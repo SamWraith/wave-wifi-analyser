@@ -20,7 +20,9 @@ Custom painters should share one axis definition, separate grid/data/label respo
 
 Keep decorative motion finite and tied to user intent or fresh data. Respect reduced-motion and accessible-navigation preferences; preserve widget/state identity when those preferences change. Keep animation state in presentation widgets, retain keyboard/focus semantics, and dispose owned controllers. Animate exact measured values with a transition rather than fabricating intermediate scan samples. Test cancellation and accessibility changes for shared interaction components.
 
-For Rive, await runtime initialization before accessing factories. The owning illustration disposes its painter, artboard and file, ignores late loads, and pauses background advancement. Verify bundled artboard/timeline names against the real asset and test actual runtime playback when changing integration; mocked illustrations only validate the surrounding flow.
+Theme reveals must preserve the live route/widget tree, dispose captured images and guard stale asynchronous cleanup. Reset controllers before subsequent reveals and recheck reduced motion after asynchronous work. Keep mobile haptics tied to explicit user intent. Display refresh preferences are requests; qualify 120 fps on physical hardware in profile mode before claiming it.
+
+For Rive, await runtime initialization before accessing factories. The owning illustration disposes its painter, artboard and file, ignores late loads, and pauses background advancement. Verify bundled artboard/timeline names against the real asset and test actual runtime playback when changing integration; mocked illustrations only validate the surrounding flow. Verify visibly changed rendered pixels, not merely a running ticker or existing timeline. Reserve known variable-copy slots for stable onboarding controls while retaining responsive width and accessibility text scaling.
 
 ## State, async work and failures
 
@@ -42,3 +44,5 @@ Keep repositories injectable through providers. Demo generation belongs in an ex
 - Review resulting diffs for remaining duplication, oversized mixed responsibilities and broad subscriptions. Existing passing tests alone do not close architecture findings.
 
 Use [Flutter architecture recommendations](https://docs.flutter.dev/app-architecture/recommendations), [Flutter rendering practices](https://docs.flutter.dev/perf/best-practices) and [Riverpod select](https://riverpod.dev/docs/how_to/select) when a framework-specific choice needs verification. Prefer installed APIs and official primary documentation over recollection.
+
+For cadence qualification, use the normal-binding `tool/motion_probe.dart` or normal app profile in addition to functional integration tests. Integration-test scheduling can differ from the production binding. Report UI/raster budgets and interval distribution alongside median cadence; never treat a 120 Hz display-mode report as proof of 120 fps.

@@ -18,6 +18,7 @@ This file applies throughout this repository. User instructions take precedence.
 - `lib/repositories/`: Android platform boundary, settings storage and explicit demo source.
 - `android/app/src/main/kotlin/com/samirpandey/wifi_analyser/MainActivity.kt`: native WiFi bridge.
 - `test/`: unit/widget regressions; `integration_test/`: native bridge checks.
+- Motion/high-refresh work: read `docs/MOTION_AND_REFRESH.md`; use FVM pin, keep haptics presentation-owned and validate performance on physical hardware before claiming 120 fps.
 - Onboarding/Rive work: read `docs/RIVE_ONBOARDING.md` for asset names, editable source and native test setup.
 
 Start with `git status --short`, then use `rg` and focused file reads. Preserve unrelated work. Do not ingest raw `research/` JSON/decompiled sources, build output, dependencies or entire sibling repositories to answer an ordinary coding question.

@@ -44,7 +44,7 @@ ai/scripts/check.sh
 flutter test integration_test/onboarding_test.dart -d <android-device-id>
 ```
 
-The asset test decodes every named artboard and applies its timeline. Welcome
+The asset test decodes every named artboard, applies its timeline and compares rendered pixels at different times. Seeking must use `advanceAndApply(0)` to synchronize native animation state; `time = value` followed by `apply()` alone produced unchanged artwork with this runtime. Welcome
 tests cover storage loading, write retries, duplicate completion taps, scan
 gating, phone/desktop layouts and both themes with enlarged text. Android
 integration checks real Rive rendering, explicit replay, finite rest,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/wave_motion.dart';
+import '../widgets/wave_haptics.dart';
 import 'analyser_navigation.dart';
 import 'channels_page.dart';
 import 'networks_page.dart';
@@ -20,6 +21,7 @@ class _AnalyserHomeState extends State<AnalyserHome> {
 
   void _select(int value) {
     if (value == selected) return;
+    WaveHaptics.selection();
     if (_scrollController.hasClients) _scrollController.jumpTo(0);
     setState(() => selected = value);
   }

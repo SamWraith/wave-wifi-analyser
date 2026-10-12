@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/onboarding_step.dart';
 import '../widgets/onboarding_illustration.dart';
 import '../widgets/wave_motion.dart';
+import '../widgets/wave_haptics.dart';
+import '../widgets/stable_text_slot.dart';
 
 class OnboardingPage extends ConsumerStatefulWidget {
   const OnboardingPage({
@@ -25,6 +27,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   final _scroll = ScrollController();
 
   void _moveTo(int index) {
+    WaveHaptics.selection();
     setState(() => _index = index);
     if (_scroll.hasClients) _scroll.jumpTo(0);
   }
@@ -37,6 +40,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
 
   void _next() {
     if (_index == onboardingSteps.length - 1) {
+      WaveHaptics.selection();
       widget.onFinished();
     } else {
       _moveTo(_index + 1);
@@ -65,7 +69,12 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _WelcomeHeader(
-                        onSkip: widget.saving ? null : widget.onFinished,
+                        onSkip: widget.saving
+                            ? null
+                            : () {
+                                WaveHaptics.selection();
+                                widget.onFinished();
+                              },
                       ),
                       SizedBox(height: wide ? 70 : 22),
                       if (wide)
@@ -169,8 +178,9 @@ class _WelcomeCopy extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          step.eyebrow,
+        StableTextSlot(
+          text: step.eyebrow,
+          alternatives: onboardingSteps.map((step) => step.eyebrow),
           style: TextStyle(
             fontSize: 11,
             letterSpacing: 1.8,
@@ -179,8 +189,9 @@ class _WelcomeCopy extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        Text(
-          step.title,
+        StableTextSlot(
+          text: step.title,
+          alternatives: onboardingSteps.map((step) => step.title),
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
             fontSize: 40,
             fontWeight: FontWeight.w700,
@@ -189,8 +200,9 @@ class _WelcomeCopy extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 18),
-        Text(
-          step.body,
+        StableTextSlot(
+          text: step.body,
+          alternatives: onboardingSteps.map((step) => step.body),
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
             height: 1.6,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -242,13 +254,17 @@ class _WelcomeControls extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 400),
           child: Row(
             children: [
-              if (index > 0) ...[
-                TextButton(
+              Visibility(
+                visible: index > 0,
+                maintainState: true,
+                maintainAnimation: true,
+                maintainSize: true,
+                child: TextButton(
                   onPressed: saving ? null : onBack,
                   child: const Text('Back'),
                 ),
-                const SizedBox(width: 12),
-              ],
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: FilledButton.icon(
                   onPressed: saving ? null : onNext,
@@ -258,8 +274,14 @@ class _WelcomeControls extends StatelessWidget {
                         : Icons.arrow_forward_rounded,
                     size: 18,
                   ),
-                  label: Text(
-                    saving
+                  label: StableTextSlot(
+                    alternatives: const [
+                      'Continue',
+                      'Start exploring',
+                      'Saving…',
+                    ],
+                    style: null,
+                    text: saving
                         ? 'Saving…'
                         : index == onboardingSteps.length - 1
                         ? 'Start exploring'

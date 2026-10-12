@@ -7,6 +7,8 @@ import 'package:rive/rive.dart' as rive;
 
 import '../models/onboarding_step.dart';
 import 'wave_motion.dart';
+import 'wave_haptics.dart';
+import 'stable_text_slot.dart';
 
 final onboardingArtProvider = Provider<Widget Function(OnboardingStep)>(
   (ref) =>
@@ -130,10 +132,17 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
           ),
         ),
         TextButton.icon(
-          onPressed: painter == null || _reduced ? null : painter.replay,
+          onPressed: painter == null || _reduced
+              ? null
+              : () {
+                  WaveHaptics.selection();
+                  painter.replay();
+                },
           icon: const Icon(Icons.touch_app_rounded, size: 18),
-          label: Text(
-            _failed
+          label: StableTextSlot(
+            alternatives: onboardingSteps.map((step) => step.action),
+            style: null,
+            text: _failed
                 ? 'Illustration unavailable'
                 : _reduced
                 ? 'Motion reduced'
@@ -179,7 +188,8 @@ final class _ExplorePainter extends rive.BasicArtboardPainter {
     if (animation == null) return false;
     if (!_background && !_reduced) _elapsed += elapsedSeconds;
     animation.time = math.min(_elapsed, animation.duration);
-    animation.apply();
+    // Synchronize native animation state after seeking before applying keys.
+    animation.advanceAndApply(0);
     artboard?.advance(0);
     return !_background && !_reduced && _elapsed < animation.duration;
   }

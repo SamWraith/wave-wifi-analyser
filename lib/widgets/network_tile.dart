@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../models/access_point.dart';
 import 'signal_charts.dart';
 import 'wave_motion.dart';
+import 'wave_haptics.dart';
 
 class NetworkTile extends StatelessWidget {
   const NetworkTile({super.key, required this.ap});
@@ -81,17 +82,19 @@ class NetworkTile extends StatelessWidget {
   );
 }
 
-Future<void> showAccessPointDetails(BuildContext context, AccessPoint ap) =>
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      sheetAnimationStyle: AnimationStyle(
-        duration: WaveMotion.duration(context, 320),
-        reverseDuration: WaveMotion.duration(context, 220),
-      ),
-      builder: (context) => AccessPointDetailsSheet(ap: ap),
-    );
+Future<void> showAccessPointDetails(BuildContext context, AccessPoint ap) {
+  WaveHaptics.impact();
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    sheetAnimationStyle: AnimationStyle(
+      duration: WaveMotion.duration(context, 320),
+      reverseDuration: WaveMotion.duration(context, 220),
+    ),
+    builder: (context) => AccessPointDetailsSheet(ap: ap),
+  );
+}
 
 class AccessPointDetailsSheet extends StatelessWidget {
   const AccessPointDetailsSheet({super.key, required this.ap});

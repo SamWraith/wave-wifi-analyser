@@ -10,12 +10,14 @@ import android.location.LocationManager
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.provider.Settings
+import io.flutter.embedding.android.FlutterSurfaceView
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
+    private val displayRefresh by lazy { DisplayRefreshPolicy(this) }
     private val wifi by lazy { applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager }
     private var sink: EventChannel.EventSink? = null
     private var permissionReply: MethodChannel.Result? = null
@@ -28,6 +30,11 @@ class MainActivity : FlutterActivity() {
     }
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.samirpandey.wifi_analyser/display")
+            .setMethodCallHandler { call, result ->
+                if (call.method == "refreshRate") result.success(displayRefresh.snapshot())
+                else result.notImplemented()
+            }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.samirpandey.wifi_analyser/wifi")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -60,6 +67,10 @@ class MainActivity : FlutterActivity() {
                 override fun onCancel(arguments: Any?) { sink = null; unregisterScanReceiver() }
             })
     }
+    override fun onFlutterSurfaceViewCreated(view: FlutterSurfaceView) {
+        super.onFlutterSurfaceViewCreated(view)
+        displayRefresh.attach(view)
+    }
     private fun registerScanReceiver() {
         if (registered || sink == null) return
         val filter = IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)
@@ -68,9 +79,9 @@ class MainActivity : FlutterActivity() {
         registered = true
     }
     private fun unregisterScanReceiver() { if (registered) { unregisterReceiver(receiver); registered = false } }
-    override fun onResume() { super.onResume(); registerScanReceiver() }
+    override fun onResume() { super.onResume(); displayRefresh.requestHighest(); registerScanReceiver() }
     override fun onPause() { unregisterScanReceiver(); super.onPause() }
-    override fun onDestroy() { unregisterScanReceiver(); permissionReply?.error("cancelled", "Activity closed", null); permissionReply = null; super.onDestroy() }
+    override fun onDestroy() { displayRefresh.close(); unregisterScanReceiver(); permissionReply?.error("cancelled", "Activity closed", null); permissionReply = null; super.onDestroy() }
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == 91) { permissionReply?.success(hasPermission()); permissionReply = null }

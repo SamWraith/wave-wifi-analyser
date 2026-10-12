@@ -1,18 +1,19 @@
 # wave - wifi analyser
 
-A Flutter WiFi analyser with a modern responsive interface, system/light/dark themes, and a native Android WiFi scan bridge. Created in `~/Developer/personal/wifi_analyser`.
+A Flutter WiFi analyser with a modern responsive interface, system/light/dark themes, and a native Android WiFi scan bridge. Created in `~/Developer/personal/wave-wifi-analyser`.
 
 ## Run
 
-Flutter SDK used: `/Users/samirpandey/fvm/versions/3.47.5`.
+Flutter SDK pinned through FVM: `3.47.5` in `.fvmrc`.
 
 ```sh
-cd ~/Developer/personal/wifi_analyser
-/Users/samirpandey/fvm/versions/3.47.5/bin/flutter pub get
-/Users/samirpandey/fvm/versions/3.47.5/bin/flutter run -d <android-device-id>
+cd ~/Developer/personal/wave-wifi-analyser
+fvm use
+fvm flutter pub get
+fvm flutter run -d <android-device-id>
 ```
 
-For desktop exploration: `flutter run -d macos` or `flutter run -d chrome`. These platforms default to clearly labelled simulated data. Android defaults to live data. Tap Scan and grant **precise location**, then ensure WiFi and Android Location services are enabled. No location coordinates are collected.
+For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrome`. These platforms default to clearly labelled simulated data. Android defaults to live data. Tap Scan and grant **precise location**, then ensure WiFi and Android Location services are enabled. No location coordinates are collected.
 
 ## Included in 1.0.0
 
@@ -25,7 +26,7 @@ For desktop exploration: `flutter run -d macos` or `flutter run -d chrome`. Thes
 - Android permission, Location-off, WiFi-off, throttled/cached, and empty states.
 - Foreground-only scan requests every 35 seconds; fresh broadcasts update data.
 - Explicit demo mode for exploring UI without Android hardware.
-- Brief page/chart reveals, animated signal values and channel bars, fresh-scan pulses, hover/focus/press feedback, and smooth theme/detail-sheet transitions. Motion respects device accessibility preferences.
+- Brief page/chart reveals, animated signal values and channel bars, fresh-scan pulses, hover/focus/press feedback, mobile haptics, circular theme reveal from the tapped control, and smooth detail-sheet transitions. Motion respects device accessibility preferences.
 - Three-step Rive welcome with interactive replay, persistent completion, Skip/Back navigation, and Settings replay. Scanning starts after welcome completes.
 
 Device discovery, speed tests, aliases, AI/cloud diagnostics, widgets, and router administration remain future work. iOS/macOS/web native WiFi scanning is not implemented. Flutter builds for those targets use demo mode; they cannot scan nearby networks yet.
@@ -50,21 +51,22 @@ Graphs use reported center frequency for wide channels when available. Envelopes
 
 ## AI coding guidance
 
-[AGENTS.md](AGENTS.md) routes agents to focused [architecture rules](ai/rules/flutter-architecture.md) and the project-local [review skill](ai/skills/wave-architecture-review/SKILL.md). The skill stays in `ai/`; no global skill installation is required. Run `ai/scripts/check.sh` for format, analysis and tests, or pass relevant test paths. Set `FLUTTER_BIN` if Flutter is not on PATH or in the documented local FVM location.
+[AGENTS.md](AGENTS.md) routes agents to focused [architecture rules](ai/rules/flutter-architecture.md) and the project-local [review skill](ai/skills/wave-architecture-review/SKILL.md). The skill stays in `ai/`; no global skill installation is required. Run `ai/scripts/check.sh` for format, analysis and tests, or pass relevant test paths. The check script prefers `.fvm/flutter_sdk`; set `FLUTTER_BIN` to override it.
 
 Preference edits survive delayed loading; serialized saves show recoverable errors separately from scan status. Signal sliders preview immediately and persist on release. Search text stays synchronized across navigation. Shared filtering/rating providers avoid recomputation for unrelated preferences, and equivalent chart content skips repaint.
 
 See [original review](docs/ARCHITECTURE_REVIEW.md) and [completed fixes](docs/ARCHITECTURE_REVIEW_FOLLOWUP.md) for architecture evidence.
 
+See [motion and display refresh](docs/MOTION_AND_REFRESH.md) for native verification and physical-device 120 fps qualification, and [verification evidence](docs/MOTION_VERIFICATION.md) for completed checks and measured limits. Android requests maximum refresh at the current resolution; iOS enables ProMotion.
+
 ## Verification
 
 ```sh
-flutter analyze
-flutter test
-flutter build apk --debug
-flutter build web
-flutter test integration_test/native_wifi_test.dart -d <android-device-id>
-flutter test integration_test/onboarding_test.dart -d <android-device-id>
+ai/scripts/check.sh
+fvm flutter build apk --release
+fvm flutter build web
+fvm flutter test integration_test/native_wifi_test.dart -d <android-device-id>
+fvm flutter test integration_test/native_motion_test.dart -d <android-or-ios-device-id>
 ```
 
 Widget tests cover phone and desktop layouts in both themes, search/details/navigation, and chart width. Analysis tests cover frequency exceptions, connected-AP exclusion, bandwidth overlap, and signal weighting. ViewModel tests check fresh/cached/duplicate timestamps, immutable history, pause behavior, stale in-flight scan responses, and settings persistence. Native integration test checks the Android bridge on an emulator. Physical RF scanning still requires a real Android device; emulator success does not validate real RF measurements.
@@ -73,8 +75,10 @@ Widget tests cover phone and desktop layouts in both themes, search/details/navi
 
 See `research/REVERSE_ENGINEERING.md` for APK identity, REA Evidence IDs, verified static findings, reconstruction choices, and remaining unknowns. APKs and raw decompilation outputs stay local and are excluded from Git. REA source clone: `~/Developer/personal/rea`; pinned JADX engine: `~/Developer/personal/rea-tools`.
 
-Installable artifact: `dist/wave-wifi-debug.apk` (regular app entrypoint, preserved separately from integration-test builds).
+Installable artifact: `dist/wave-wifi-release.apk` (normal app entry point, preserved separately from integration-test builds).
+
+[Original platform branding](assets/branding/README.md) includes editable SVG, Android adaptive/themed/night icons, and iOS Any/Dark/Tinted appearances.
 
 See [Rive onboarding](docs/RIVE_ONBOARDING.md) for editable artwork, runtime ownership, and native library setup. Keep Flutter/Dart on PATH for Rive's Android build hook. Independent architecture review found no actionable onboarding issues. Physical RF validation remains open.
 
-APK output: `build/app/outputs/flutter-apk/app-debug.apk`. Debug-signed only; production signing is not configured.
+APK output: `build/app/outputs/flutter-apk/app-release.apk`. Release mode currently uses development signing; production signing is not configured.

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="Wave: WiFi arcs above a W signal wave">
+  <g fill="none" stroke="#7054D7" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
+    <path id="outer-signal" d="M52 90 Q128 24 204 90"/>
+    <path id="inner-signal" d="M84 110 Q128 72 172 110"/>
+    <path id="signal-wave" d="M72 147 L96 183 L128 137 L160 183 L184 147"/>
+  </g>
+</svg>

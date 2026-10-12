@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../viewmodels/analyser_view_model.dart';
 import '../widgets/wave_components.dart';
+import '../widgets/theme_reveal.dart';
+import '../widgets/wave_haptics.dart';
 import 'onboarding_page.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -68,14 +70,22 @@ class AppearanceCard extends ConsumerWidget {
             spacing: 10,
             children: ThemeMode.values
                 .map(
-                  (mode) => ChoiceChip(
-                    label: Text(switch (mode) {
-                      ThemeMode.system => 'System',
-                      ThemeMode.light => 'Light',
-                      ThemeMode.dark => 'Dark',
-                    }),
-                    selected: modeSelected == mode,
-                    onSelected: (_) => c.setTheme(mode),
+                  (mode) => Builder(
+                    builder: (chipContext) => ChoiceChip(
+                      label: Text(switch (mode) {
+                        ThemeMode.system => 'System',
+                        ThemeMode.light => 'Light',
+                        ThemeMode.dark => 'Dark',
+                      }),
+                      selected: modeSelected == mode,
+                      onSelected: (_) {
+                        if (mode != modeSelected) {
+                          ThemeReveal.change(chipContext, () {
+                            c.setTheme(mode);
+                          });
+                        }
+                      },
+                    ),
                   ),
                 )
                 .toList(),
@@ -113,7 +123,10 @@ class ScanningSettingsCard extends ConsumerWidget {
               style: TextStyle(fontSize: 12),
             ),
             value: demo,
-            onChanged: c.setDemo,
+            onChanged: (value) {
+              WaveHaptics.selection();
+              c.setDemo(value);
+            },
           ),
           const Divider(),
           SwitchListTile(
@@ -129,7 +142,10 @@ class ScanningSettingsCard extends ConsumerWidget {
               style: const TextStyle(fontSize: 12),
             ),
             value: !paused,
-            onChanged: (_) => c.togglePause(),
+            onChanged: (_) {
+              WaveHaptics.selection();
+              c.togglePause();
+            },
           ),
           const SizedBox(height: 14),
           Text(
@@ -143,7 +159,10 @@ class ScanningSettingsCard extends ConsumerWidget {
             divisions: 11,
             label: '$minimum dBm',
             onChanged: (v) => c.updateMinimum(v.round()),
-            onChangeEnd: (v) => c.setMinimum(v.round()),
+            onChangeEnd: (v) {
+              WaveHaptics.selection();
+              c.setMinimum(v.round());
+            },
           ),
           Text(
             'Filters display only. Channel scoring still includes all scanned access points.',

@@ -5,6 +5,9 @@ import '../models/access_point.dart';
 import '../viewmodels/analyser_view_model.dart';
 import '../widgets/wave_components.dart';
 import '../widgets/wave_motion.dart';
+import '../widgets/wave_haptics.dart';
+import '../widgets/theme_reveal.dart';
+import '../widgets/stable_text_slot.dart';
 import '../widgets/scan_activity.dart';
 import 'analyser_providers.dart';
 
@@ -237,23 +240,32 @@ class AnalyserHeader extends ConsumerWidget {
             ],
           ),
         ),
-        IconButton(
-          tooltip: 'Switch light / dark theme',
-          onPressed: () => c.setTheme(
-            Theme.of(context).brightness == Brightness.dark
-                ? ThemeMode.light
-                : ThemeMode.dark,
-          ),
-          icon: Icon(
-            Theme.of(context).brightness == Brightness.dark
-                ? Icons.light_mode_outlined
-                : Icons.dark_mode_outlined,
+        Builder(
+          builder: (buttonContext) => IconButton(
+            tooltip: 'Switch light / dark theme',
+            onPressed: () => ThemeReveal.change(buttonContext, () {
+              c.setTheme(
+                Theme.of(context).brightness == Brightness.dark
+                    ? ThemeMode.light
+                    : ThemeMode.dark,
+              );
+            }),
+            icon: Icon(
+              Theme.of(context).brightness == Brightness.dark
+                  ? Icons.light_mode_outlined
+                  : Icons.dark_mode_outlined,
+            ),
           ),
         ),
         if (wide) ...[
           const SizedBox(width: 12),
           FilledButton.icon(
-            onPressed: busy || paused ? null : () => c.scan(),
+            onPressed: busy || paused
+                ? null
+                : () {
+                    WaveHaptics.impact();
+                    c.scan();
+                  },
             icon: busy
                 ? const SizedBox(
                     width: 16,
@@ -293,14 +305,24 @@ class ScanStatusBar extends ConsumerWidget {
           const ScanActivity(),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              paused ? 'Scanning paused. Last results retained.' : status,
+            child: StableTextSlot(
+              text: paused ? 'Scanning paused. Last results retained.' : status,
+              alternatives: const [
+                'Scanning… Cached results shown until new scan arrives.',
+                'Allow precise location to discover nearby WiFi networks.',
+                'Enable Location services in Android settings to scan WiFi.',
+                'WiFi scans temporarily unavailable. Showing cached results.',
+                'Scanning paused. Last results retained.',
+              ],
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
           IconButton(
             tooltip: paused ? 'Resume scanning' : 'Pause scanning',
-            onPressed: c.togglePause,
+            onPressed: () {
+              WaveHaptics.selection();
+              c.togglePause();
+            },
             icon: Icon(
               paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
               size: 18,
@@ -308,7 +330,12 @@ class ScanStatusBar extends ConsumerWidget {
           ),
           IconButton(
             tooltip: 'Scan now',
-            onPressed: busy || paused ? null : () => c.scan(),
+            onPressed: busy || paused
+                ? null
+                : () {
+                    WaveHaptics.impact();
+                    c.scan();
+                  },
             icon: const Icon(Icons.refresh_rounded, size: 18),
           ),
         ],
@@ -336,7 +363,12 @@ class BandSelector extends ConsumerWidget {
           (band) => ChoiceChip(
             label: Text(band.label),
             selected: selectedBand == band,
-            onSelected: (_) => c.setBand(band),
+            onSelected: (_) {
+              if (band != selectedBand) {
+                WaveHaptics.selection();
+                c.setBand(band);
+              }
+            },
             showCheckmark: false,
           ),
         ),

@@ -7,7 +7,7 @@
     <application
         android:label="wave - wifi analyser"
         android:name="${applicationName}"
-        android:icon="@drawable/ic_launcher_wave">
+        android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
             android:exported="true"

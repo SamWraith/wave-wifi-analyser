@@ -5,7 +5,7 @@ import 'viewmodels/analyser_view_model.dart';
 import 'views/onboarding_gate.dart';
 import 'viewmodels/onboarding_view_model.dart';
 import 'views/app_theme.dart';
-import 'widgets/wave_motion.dart';
+import 'widgets/theme_reveal.dart';
 
 class WaveApp extends ConsumerWidget {
   const WaveApp({super.key});
@@ -22,7 +22,8 @@ class WaveApp extends ConsumerWidget {
       title: 'wave - wifi analyser',
       debugShowCheckedModeBanner: false,
       themeMode: themeMode,
-      themeAnimationDuration: WaveMotion.duration(context, 360),
+      themeAnimationDuration: Duration.zero,
+      builder: (context, child) => ThemeReveal(child: child!),
       themeAnimationCurve: Curves.easeInOutCubic,
       theme: buildAppTheme(Brightness.light),
       darkTheme: buildAppTheme(Brightness.dark),

@@ -1,0 +1,11 @@
+{
+  "name": "wave-icon-assets",
+  "private": true,
+  "scripts": {
+    "generate": "node generate.cjs",
+    "verify": "node verify.cjs"
+  },
+  "devDependencies": {
+    "sharp": "0.35.5"
+  }
+}

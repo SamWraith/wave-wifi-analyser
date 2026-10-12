@@ -6,6 +6,8 @@ cd "$project_root"
 
 if [[ -n "${FLUTTER_BIN:-}" ]]; then
   flutter_bin="$FLUTTER_BIN"
+elif [[ -x "$project_root/.fvm/flutter_sdk/bin/flutter" ]]; then
+  flutter_bin="$project_root/.fvm/flutter_sdk/bin/flutter"
 elif command -v flutter >/dev/null 2>&1; then
   flutter_bin="$(command -v flutter)"
 elif [[ -x "$HOME/fvm/versions/3.47.5/bin/flutter" ]]; then
@@ -15,12 +17,13 @@ else
   exit 1
 fi
 
+export PATH="$(dirname "$flutter_bin"):$PATH"
 dart_bin="$(dirname "$flutter_bin")/dart"
 if [[ ! -x "$dart_bin" ]]; then
   echo 'Dart executable must sit alongside FLUTTER_BIN.' >&2
   exit 1
 fi
-"$dart_bin" format --output=none --set-exit-if-changed lib test integration_test
+"$dart_bin" format --output=none --set-exit-if-changed lib test integration_test test_driver tool/motion_probe.dart
 "$flutter_bin" analyze
 if [[ "$#" -eq 0 ]]; then
   "$flutter_bin" test

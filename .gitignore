@@ -54,3 +54,6 @@ app.*.map.json
 *.aab
 /research/*.json
 /research/*.txt
+
+# FVM Version Cache
+.fvm/
