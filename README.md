@@ -15,21 +15,78 @@ fvm flutter run -d <android-device-id>
 
 For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrome`. These platforms default to clearly labelled simulated data. Android defaults to live data. Tap Scan and grant **precise location**, then ensure WiFi and Android Location services are enabled. No location coordinates are collected.
 
-## Included in 1.0.0
+## Implemented features — 1.0.0
 
-- Overview with connected AP, signal quality, advertised security, and bandwidth.
-- Channel overlap graph and per-AP signal history, with 2.4/5/6 GHz filters. Tap a legend name to hide, include, then isolate that access point; tap again or use Show all to reset. Legend filtering retains chart axes and measured scan/history data. Overview uses one horizontally scrollable legend row with expand/collapse controls; Spectrum shows the full legend list.
-- Access-point search, signal sorting, hidden SSIDs, detail sheet, and MAC copying.
-- Channel candidates ranked by bandwidth overlap weighted by received power.
-- Approximate free-space distance, labelled as an estimate.
-- Display signal threshold, scan pause/resume, and persistent theme selection.
-- Android permission, Location-off, WiFi-off, throttled/cached, and empty states.
-- Foreground-only scan requests every 35 seconds; fresh broadcasts update data.
-- Explicit demo mode for exploring UI without Android hardware.
-- Brief page/chart reveals, animated signal values and channel bars, fresh-scan pulses, hover/focus/press feedback, mobile haptics, circular theme reveal from the tapped control, and smooth detail-sheet transitions. Motion respects device accessibility preferences.
-- Three-step Rive welcome with interactive replay, persistent completion, Skip/Back navigation, and Settings replay. Scanning starts after welcome completes.
+### Overview and WiFi scanning
 
-Device discovery, speed tests, aliases, AI/cloud diagnostics, widgets, and router administration remain future work. iOS/macOS/web native WiFi scanning is not implemented. Flutter builds for those targets use demo mode; they cannot scan nearby networks yet.
+- Connected access-point card with network name, band, channel, measured signal in dBm, signal quality, advertised security and channel width.
+- Nearby-network count, strongest nearby access points, clearest channel candidate and local signal/channel/security insights.
+- Android live scans, manual Scan action, automatic scanning and pause/resume. Automatic requests run every 35 seconds while foregrounded; Android determines actual scan availability.
+- Permission, Location-off, WiFi-off, throttled/cached, empty and recoverable scan-error states, plus a shortcut to Android WiFi settings.
+- Clearly labelled demo mode on every target, with simulated updates every 3 seconds. Backgrounding or pausing stops automatic updates.
+
+### Spectrum, signal history and interactive legends
+
+- Channel landscape showing illustrative signal envelopes from reported frequency, channel width and received power.
+- Per-access-point signal history with up to 60 fresh samples per BSSID. Cached or duplicate scan timestamps never become fresh history samples.
+- Switch between channel landscape and signal history; filter 2.4 GHz, 5 GHz or 6 GHz bands.
+- Tap a WiFi legend name through this cycle: **hide → include again → show only this WiFi → restore all**.
+- While one WiFi is isolated, tap another legend name to switch focus. **Show all** resets legend selections anytime.
+- Hidden networks stay in the legend. Duplicate network names remain independent through BSSID identity; colors stay tied to BSSID as scan order changes.
+- Chart axes and history time range retain all chart input data when curves are hidden, keeping remaining curves in place. Legend filtering does not alter measurements or channel scoring.
+- **Overview:** one horizontally scrollable legend row, pinned reset and expand controls, full wrapped list on expansion, and collapse back to the compact row. Selection survives expansion/collapse.
+- **Spectrum:** full wrapped legend list. Legend controls work in both chart modes, with keyboard selection and tooltips identifying the access point and next action.
+
+### Networks and access-point details
+
+- Search by network name, strongest-signal-first ordering and a display-only minimum-signal filter.
+- Hidden-SSID entries, connected/nearby identification and access-point detail sheets.
+- Details include BSSID, signal/quality, frequency, channel/band, width, advertised security and approximate distance.
+- Selectable detail values and Copy MAC address with confirmation feedback.
+- Search text stays synchronized when navigating between screens.
+
+### Channel planning
+
+- Channel candidates ranked by bandwidth overlap weighted by received power, with relative overlap bars and Clear/Low/Moderate/High labels.
+- Option to exclude the connected access point when planning its channel.
+- Display filters and legend visibility do not remove scanned access points from scoring. Recommendations are a local heuristic, not measured noise, throughput or regulatory availability.
+
+### Welcome and onboarding
+
+- Three-step welcome with original Rive signal, channel and scan-access scenes.
+- Finite animation on scene entry, interactive replay actions, Back/Continue, Skip and Start exploring controls.
+- Persisted completion and welcome replay from Settings. Scanning starts after initial welcome completes.
+- Background-aware playback, reduced-motion support and stable copy/control slots across steps.
+
+### Appearance, motion and feedback
+
+- Modern responsive phone/desktop layouts with Overview, Spectrum, Networks, Channels and Settings destinations.
+- System, light and dark themes with saved theme preference.
+- Circular theme reveal growing from the tapped header toggle or Settings theme control, retaining navigation, search and focus state.
+- Finite page/chart reveals, animated exact signal values, channel bars, fresh-scan pulses and detail-sheet transitions.
+- Mobile selection/impact haptics for supported actions, plus hover/focus/press feedback and accessible standard controls.
+- Reduced-motion/accessibility preferences honored by custom motion; stable ordinary scan-status space and onboarding copy reduce unintended layout shifts.
+- Android requests the highest advertised refresh mode at the current resolution; iOS ProMotion opt-in is enabled. Sampled theme/Rive motion reached approximately 120 Hz active cadence with touch activity on the tested phone. Constant 120 fps is not qualified; see [measured performance and limits](docs/MOTION_VERIFICATION.md).
+
+### Settings and platform branding
+
+- Saved theme and minimum-signal preferences, immediate slider preview with persistence on release, and separate recoverable preference-error feedback.
+- Demo mode, automatic scanning controls, Android WiFi settings shortcut and Replay welcome.
+- Original Wave logo with editable SVG master and reproducible platform exports.
+- Android adaptive, monochrome/themed, light/night and legacy-density launcher icons; iOS Any/light, Dark and Tinted asset-catalog appearances. Launcher/system appearance controls icon presentation independently of in-app theme. See [branding assets](assets/branding/README.md).
+
+## Platform support and current limits
+
+| Target | Nearby WiFi scanning | Interface/demo support |
+| --- | --- | --- |
+| Android | Live scan bridge implemented; required permission and WiFi/Location services must be enabled | Yes |
+| iOS | Not implemented | Yes, demo data |
+| macOS | Not implemented | Yes, demo data |
+| Web | Not implemented | Yes, demo data |
+
+No location coordinates are collected. Distance is a free-space estimate and can be inaccurate indoors; chart envelopes are illustrative rather than RF spectrum measurements. Local channel recommendations do not configure routers.
+
+Saved measurement sessions, device discovery, speed tests, network aliases, AI/cloud diagnostics, home-screen widgets and router administration are not included. Potential additions are recommendations, not committed scope; see the [product manager review](docs/PRODUCT_REVIEW.md).
 
 ## Architecture: MVVM + Riverpod 3.4.3
 
@@ -69,7 +126,7 @@ fvm flutter test integration_test/native_wifi_test.dart -d <android-device-id>
 fvm flutter test integration_test/native_motion_test.dart -d <android-or-ios-device-id>
 ```
 
-Widget tests cover phone and desktop layouts in both themes, search/details/navigation, and chart width. Analysis tests cover frequency exceptions, connected-AP exclusion, bandwidth overlap, and signal weighting. ViewModel tests check fresh/cached/duplicate timestamps, immutable history, pause behavior, stale in-flight scan responses, and settings persistence. Native integration test checks the Android bridge on an emulator. Physical RF scanning still requires a real Android device; emulator success does not validate real RF measurements.
+Widget tests cover phone and desktop layouts in both themes, search/details/navigation, chart width, legend hide/include/isolate/reset cycles, duplicate-SSID identity, scan reordering, compact scrolling/expansion at normal and large text scales, and rendered curve visibility. Analysis tests cover frequency exceptions, connected-AP exclusion, bandwidth overlap, and signal weighting. ViewModel tests check fresh/cached/duplicate timestamps, immutable history, pause behavior, stale in-flight scan responses, and settings persistence. Native integration test checks the Android bridge on an emulator. Physical RF scanning still requires a real Android device; emulator success does not validate real RF measurements.
 
 ## Research
 
