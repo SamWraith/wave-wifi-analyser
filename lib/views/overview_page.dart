@@ -17,7 +17,7 @@ class OverviewPage extends ConsumerWidget {
     children: [
       const OverviewSummary(),
       const SizedBox(height: 22),
-      const ChartPanel(),
+      const ChartPanel(compactLegend: true),
       const SizedBox(height: 22),
       ResponsivePair(
         first: const NetworkInsights(),

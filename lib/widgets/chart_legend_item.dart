@@ -12,10 +12,11 @@ class ChartLegendItem extends StatelessWidget {
     required this.solo,
     required this.nextAction,
     required this.onTap,
+    this.compact = false,
   });
 
   final AccessPoint point;
-  final bool visible, solo;
+  final bool visible, solo, compact;
   final String nextAction;
   final VoidCallback onTap;
 
@@ -36,10 +37,21 @@ class ChartLegendItem extends StatelessWidget {
         size: visible && !solo ? 10 : 18,
         color: pointColor(point),
       ),
-      label: Text(
-        point.name,
-        style: TextStyle(
-          decoration: visible ? null : TextDecoration.lineThrough,
+      label: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: compact ? 140 : double.infinity),
+        child: Text(
+          point.name,
+          maxLines: compact ? 1 : null,
+          overflow: compact ? TextOverflow.ellipsis : null,
+          style:
+              (compact
+                      ? Theme.of(context).textTheme.labelMedium
+                      : const TextStyle())
+                  ?.copyWith(
+                    decoration: visible
+                        ? TextDecoration.none
+                        : TextDecoration.lineThrough,
+                  ),
         ),
       ),
       onSelected: (_) => onTap(),

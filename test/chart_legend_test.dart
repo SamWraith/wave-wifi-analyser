@@ -6,6 +6,7 @@ import 'package:wifi_analyser/models/analyser_state.dart';
 import 'package:wifi_analyser/viewmodels/analyser_view_model.dart';
 import 'package:wifi_analyser/views/chart_panel.dart';
 import 'package:wifi_analyser/widgets/signal_charts.dart';
+import 'package:wifi_analyser/widgets/chart_legend.dart';
 
 AccessPoint ap(int id, {int rssi = -50}) => AccessPoint(
   ssid: id < 2 ? 'Shared name' : 'WiFi $id',
@@ -122,4 +123,69 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+  for (final scale in [1.0, 2.0]) {
+    testWidgets(
+      'compact legend scrolls/expands without losing selection at $scale',
+      (tester) async {
+        tester.view.physicalSize = const Size(390, 1100);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final model = _ChartModel();
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [analyserProvider.overrideWith(() => model)],
+            child: MaterialApp(
+              home: MediaQuery(
+                data: MediaQueryData(
+                  textScaler: TextScaler.linear(scale),
+                  disableAnimations: scale == 2.0,
+                ),
+                child: const Scaffold(
+                  body: SingleChildScrollView(
+                    child: ChartPanel(compactLegend: true),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final legend = find.byType(ChartLegend);
+        final collapsedHeight = tester.getSize(legend).height;
+        expect(collapsedHeight, lessThanOrEqualTo(72));
+        final scroll = find.byKey(const PageStorageKey('compact-chart-legend'));
+        await tester.drag(scroll, const Offset(-2000, 0));
+        await tester.pumpAndSettle();
+        final lastChip = find.byKey(ValueKey('chart-legend-${ap(8).bssid}'));
+        await tester.tap(lastChip);
+        await tester.pumpAndSettle();
+        expect(
+          tester.widget<SignalChart>(find.byType(SignalChart)).hiddenBssids,
+          {ap(8).bssid},
+        );
+        await tester.tap(find.byTooltip('Expand WiFi legends'));
+        await tester.pumpAndSettle();
+        expect(scroll, findsNothing);
+        expect(tester.getSize(legend).height, greaterThan(collapsedHeight));
+        expect(tester.widget<FilterChip>(lastChip).selected, isFalse);
+        await tester.tap(find.byTooltip('Collapse WiFi legends'));
+        await tester.pumpAndSettle();
+        expect(scroll, findsOneWidget);
+        expect(tester.getSize(legend).height, collapsedHeight);
+        // More scan results do not add rows to the collapsed Overview legend.
+        model.update(List.generate(40, ap));
+        await tester.pumpAndSettle();
+        expect(tester.getSize(legend).height, collapsedHeight);
+        await tester.tap(find.byTooltip('Show all networks'));
+        await tester.pumpAndSettle();
+        expect(
+          tester.widget<SignalChart>(find.byType(SignalChart)).hiddenBssids,
+          isEmpty,
+        );
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+  }
 }

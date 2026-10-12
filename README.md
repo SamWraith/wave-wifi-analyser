@@ -18,7 +18,7 @@ For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrom
 ## Included in 1.0.0
 
 - Overview with connected AP, signal quality, advertised security, and bandwidth.
-- Channel overlap graph and per-AP signal history, with 2.4/5/6 GHz filters. Tap a legend name to hide, include, then isolate that access point; tap again or use Show all to reset. Legend filtering retains chart axes and measured scan/history data.
+- Channel overlap graph and per-AP signal history, with 2.4/5/6 GHz filters. Tap a legend name to hide, include, then isolate that access point; tap again or use Show all to reset. Legend filtering retains chart axes and measured scan/history data. Overview uses one horizontally scrollable legend row with expand/collapse controls; Spectrum shows the full legend list.
 - Access-point search, signal sorting, hidden SSIDs, detail sheet, and MAC copying.
 - Channel candidates ranked by bandwidth overlap weighted by received power.
 - Approximate free-space distance, labelled as an estimate.

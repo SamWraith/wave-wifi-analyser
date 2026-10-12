@@ -7,10 +7,12 @@ import '../widgets/wave_motion.dart';
 import 'analyser_providers.dart';
 import '../widgets/signal_charts.dart';
 import '../widgets/chart_legend_item.dart';
+import '../widgets/chart_legend.dart';
 import '../widgets/wave_haptics.dart';
 
 class ChartPanel extends ConsumerStatefulWidget {
-  const ChartPanel({super.key});
+  const ChartPanel({super.key, this.compactLegend = false});
+  final bool compactLegend;
   @override
   ConsumerState<ChartPanel> createState() => _ChartPanelState();
 }
@@ -71,6 +73,24 @@ class _ChartPanelState extends ConsumerState<ChartPanel> {
             : _phases[ap.bssid] == _LegendPhase.hidden)
           ap.bssid,
     };
+    final legendItems = <Widget>[
+      for (final ap in points)
+        ChartLegendItem(
+          key: ValueKey(ap.bssid),
+          point: ap,
+          compact: widget.compactLegend,
+          visible: !hidden.contains(ap.bssid),
+          solo: solo == ap.bssid,
+          nextAction: solo == ap.bssid
+              ? 'Show all networks'
+              : solo != null || _phases[ap.bssid] == _LegendPhase.restored
+              ? 'Show only this network'
+              : hidden.contains(ap.bssid)
+              ? 'Include this network'
+              : 'Exclude this network',
+          onTap: () => _cycleLegend(ap.bssid, visibleIds),
+        ),
+    ];
     return WavePanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,46 +125,15 @@ class _ChartPanelState extends ConsumerState<ChartPanel> {
               ),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Tap names: hide → include → solo',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ),
-                TextButton(
-                  onPressed: _phases.isEmpty && _soloBssid == null
-                      ? null
-                      : () {
-                          WaveHaptics.selection();
-                          setState(_resetLegend);
-                        },
-                  child: const Text('Show all'),
-                ),
-              ],
-            ),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final ap in points)
-                  ChartLegendItem(
-                    key: ValueKey(ap.bssid),
-                    point: ap,
-                    visible: !hidden.contains(ap.bssid),
-                    solo: solo == ap.bssid,
-                    nextAction: solo == ap.bssid
-                        ? 'Show all networks'
-                        : solo != null ||
-                              _phases[ap.bssid] == _LegendPhase.restored
-                        ? 'Show only this network'
-                        : hidden.contains(ap.bssid)
-                        ? 'Include this network'
-                        : 'Exclude this network',
-                    onTap: () => _cycleLegend(ap.bssid, visibleIds),
-                  ),
-              ],
+            ChartLegend(
+              compact: widget.compactLegend,
+              items: legendItems,
+              onReset: _phases.isEmpty && _soloBssid == null
+                  ? null
+                  : () {
+                      WaveHaptics.selection();
+                      setState(_resetLegend);
+                    },
             ),
             if (timeGraph && history.isEmpty)
               Text(
