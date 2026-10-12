@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/access_point.dart';
 import '../models/analyser_state.dart';
+import '../repositories/demo_wifi_source.dart';
 import '../repositories/wifi_repository.dart';
 import '../repositories/settings_repository.dart';
 
@@ -25,8 +25,12 @@ class AnalyserViewModel extends Notifier<AnalyserState>
   Timer? _timer, _deadline;
   StreamSubscription<WifiSnapshot>? _subscription;
   final Map<String, int> _lastTimestamp = {};
+  int _evictedTimestampFloor = 0;
   bool _active = true;
-  int _demoTick = 0, _epoch = 0;
+  int _epoch = 0, _themeRevision = 0, _minimumRevision = 0;
+  final _demo = DemoWifiSource();
+  Future<void> _preferenceWrites = Future.value();
+  final Map<String, String> _preferenceErrors = {};
   @override
   AnalyserState build() {
     _wifi = ref.read(wifiRepositoryProvider);
@@ -48,13 +52,16 @@ class AnalyserViewModel extends Notifier<AnalyserState>
       final prefs = await _settings.load();
       if (!ref.mounted) return;
       state = state.copyWith(
-        themeMode: prefs.themeMode,
-        minimumRssi: prefs.minimumRssi,
+        themeMode: _themeRevision == 0 ? prefs.themeMode : state.themeMode,
+        minimumRssi: _minimumRevision == 0
+            ? prefs.minimumRssi
+            : state.minimumRssi,
       );
     } catch (_) {
       if (ref.mounted) {
         state = state.copyWith(
-          status: 'Preferences unavailable. Using defaults.',
+          preferencesError:
+              'Could not load preferences. Current choices remain available.',
         );
       }
     }
@@ -62,13 +69,14 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     if (_wifi.supported) {
       _subscription = _wifi.scanResults.listen(
         (snapshot) {
-          if (!ref.mounted || state.demo || state.paused || !_active) return;
+          if (!_acceptLiveUpdates) return;
           _deadline?.cancel();
           state = state.copyWith(busy: false);
           _apply(snapshot);
         },
         onError: (Object error) {
-          if (ref.mounted) {
+          if (_acceptLiveUpdates) {
+            _deadline?.cancel();
             state = state.copyWith(
               busy: false,
               status: 'Scan unavailable: $error',
@@ -84,6 +92,11 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     }
     if (ref.mounted) _schedule();
   }
+
+  bool get _acceptLiveUpdates =>
+      ref.mounted && !state.demo && !state.paused && _active;
+
+  bool _isCurrent(int epoch) => ref.mounted && epoch == _epoch;
 
   void _schedule() {
     _timer?.cancel();
@@ -121,8 +134,12 @@ class AnalyserViewModel extends Notifier<AnalyserState>
       (key, value) => MapEntry(key, List<SignalSample>.of(value)),
     );
     var observed = false;
+    // Keep one floor for the whole batch: eviction during this scan must not
+    // suppress other first-time APs from the same hardware scan.
+    final timestampFloor = _evictedTimestampFloor;
     for (final ap in snapshot.accessPoints) {
-      if (snapshot.fresh && ap.timestamp > (_lastTimestamp[ap.bssid] ?? 0)) {
+      if (snapshot.fresh &&
+          ap.timestamp > (_lastTimestamp[ap.bssid] ?? timestampFloor)) {
         _record(history, ap.bssid, now, ap.rssi);
         _lastTimestamp[ap.bssid] = ap.timestamp;
         observed = true;
@@ -148,74 +165,33 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     final samples = history.putIfAbsent(bssid, () => []);
     samples.add(SignalSample(at, rssi));
     if (samples.length > 60) samples.removeAt(0);
-    if (history.length > 256) history.remove(history.keys.first);
+    if (history.length > 256) {
+      final oldest = history.keys.first;
+      history.remove(oldest);
+      final evicted = _lastTimestamp.remove(oldest);
+      if (evicted != null && evicted > _evictedTimestampFloor) {
+        _evictedTimestampFloor = evicted;
+      }
+    }
   }
 
   Future<void> scan({bool requestPermission = true}) async {
     if (!ref.mounted || state.busy || state.paused || !_active) return;
     if (state.demo) {
-      _demoTick++;
-      final now = DateTime.now();
-      final points = demoAccessPoints
-          .map(
-            (ap) => AccessPoint(
-              ssid: ap.ssid,
-              bssid: ap.bssid,
-              rssi:
-                  ap.rssi +
-                  (math.sin(_demoTick * .6 + ap.frequency) * 3).round(),
-              frequency: ap.frequency,
-              centerFrequency: ap.centerFrequency,
-              width: ap.width,
-              security: ap.security,
-              connected: ap.connected,
-            ),
-          )
-          .toList();
-      final history = state.history.map(
-        (key, value) => MapEntry(key, List<SignalSample>.of(value)),
-      );
-      for (final ap in points) {
-        _record(history, ap.bssid, now, ap.rssi);
-      }
-      state = state.copyWith(
-        accessPoints: points,
-        history: history,
-        lastUpdated: now,
-        status: 'Simulated data • no hardware scan',
-      );
+      _scanDemo();
       return;
     }
     final epoch = _epoch;
     state = state.copyWith(busy: true, status: 'Scanning nearby networks…');
     try {
-      if (requestPermission && !state.permission) {
-        final allowed = await _wifi.requestPermission();
-        if (!ref.mounted || epoch != _epoch) return;
-        state = state.copyWith(permission: allowed);
-        if (!allowed) {
-          state = state.copyWith(busy: false);
-          await _snapshot();
-          return;
-        }
-      }
+      if (!await _ensurePermission(requestPermission, epoch)) return;
       final snapshot = await _wifi.scan();
       if (!ref.mounted || epoch != _epoch) return;
       _apply(snapshot);
       if (!snapshot.scanRequested) {
         state = state.copyWith(busy: false);
       } else if (state.busy) {
-        _deadline?.cancel();
-        _deadline = Timer(const Duration(seconds: 15), () async {
-          if (!ref.mounted || epoch != _epoch) return;
-          state = state.copyWith(busy: false);
-          await _snapshot();
-          if (ref.mounted && epoch == _epoch) {
-            state = state.copyWith(
-              status: 'No new scan yet. Showing cached results.',
-            );
-          }
-        });
+        _waitForScan(epoch);
       }
     } on PlatformException catch (e) {
       if (ref.mounted && epoch == _epoch) {
@@ -231,14 +207,102 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     }
   }
 
-  Future<void> setTheme(ThemeMode value) async {
-    state = state.copyWith(themeMode: value);
-    await _settings.saveTheme(value);
+  void _scanDemo() {
+    final now = DateTime.now();
+    final points = _demo.next();
+    final history = state.history.map(
+      (key, value) => MapEntry(key, List<SignalSample>.of(value)),
+    );
+    for (final ap in points) {
+      _record(history, ap.bssid, now, ap.rssi);
+    }
+    state = state.copyWith(
+      accessPoints: points,
+      history: history,
+      lastUpdated: now,
+      status: 'Simulated data • no hardware scan',
+    );
   }
 
-  Future<void> setMinimum(int value) async {
-    state = state.copyWith(minimumRssi: value);
-    await _settings.saveMinimum(value);
+  Future<bool> _ensurePermission(bool requestPermission, int epoch) async {
+    if (!requestPermission || state.permission) return _isCurrent(epoch);
+    final allowed = await _wifi.requestPermission();
+    if (!_isCurrent(epoch)) return false;
+    state = state.copyWith(permission: allowed);
+    if (allowed) return true;
+    state = state.copyWith(busy: false);
+    await _snapshot();
+    return false;
+  }
+
+  void _waitForScan(int epoch) {
+    _deadline?.cancel();
+    _deadline = Timer(const Duration(seconds: 15), () async {
+      if (!_isCurrent(epoch)) return;
+      state = state.copyWith(busy: false);
+      await _snapshot();
+      if (_isCurrent(epoch)) {
+        state = state.copyWith(
+          status: 'No new scan yet. Showing cached results.',
+        );
+      }
+    });
+  }
+
+  Future<void> setTheme(ThemeMode value) {
+    if (!ref.mounted) return Future.value();
+    final revision = ++_themeRevision;
+    state = state.copyWith(themeMode: value);
+    return _savePreference(
+      'theme',
+      () => revision == _themeRevision,
+      () => _settings.saveTheme(value),
+    );
+  }
+
+  /// Update slider feedback without writing storage on every drag event.
+  void updateMinimum(int value) {
+    if (!ref.mounted) return;
+    _minimumRevision++;
+    state = state.copyWith(minimumRssi: value.clamp(-95, -40));
+  }
+
+  Future<void> setMinimum(int value) {
+    if (!ref.mounted) return Future.value();
+    updateMinimum(value);
+    final revision = _minimumRevision;
+    final minimum = state.minimumRssi;
+    return _savePreference(
+      'signal threshold',
+      () => revision == _minimumRevision,
+      () => _settings.saveMinimum(minimum),
+    );
+  }
+
+  Future<void> _savePreference(
+    String field,
+    bool Function() isLatest,
+    Future<void> Function() write,
+  ) {
+    final next = _preferenceWrites.then((_) async {
+      if (!ref.mounted || !isLatest()) return;
+      try {
+        await write();
+        if (!ref.mounted || !isLatest()) return;
+        _preferenceErrors.remove(field);
+      } catch (_) {
+        if (!ref.mounted || !isLatest()) return;
+        _preferenceErrors[field] =
+            'Could not save $field. Choose it again to retry.';
+      }
+      final error = _preferenceErrors.values.join(' ');
+      state = state.copyWith(
+        preferencesError: error.isEmpty ? null : error,
+        clearPreferencesError: error.isEmpty,
+      );
+    });
+    _preferenceWrites = next;
+    return next;
   }
 
   void setBand(WifiBand value) {
@@ -257,6 +321,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     _epoch++;
     _deadline?.cancel();
     _lastTimestamp.clear();
+    _evictedTimestampFloor = 0;
     state = state.copyWith(
       demo: value,
       busy: false,

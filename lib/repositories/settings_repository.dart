@@ -31,11 +31,17 @@ class LocalSettingsRepository implements SettingsRepository {
 
   @override
   Future<void> saveTheme(ThemeMode mode) async {
-    await (await _prefs).setInt('theme', mode.index);
+    await _write('theme', mode.index);
   }
 
   @override
   Future<void> saveMinimum(int value) async {
-    await (await _prefs).setInt('minimumRssi', value);
+    await _write('minimumRssi', value);
+  }
+
+  Future<void> _write(String key, int value) async {
+    if (!await (await _prefs).setInt(key, value)) {
+      throw StateError('Could not persist $key');
+    }
   }
 }

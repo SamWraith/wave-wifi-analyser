@@ -20,6 +20,7 @@ class AnalyserState {
     this.wifiEnabled = false,
     this.status = 'Ready to scan',
     this.query = '',
+    this.preferencesError,
     this.themeMode = ThemeMode.system,
     this.band = WifiBand.ghz24,
     this.minimumRssi = -95,
@@ -34,6 +35,24 @@ class AnalyserState {
                MapEntry(key, List<SignalSample>.unmodifiable(value)),
          ),
        );
+  const AnalyserState._fromFrozen({
+    required this.demo,
+    this.busy = false,
+    this.paused = false,
+    this.permission = false,
+    this.locationEnabled = false,
+    this.wifiEnabled = false,
+    this.status = 'Ready to scan',
+    this.query = '',
+    this.preferencesError,
+    this.themeMode = ThemeMode.system,
+    this.band = WifiBand.ghz24,
+    this.minimumRssi = -95,
+    this.excludeConnected = true,
+    this.accessPoints = const [],
+    this.history = const {},
+    this.lastUpdated,
+  });
   final bool demo,
       busy,
       paused,
@@ -42,26 +61,13 @@ class AnalyserState {
       wifiEnabled,
       excludeConnected;
   final String status, query;
+  final String? preferencesError;
   final ThemeMode themeMode;
   final WifiBand band;
   final int minimumRssi;
   final List<AccessPoint> accessPoints;
   final Map<String, List<SignalSample>> history;
   final DateTime? lastUpdated;
-  List<AccessPoint> get bandPoints =>
-      accessPoints.where((ap) => ap.band == band).toList()
-        ..sort((a, b) => b.rssi.compareTo(a.rssi));
-  List<AccessPoint> get visiblePoints => bandPoints
-      .where(
-        (ap) =>
-            ap.rssi >= minimumRssi &&
-            ap.name.toLowerCase().contains(query.toLowerCase()),
-      )
-      .toList();
-  AccessPoint? get connected =>
-      accessPoints.where((ap) => ap.connected).firstOrNull;
-  List<ChannelRating> get ratings =>
-      rateChannels(accessPoints, band, excludeConnected: excludeConnected);
   AnalyserState copyWith({
     bool? demo,
     bool? busy,
@@ -72,6 +78,8 @@ class AnalyserState {
     bool? excludeConnected,
     String? status,
     String? query,
+    String? preferencesError,
+    bool clearPreferencesError = false,
     ThemeMode? themeMode,
     WifiBand? band,
     int? minimumRssi,
@@ -79,7 +87,7 @@ class AnalyserState {
     Map<String, List<SignalSample>>? history,
     DateTime? lastUpdated,
     bool clearLastUpdated = false,
-  }) => AnalyserState(
+  }) => AnalyserState._fromFrozen(
     demo: demo ?? this.demo,
     busy: busy ?? this.busy,
     paused: paused ?? this.paused,
@@ -89,26 +97,38 @@ class AnalyserState {
     excludeConnected: excludeConnected ?? this.excludeConnected,
     status: status ?? this.status,
     query: query ?? this.query,
+    preferencesError: clearPreferencesError
+        ? null
+        : preferencesError ?? this.preferencesError,
     themeMode: themeMode ?? this.themeMode,
     band: band ?? this.band,
     minimumRssi: minimumRssi ?? this.minimumRssi,
-    accessPoints: accessPoints ?? this.accessPoints,
-    history: history ?? this.history,
+    accessPoints: accessPoints == null
+        ? this.accessPoints
+        : List.unmodifiable(accessPoints),
+    history: history == null
+        ? this.history
+        : Map.unmodifiable(
+            history.map(
+              (key, value) =>
+                  MapEntry(key, List<SignalSample>.unmodifiable(value)),
+            ),
+          ),
     lastUpdated: clearLastUpdated ? null : lastUpdated ?? this.lastUpdated,
   );
 }
 
 @immutable
 class WifiSnapshot {
-  const WifiSnapshot({
+  WifiSnapshot({
     required this.permission,
     required this.locationEnabled,
     required this.wifiEnabled,
     required this.status,
-    required this.accessPoints,
+    required List<AccessPoint> accessPoints,
     this.fresh = false,
     this.scanRequested = false,
-  });
+  }) : accessPoints = List.unmodifiable(accessPoints);
   final bool permission, locationEnabled, wifiEnabled, fresh, scanRequested;
   final String status;
   final List<AccessPoint> accessPoints;

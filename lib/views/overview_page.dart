@@ -1,0 +1,155 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../viewmodels/analyser_view_model.dart';
+import '../widgets/wave_components.dart';
+import 'analyser_providers.dart';
+import '../widgets/connection_card.dart';
+import '../widgets/network_tile.dart';
+import 'chart_panel.dart';
+
+class OverviewPage extends ConsumerWidget {
+  const OverviewPage({super.key, required this.onViewNetworks});
+  final VoidCallback onViewNetworks;
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const OverviewSummary(),
+      const SizedBox(height: 22),
+      const ChartPanel(),
+      const SizedBox(height: 22),
+      ResponsivePair(
+        first: const NetworkInsights(),
+        second: NearbyNetworks(onViewAll: onViewNetworks),
+      ),
+    ],
+  );
+}
+
+class OverviewSummary extends ConsumerWidget {
+  const OverviewSummary({super.key});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ap = ref.watch(connectedPointProvider);
+    final demo = ref.watch(analyserProvider.select((state) => state.demo));
+    final band = ref.watch(analyserProvider.select((state) => state.band));
+    final count = ref.watch(
+      bandPointsProvider.select((points) => points.length),
+    );
+    final ratings = ref.watch(channelRatingsProvider);
+    return ResponsivePair(
+      breakpoint: 680,
+      firstFlex: 3,
+      secondFlex: 2,
+      spacing: 18,
+      first: ConnectionCard(ap: ap, demo: demo),
+      second: Column(
+        children: [
+          MetricCard(
+            label: 'NEARBY NETWORKS',
+            value: '$count',
+            note: 'On ${band.label}',
+            icon: Icons.radar_rounded,
+          ),
+          const SizedBox(height: 14),
+          MetricCard(
+            label: 'CLEAREST CANDIDATE',
+            value: count == 0 ? '—' : 'CH ${ratings.first.channel}',
+            note: 'Relative overlap estimate',
+            icon: Icons.auto_awesome_outlined,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class NearbyNetworks extends ConsumerWidget {
+  const NearbyNetworks({super.key, required this.onViewAll});
+  final VoidCallback onViewAll;
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final points = ref.watch(visiblePointsProvider);
+    return WavePanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeading(
+            title: 'Nearby networks',
+            subtitle: 'Strongest signals in this band',
+            trailing: TextButton(
+              onPressed: onViewAll,
+              child: const Text('View all'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (points.isEmpty)
+            const EmptyState(text: 'No networks in this band'),
+          ...points
+              .take(3)
+              .map((ap) => NetworkTile(key: ValueKey(ap.bssid), ap: ap)),
+        ],
+      ),
+    );
+  }
+}
+
+class NetworkInsights extends ConsumerWidget {
+  const NetworkInsights({super.key});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ap = ref.watch(connectedPointProvider);
+    final points = ref.watch(bandPointsProvider);
+    final ratings = ref.watch(channelRatingsProvider);
+    final open = points
+        .where((a) => a.security == 'Open' || a.security == 'WEP')
+        .length;
+    return WavePanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeading(
+            title: 'Network insights',
+            subtitle: 'Local rules. Clear next steps.',
+            trailing: Icon(
+              Icons.auto_awesome_outlined,
+              color: Theme.of(context).colorScheme.primary,
+              size: 21,
+            ),
+          ),
+          const SizedBox(height: 20),
+          InsightTile(
+            icon: Icons.signal_cellular_alt_rounded,
+            title: ap == null
+                ? 'No connected AP identified'
+                : '${ap.quality} signal',
+            text: ap == null
+                ? 'Scan on Android while connected to WiFi.'
+                : ap.rssi < -70
+                ? 'Move closer to your access point and compare signal history.'
+                : 'Signal looks healthy at your current location.',
+          ),
+          const SizedBox(height: 18),
+          InsightTile(
+            icon: Icons.layers_outlined,
+            title: 'Channel planning',
+            text: points.isEmpty
+                ? 'Run a scan before comparing channels.'
+                : 'Channel ${ratings.first.channel} has lowest estimated overlap among shown candidates. Verify your router supports it.',
+          ),
+          const SizedBox(height: 18),
+          InsightTile(
+            icon: Icons.shield_outlined,
+            title: open > 0
+                ? '$open open or legacy networks'
+                : 'Security check',
+            text: open > 0
+                ? 'Open and WEP networks deserve caution. Prefer WPA2 or WPA3.'
+                : 'Use WPA2 or WPA3 on your router. This checks advertised security only.',
+          ),
+        ],
+      ),
+    );
+  }
+}

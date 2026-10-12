@@ -26,18 +26,17 @@ class AndroidWifiRepository implements WifiRepository {
   bool get supported =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
   @override
-  Stream<WifiSnapshot> get scanResults => _events.receiveBroadcastStream().map(
-    (value) => WifiSnapshot.fromMap(Map<dynamic, dynamic>.from(value as Map)),
-  );
+  Stream<WifiSnapshot> get scanResults =>
+      _events.receiveBroadcastStream().map(decodeSnapshot);
   Future<WifiSnapshot> _read(String method) async {
-    final result = await _native.invokeMapMethod<dynamic, dynamic>(method);
+    final result = await _native.invokeMethod<Object?>(method);
     if (result == null) {
       throw PlatformException(
         code: 'empty_snapshot',
         message: 'Android returned no WiFi state',
       );
     }
-    return WifiSnapshot.fromMap(result);
+    return decodeSnapshot(result);
   }
 
   @override
@@ -49,4 +48,21 @@ class AndroidWifiRepository implements WifiRepository {
       await _native.invokeMethod<bool>('requestPermission') ?? false;
   @override
   Future<void> openSettings() => _native.invokeMethod<void>('openSettings');
+}
+
+/// Keep malformed native payloads inside the repository error boundary.
+WifiSnapshot decodeSnapshot(Object? value) {
+  try {
+    return WifiSnapshot.fromMap(Map<dynamic, dynamic>.from(value as Map));
+  } on TypeError {
+    throw PlatformException(
+      code: 'invalid_snapshot',
+      message: 'Android returned malformed WiFi state',
+    );
+  } on FormatException {
+    throw PlatformException(
+      code: 'invalid_snapshot',
+      message: 'Android returned malformed WiFi state',
+    );
+  }
 }

@@ -45,6 +45,18 @@ void main() {
         await tester.tap(find.text('Settings').last);
         await tester.pumpAndSettle();
         expect(find.text('Appearance'), findsOneWidget);
+        await tester.tap(find.text('Networks').last);
+        await tester.pumpAndSettle();
+        expect(
+          tester.widget<TextField>(find.byType(TextField)).controller!.text,
+          'Studio',
+        );
+        expect(find.text('Neighbourhood'), findsNothing);
+        await tester.enterText(find.byType(TextField), '');
+        await tester.pump();
+        expect(find.text('Neighbourhood'), findsOneWidget);
+        await tester.tap(find.text('Settings').last);
+        await tester.pumpAndSettle();
         expect(
           ProviderScope.containerOf(tester.element(find.byType(WaveApp)))
               .read(analyserProvider)
