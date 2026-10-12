@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/access_point.dart';
 import '../viewmodels/analyser_view_model.dart';
 import '../widgets/wave_components.dart';
+import '../widgets/wave_motion.dart';
+import '../widgets/scan_activity.dart';
 import 'analyser_providers.dart';
 
 const pages = ['Overview', 'Spectrum', 'Networks', 'Channels', 'Settings'];
@@ -119,19 +121,24 @@ class _SidebarDestinations extends StatelessWidget {
         pages.length,
         (i) => Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: ListTile(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            selected: selected == i,
-            selectedTileColor: Theme.of(context).colorScheme.primary
-                .withValues(alpha: .12),
-            leading: Icon(pageIcons[i], size: 21),
-            title: Text(
-              pages[i],
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-            ),
+          child: WaveInteractive(
             onTap: () => onSelected(i),
+            child: ListTile(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              selected: selected == i,
+              selectedTileColor: Theme.of(context).colorScheme.primary
+                  .withValues(alpha: .12),
+              leading: Icon(pageIcons[i], size: 21),
+              title: Text(
+                pages[i],
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -283,13 +290,7 @@ class ScanStatusBar extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            demo ? Icons.science_outlined : Icons.sensors_rounded,
-            size: 18,
-            color: demo
-                ? const Color(0xFFCA914C)
-                : Theme.of(context).colorScheme.primary,
-          ),
+          const ScanActivity(),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

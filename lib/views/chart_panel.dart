@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../viewmodels/analyser_view_model.dart';
 import '../widgets/wave_components.dart';
+import '../widgets/wave_motion.dart';
 import 'analyser_providers.dart';
 import '../widgets/signal_charts.dart';
 
@@ -44,11 +45,14 @@ class _ChartPanelState extends ConsumerState<ChartPanel> {
               text: 'No scan results yet. Scan nearby networks or enable demo in Settings.',
             )
           else ...[
-            SignalChart(
-              points: points,
-              band: band,
-              history: history,
-              time: timeGraph,
+            WaveReveal(
+              key: ValueKey((timeGraph, band)),
+              child: SignalChart(
+                points: points,
+                band: band,
+                history: history,
+                time: timeGraph,
+              ),
             ),
             const SizedBox(height: 12),
             Wrap(

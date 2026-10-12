@@ -16,6 +16,10 @@ Calculate ratings, normalization and filtered/sorted lists once per relevant inp
 
 Custom painters should share one axis definition, separate grid/data/label responsibilities, and implement shouldRepaint using all rendered inputs including theme colors. Equivalent newly allocated lists must not cause unconditional repaint; changed history/frequency/width must still repaint. Profile before adding repaint boundaries or claiming speed gains.
 
+## Motion and interaction
+
+Keep decorative motion finite and tied to user intent or fresh data. Respect reduced-motion and accessible-navigation preferences; preserve widget/state identity when those preferences change. Keep animation state in presentation widgets, retain keyboard/focus semantics, and dispose owned controllers. Animate exact measured values with a transition rather than fabricating intermediate scan samples. Test cancellation and accessibility changes for shared interaction components.
+
 ## State, async work and failures
 
 Public immutable models must defensively freeze collections, including nested history. Preserve unchanged frozen collections on copyWith. Native payload errors become typed recoverable repository errors, not arbitrary cast failures leaking into UI callbacks.

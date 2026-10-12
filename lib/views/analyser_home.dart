@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/wave_motion.dart';
 import 'analyser_navigation.dart';
 import 'channels_page.dart';
 import 'networks_page.dart';
@@ -15,7 +16,20 @@ class AnalyserHome extends StatefulWidget {
 
 class _AnalyserHomeState extends State<AnalyserHome> {
   int selected = 0;
-  void _select(int value) => setState(() => selected = value);
+  final _scrollController = ScrollController();
+
+  void _select(int value) {
+    if (value == selected) return;
+    if (_scrollController.hasClients) _scrollController.jumpTo(0);
+    setState(() => selected = value);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width >= 950;
@@ -29,6 +43,7 @@ class _AnalyserHomeState extends State<AnalyserHome> {
                 children: [
                   Expanded(
                     child: SingleChildScrollView(
+                      controller: _scrollController,
                       padding: EdgeInsets.all(wide ? 32 : 20),
                       child: Center(
                         child: ConstrainedBox(
@@ -44,15 +59,18 @@ class _AnalyserHomeState extends State<AnalyserHome> {
                                 const BandSelector(),
                                 const SizedBox(height: 24),
                               ],
-                              switch (selected) {
-                                0 => OverviewPage(
-                                  onViewNetworks: () => _select(2),
-                                ),
-                                1 => const SpectrumPage(),
-                                2 => const NetworksPage(),
-                                3 => const ChannelsPage(),
-                                _ => const SettingsPage(),
-                              },
+                              WaveReveal(
+                                key: ValueKey(selected),
+                                child: switch (selected) {
+                                  0 => OverviewPage(
+                                    onViewNetworks: () => _select(2),
+                                  ),
+                                  1 => const SpectrumPage(),
+                                  2 => const NetworksPage(),
+                                  3 => const ChannelsPage(),
+                                  _ => const SettingsPage(),
+                                },
+                              ),
                               const SizedBox(height: 24),
                               Text(
                                 'WAVE  /  WIFI, MADE VISIBLE',

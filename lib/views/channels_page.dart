@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/access_point.dart';
 import '../viewmodels/analyser_view_model.dart';
 import '../widgets/wave_components.dart';
+import '../widgets/wave_motion.dart';
 import 'analyser_providers.dart';
 
 class ChannelsPage extends ConsumerWidget {
@@ -89,13 +90,19 @@ class ChannelRatingTile extends StatelessWidget {
         Expanded(
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: amount,
-              minHeight: 9,
-              color: amount < .3
-                  ? const Color(0xFF2CC9A8)
-                  : Theme.of(context).colorScheme.primary,
-              backgroundColor: Theme.of(context).colorScheme.outlineVariant,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: amount),
+              duration: WaveMotion.duration(context, 360),
+              curve: WaveMotion.curve,
+              builder: (context, value, _) => LinearProgressIndicator(
+                value: value,
+                semanticsValue: '${(amount * 100).round()}%',
+                minHeight: 9,
+                color: amount < .3
+                    ? const Color(0xFF2CC9A8)
+                    : Theme.of(context).colorScheme.primary,
+                backgroundColor: Theme.of(context).colorScheme.outlineVariant,
+              ),
             ),
           ),
         ),

@@ -25,6 +25,7 @@ For desktop exploration: `flutter run -d macos` or `flutter run -d chrome`. Thes
 - Android permission, Location-off, WiFi-off, throttled/cached, and empty states.
 - Foreground-only scan requests every 35 seconds; fresh broadcasts update data.
 - Explicit demo mode for exploring UI without Android hardware.
+- Brief page/chart reveals, animated signal values and channel bars, fresh-scan pulses, hover/focus/press feedback, and smooth theme/detail-sheet transitions. Motion respects device accessibility preferences.
 
 Device discovery, speed tests, aliases, AI/cloud diagnostics, widgets, and router administration remain future work. iOS/macOS/web native WiFi scanning is not implemented. Flutter builds for those targets use demo mode; they cannot scan nearby networks yet.
 
@@ -37,7 +38,7 @@ Device discovery, speed tests, aliases, AI/cloud diagnostics, widgets, and route
 - `lib/repositories/settings_repository.dart`: persistence interface and local preferences implementation.
 - `lib/widgets/signal_charts.dart`: canvas-based channel and history plots.
 - `lib/main.dart` / `lib/app.dart`: bootstrap `ProviderScope` and reactive app theme.
-- `lib/views/`: 93-line responsive shell, cohesive pages, selective consumers and derived presentation providers.
+- `lib/views/`: responsive shell, cohesive pages, selective consumers and derived presentation providers.
 - `lib/widgets/`: reusable panels, headings, metrics, network tiles/detail sheet, connection card and focused chart painters.
 - `lib/repositories/demo_wifi_source.dart`: deterministic simulated scans, separate from hardware and domain models.
 - `android/app/src/main/kotlin/com/samirpandey/wifi_analyser/MainActivity.kt`: native `WifiManager` integration.
@@ -72,6 +73,6 @@ See `research/REVERSE_ENGINEERING.md` for APK identity, REA Evidence IDs, verifi
 
 Installable artifact: `dist/wave-wifi-debug.apk` (regular app entrypoint, preserved separately from integration-test builds).
 
-Verified: `flutter analyze` clean, 28 unit/widget tests passed, Android bridge integration test passed on isolated `Wave_WiFi_Test` emulator, debug APK and web builds succeeded. Physical RF validation remains open.
+Current motion checks: `flutter analyze` clean, 33 unit/widget tests passed (including phone/desktop in both themes, keyboard activation, cancelled presses and accessibility changes), debug APK and web builds succeeded. Independent architecture review completed with its state-reset finding fixed and regression-tested. Android bridge integration previously passed on isolated `Wave_WiFi_Test` emulator; native code is unchanged in this motion update. Physical RF validation remains open.
 
 APK output: `build/app/outputs/flutter-apk/app-debug.apk`. Debug-signed only; production signing is not configured.

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'viewmodels/analyser_view_model.dart';
 import 'views/analyser_home.dart';
 import 'views/app_theme.dart';
+import 'widgets/wave_motion.dart';
 
 class WaveApp extends ConsumerWidget {
   const WaveApp({super.key});
@@ -16,6 +17,8 @@ class WaveApp extends ConsumerWidget {
       title: 'wave - wifi analyser',
       debugShowCheckedModeBanner: false,
       themeMode: themeMode,
+      themeAnimationDuration: WaveMotion.duration(context, 360),
+      themeAnimationCurve: Curves.easeInOutCubic,
       theme: buildAppTheme(Brightness.light),
       darkTheme: buildAppTheme(Brightness.dark),
       home: const AnalyserHome(),

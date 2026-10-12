@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'wave_motion.dart';
+
 class WavePanel extends StatelessWidget {
   const WavePanel({super.key, required this.child, this.padding});
   final Widget child;
@@ -102,7 +104,7 @@ class HeroStat extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(
+      WaveValue(
         value,
         style: const TextStyle(
           color: Colors.white,
@@ -155,7 +157,7 @@ class MetricCard extends StatelessWidget {
                     ?.copyWith(fontSize: 9, letterSpacing: 1.2),
               ),
               const SizedBox(height: 4),
-              Text(value, style: Theme.of(context).textTheme.titleLarge),
+              WaveValue(value, style: Theme.of(context).textTheme.titleLarge),
               Text(
                 note,
                 style: Theme.of(context).textTheme.bodySmall

@@ -3,12 +3,13 @@ import 'package:flutter/services.dart';
 
 import '../models/access_point.dart';
 import 'signal_charts.dart';
+import 'wave_motion.dart';
 
 class NetworkTile extends StatelessWidget {
   const NetworkTile({super.key, required this.ap});
   final AccessPoint ap;
   @override
-  Widget build(BuildContext context) => InkWell(
+  Widget build(BuildContext context) => WaveInteractive(
     borderRadius: BorderRadius.circular(12),
     onTap: () => showAccessPointDetails(context, ap),
     child: Padding(
@@ -54,7 +55,7 @@ class NetworkTile extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
+              WaveValue(
                 '${ap.rssi}',
                 style: const TextStyle(
                   fontSize: 18,
@@ -85,6 +86,10 @@ Future<void> showAccessPointDetails(BuildContext context, AccessPoint ap) =>
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
+      sheetAnimationStyle: AnimationStyle(
+        duration: WaveMotion.duration(context, 320),
+        reverseDuration: WaveMotion.duration(context, 220),
+      ),
       builder: (context) => AccessPointDetailsSheet(ap: ap),
     );
 
