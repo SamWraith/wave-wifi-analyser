@@ -1,3 +1,6 @@
+import 'dart:ui' as ui;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wifi_analyser/models/access_point.dart';
@@ -45,6 +48,7 @@ void main() {
       ThemeData? theme,
       bool time = false,
       Map<String, List<SignalSample>>? history,
+      Set<String> hiddenBssids = const {},
     }) async {
       await tester.pumpWidget(
         MaterialApp(
@@ -55,6 +59,7 @@ void main() {
               band: band,
               time: time,
               history: history,
+              hiddenBssids: hiddenBssids,
             ),
           ),
         ),
@@ -90,6 +95,18 @@ void main() {
     );
     expect((await render(time: true)).shouldRepaint(original), isTrue);
 
+    final hidden = {point().bssid};
+    final hiddenPainter = await render(hiddenBssids: hidden);
+    expect(hiddenPainter.shouldRepaint(original), isTrue);
+    expect(
+      (await render(hiddenBssids: {point().bssid}))
+          .shouldRepaint(hiddenPainter),
+      isFalse,
+    );
+    // Caller mutation cannot change the painter's frozen selection.
+    hidden.clear();
+    expect((await render()).shouldRepaint(hiddenPainter), isTrue);
+
     final at = DateTime(2026);
     final samples = [SignalSample(at, -50)];
     final history = {point().bssid: samples};
@@ -121,5 +138,60 @@ void main() {
       },
     );
     expect(changedTime.shouldRepaint(previous), isTrue);
+  });
+  testWidgets('hidden curves disappear from spectrum and history pixels', (
+    tester,
+  ) async {
+    Future<List<int>> pixels({
+      required bool time,
+      required bool hidden,
+      bool empty = false,
+    }) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SignalChart(
+            points: empty ? [] : [point()],
+            band: WifiBand.ghz5,
+            time: time,
+            hiddenBssids: hidden ? {point().bssid} : {},
+            history: {
+              point().bssid: [SignalSample(DateTime(2026), -50)],
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final paint = tester
+          .widget<CustomPaint>(
+            find.descendant(
+              of: find.byType(SignalChart),
+              matching: find.byType(CustomPaint),
+            ),
+          )
+          .painter!;
+      return (await tester.runAsync(() async {
+        final recorder = ui.PictureRecorder();
+        paint.paint(Canvas(recorder), const Size(300, 270));
+        final picture = recorder.endRecording();
+        final image = await picture.toImage(300, 270);
+        try {
+          final data = (await image.toByteData(
+            format: ui.ImageByteFormat.rawRgba,
+          ))!;
+          return data.buffer.asUint8List().toList();
+        } finally {
+          image.dispose();
+          picture.dispose();
+        }
+      }))!;
+    }
+
+    for (final time in [false, true]) {
+      final visible = await pixels(time: time, hidden: false);
+      final hidden = await pixels(time: time, hidden: true);
+      final empty = await pixels(time: time, hidden: false, empty: true);
+      expect(listEquals(visible, hidden), isFalse);
+      expect(listEquals(hidden, empty), isTrue);
+    }
   });
 }

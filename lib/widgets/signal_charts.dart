@@ -26,11 +26,13 @@ class SignalChart extends StatelessWidget {
     required this.band,
     this.history,
     this.time = false,
+    this.hiddenBssids = const {},
   });
   final List<AccessPoint> points;
   final WifiBand band;
   final Map<String, List<SignalSample>>? history;
   final bool time;
+  final Set<String> hiddenBssids;
   @override
   Widget build(BuildContext context) => SizedBox(
     height: 270,
@@ -43,6 +45,7 @@ class SignalChart extends StatelessWidget {
         time,
         Theme.of(context).colorScheme.onSurfaceVariant,
         Theme.of(context).colorScheme.outlineVariant,
+        hiddenBssids,
       ),
     ),
   );
@@ -56,7 +59,9 @@ class _SignalPainter extends CustomPainter {
     this.time,
     this.labelColor,
     this.gridColor,
-  ) : points = List.unmodifiable(points),
+    Set<String> hiddenBssids,
+  ) : hiddenBssids = Set.unmodifiable(hiddenBssids),
+      points = List.unmodifiable(points),
       history = Map.unmodifiable({
         for (final point in points)
           point.bssid: List<SignalSample>.unmodifiable(
@@ -71,6 +76,7 @@ class _SignalPainter extends CustomPainter {
   final bool time;
   final Color labelColor, gridColor;
   final SpectrumAxis axis;
+  final Set<String> hiddenBssids;
 
   void _label(Canvas canvas, String value, Offset at, {double size = 10}) {
     final text = TextPainter(
@@ -129,6 +135,7 @@ class _SignalPainter extends CustomPainter {
         .reduce(math.min);
     final span = math.max(1000, newest - oldest);
     for (final point in points) {
+      if (hiddenBssids.contains(point.bssid)) continue;
       final samples = history[point.bssid]!;
       final path = Path();
       for (var i = 0; i < samples.length; i++) {
@@ -164,6 +171,7 @@ class _SignalPainter extends CustomPainter {
     double x(num frequency) =>
         area.left + axis.fraction(frequency) * area.width;
     for (final point in points.reversed) {
+      if (hiddenBssids.contains(point.bssid)) continue;
       // Illustrative envelope; bandwidth and center derive from the scan.
       final width = math.max(point.width, 20);
       final center = x(point.spectralCenter);
@@ -225,6 +233,7 @@ class _SignalPainter extends CustomPainter {
       time != oldDelegate.time ||
       labelColor != oldDelegate.labelColor ||
       gridColor != oldDelegate.gridColor ||
+      !setEquals(hiddenBssids, oldDelegate.hiddenBssids) ||
       !listEquals(_pointContent, oldDelegate._pointContent) ||
       (time && !listEquals(_historyContent, oldDelegate._historyContent));
 }
