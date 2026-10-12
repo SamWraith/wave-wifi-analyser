@@ -20,6 +20,8 @@ Custom painters should share one axis definition, separate grid/data/label respo
 
 Keep decorative motion finite and tied to user intent or fresh data. Respect reduced-motion and accessible-navigation preferences; preserve widget/state identity when those preferences change. Keep animation state in presentation widgets, retain keyboard/focus semantics, and dispose owned controllers. Animate exact measured values with a transition rather than fabricating intermediate scan samples. Test cancellation and accessibility changes for shared interaction components.
 
+For Rive, await runtime initialization before accessing factories. The owning illustration disposes its painter, artboard and file, ignores late loads, and pauses background advancement. Verify bundled artboard/timeline names against the real asset and test actual runtime playback when changing integration; mocked illustrations only validate the surrounding flow.
+
 ## State, async work and failures
 
 Public immutable models must defensively freeze collections, including nested history. Preserve unchanged frozen collections on copyWith. Native payload errors become typed recoverable repository errors, not arbitrary cast failures leaking into UI callbacks.

@@ -94,13 +94,16 @@ class _WaveInteractiveState extends State<WaveInteractive> {
         color: Theme.of(context).colorScheme.primary
             .withValues(alpha: _hovered || _focused ? .07 : 0),
       ),
-      child: InkWell(
-        borderRadius: widget.borderRadius,
-        onTap: widget.onTap,
-        onHighlightChanged: (value) => setState(() => _pressed = value),
-        onHover: (value) => setState(() => _hovered = value),
-        onFocusChange: (value) => setState(() => _focused = value),
-        child: widget.child,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: widget.borderRadius,
+          onTap: widget.onTap,
+          onHighlightChanged: (value) => setState(() => _pressed = value),
+          onHover: (value) => setState(() => _hovered = value),
+          onFocusChange: (value) => setState(() => _focused = value),
+          child: widget.child,
+        ),
       ),
     ),
   );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wifi_analyser/app.dart';
@@ -10,7 +11,10 @@ void main() {
   for (final size in [const Size(390, 844), const Size(1440, 1000)]) {
     for (final mode in [ThemeMode.light, ThemeMode.dark]) {
       testWidgets('navigation and details at $size in $mode', (tester) async {
-        SharedPreferences.setMockInitialValues({'theme': mode.index});
+        SharedPreferences.setMockInitialValues({
+          'theme': mode.index,
+          'onboardingComplete': true,
+        });
         tester.view.physicalSize = size;
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);
@@ -30,6 +34,16 @@ void main() {
           greaterThan(220),
         );
         expect(tester.takeException(), isNull);
+        if (size.width >= 950) {
+          final mouse = await tester.createGesture(
+            kind: PointerDeviceKind.mouse,
+          );
+          await mouse.addPointer(location: Offset.zero);
+          await mouse.moveTo(tester.getCenter(find.text('Overview').first));
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+          await mouse.removePointer();
+        }
         await tester.tap(find.text('Networks').last);
         await tester.pumpAndSettle();
         await tester.enterText(find.byType(TextField), 'Studio');

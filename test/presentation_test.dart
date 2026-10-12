@@ -14,7 +14,7 @@ import 'package:wifi_analyser/widgets/network_tile.dart';
 
 void main() {
   Future<ProviderContainer> start(WidgetTester tester) async {
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({'onboardingComplete': true});
     tester.view.physicalSize = const Size(1440, 1000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);

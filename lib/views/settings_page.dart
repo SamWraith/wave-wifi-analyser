@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../viewmodels/analyser_view_model.dart';
 import '../widgets/wave_components.dart';
+import 'onboarding_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -175,6 +176,17 @@ class AboutCard extends StatelessWidget {
         Text(
           'Android supports live nearby-network scans. iOS, macOS and web currently support demo mode. Precise location permission and Location services are required by Android WiFi scanning APIs. No location coordinates are collected.',
           style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: 16),
+        OutlinedButton.icon(
+          onPressed: () => Navigator.of(context).push<void>(
+            MaterialPageRoute(
+              builder: (context) =>
+                  OnboardingPage(onFinished: () => Navigator.of(context).pop()),
+            ),
+          ),
+          icon: const Icon(Icons.auto_awesome_rounded, size: 18),
+          label: const Text('Replay welcome'),
         ),
         const SizedBox(height: 12),
         Text(

@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wifi_analyser/app.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wifi_analyser/viewmodels/analyser_view_model.dart';
@@ -19,6 +20,10 @@ void main() {
     expect(snapshot['locationEnabled'], isA<bool>());
     expect(snapshot['accessPoints'], isA<List>());
 
+    await (await SharedPreferences.getInstance()).setBool(
+      'onboardingComplete',
+      true,
+    );
     await tester.pumpWidget(const ProviderScope(child: WaveApp()));
     await tester.pumpAndSettle();
     expect(find.text('Know your WiFi.'), findsOneWidget);
