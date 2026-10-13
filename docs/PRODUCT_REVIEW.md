@@ -28,6 +28,13 @@ ranking uses a fixed candidate list and an overlap heuristic. Sources reviewed:
 `lib/views/overview_page.dart`, `lib/views/channels_page.dart`,
 `lib/views/settings_page.dart`, `lib/widgets/scan_activity.dart`, and legend UI.
 
+## Implementation follow-up
+
+The user subsequently approved ranks 1 and 2. Both are implemented in the
+2026-10-13 follow-up; see [freshness and guidance verification](FRESHNESS_AND_GUIDANCE.md).
+The original ranking and hypotheses below remain historical recommendations.
+Ranks 3–6 remain proposed, outside this slice.
+
 ## Ranked feature recommendations
 
 Effort is relative engineering scope: small (focused presentation/state), medium

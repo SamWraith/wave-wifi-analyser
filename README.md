@@ -26,6 +26,15 @@ For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrom
 - Visible last-fresh-result age, pending/cached/paused labels and separate simulated-update age. Older observations are marked after two minutes; presentation clocks never add history or promise a next scan.
 - Clearly labelled demo mode on every target, with simulated updates every 3 seconds. Backgrounding or pausing stops automatic updates.
 
+### Guided Improve my WiFi
+
+- Overview opens an on-device guide for weak signal or crowded channel.
+- Captures a fresh connected-AP baseline, shows RSSI/band/channel/width and relative overlap evidence, suggests one action, then requests a recheck.
+- Compares only newer observations of the same BSSID. Cached/duplicate results cannot complete a recheck; changing access points requires a new check.
+- Demo, paused, missing-connected-AP, empty and older-than-two-minute data explain why a live comparison cannot start. Scan recovery controls remain available inside the guide.
+- Uses the connected band and full scan regardless of display filters. Guidance does not diagnose interference, ISP trouble or router failure, measure speed, or configure routers.
+- Baselines exist only while the guide is open; these are single-observation checks, not saved sessions or proof of lasting improvement.
+
 ### Spectrum, signal history and interactive legends
 
 - Channel landscape showing illustrative signal envelopes from reported frequency, channel width and received power.
@@ -87,12 +96,15 @@ For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrom
 
 No location coordinates are collected. Distance is a free-space estimate and can be inaccurate indoors; chart envelopes are illustrative rather than RF spectrum measurements. Local channel recommendations do not configure routers.
 
-Saved measurement sessions, device discovery, speed tests, network aliases, AI/cloud diagnostics, home-screen widgets and router administration are not included. Potential additions are recommendations, not committed scope; see the [product manager review](docs/PRODUCT_REVIEW.md).
+Saved measurement sessions, device discovery, speed tests, network aliases, AI/cloud diagnostics, home-screen widgets and router administration are not included. Remaining additions are recommendations, not committed scope; see the [product manager review](docs/PRODUCT_REVIEW.md).
 
 ## Architecture: MVVM + Riverpod 3.4.3
 
 - `lib/models/access_point.dart`: scan model, frequency/channel conversion, distance, overlap heuristic.
 - `lib/models/analyser_state.dart`: immutable view state and typed native snapshots.
+- `lib/models/scan_freshness.dart` / `wifi_guidance.dart`: elapsed-age rules and offline evidence/guidance.
+- `lib/viewmodels/wifi_guidance_view_model.dart`: ephemeral same-AP baseline/recheck workflow.
+- `lib/views/wifi_guidance_sheet.dart`: scrollable guide using shared scan recovery controls.
 - `lib/viewmodels/analyser_view_model.dart`: Riverpod `NotifierProvider`, lifecycle, scan orchestration, preferences and history.
 - `lib/repositories/wifi_repository.dart`: typed Android MethodChannel/EventChannel boundary.
 - `lib/repositories/settings_repository.dart`: persistence interface and local preferences implementation.

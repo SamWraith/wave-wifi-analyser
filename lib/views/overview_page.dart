@@ -7,6 +7,7 @@ import 'analyser_providers.dart';
 import '../widgets/connection_card.dart';
 import '../widgets/network_tile.dart';
 import 'chart_panel.dart';
+import 'wifi_guidance_sheet.dart';
 
 class OverviewPage extends ConsumerWidget {
   const OverviewPage({super.key, required this.onViewNetworks});
@@ -16,6 +17,12 @@ class OverviewPage extends ConsumerWidget {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       const OverviewSummary(),
+      const SizedBox(height: 16),
+      OutlinedButton.icon(
+        onPressed: () => showWifiGuidance(context),
+        icon: const Icon(Icons.wifi_find_rounded),
+        label: const Text('Improve my WiFi'),
+      ),
       const SizedBox(height: 22),
       const ChartPanel(compactLegend: true),
       const SizedBox(height: 22),

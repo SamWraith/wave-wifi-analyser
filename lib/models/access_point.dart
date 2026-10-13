@@ -94,16 +94,12 @@ List<ChannelRating> rateChannels(
             ? 5000
             : 5950) +
         ch * 5;
-    var score = 0.0;
-    for (final ap in aps.where(
-      (a) => a.band == band && !(excludeConnected && a.connected),
-    )) {
-      final overlap = math.max(
-        0.0,
-        1 - (freq - ap.spectralCenter).abs() / (ap.width / 2 + 10),
-      );
-      score += overlap * math.pow(10, (ap.rssi + 60) / 10);
-    }
+    final score = estimateChannelOverlap(
+      aps,
+      band,
+      freq,
+      excludeConnected: excludeConnected,
+    );
     return ChannelRating(ch, freq, score);
   }).toList();
   ratings.sort((a, b) {
@@ -111,4 +107,24 @@ List<ChannelRating> rateChannels(
     return c != 0 ? c : a.channel.compareTo(b.channel);
   });
   return ratings;
+}
+
+/// Width-aware relative overlap, not measured noise or throughput.
+double estimateChannelOverlap(
+  List<AccessPoint> aps,
+  WifiBand band,
+  int frequency, {
+  bool excludeConnected = true,
+}) {
+  var score = 0.0;
+  for (final ap in aps.where(
+    (a) => a.band == band && !(excludeConnected && a.connected),
+  )) {
+    final overlap = math.max(
+      0.0,
+      1 - (frequency - ap.spectralCenter).abs() / (ap.width / 2 + 10),
+    );
+    score += overlap * math.pow(10, (ap.rssi + 60) / 10);
+  }
+  return score;
 }
