@@ -52,7 +52,7 @@ For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrom
 - Search by network name, strongest-signal-first ordering and a display-only minimum-signal filter.
 - Hidden-SSID entries, connected/nearby identification and access-point detail sheets.
 - Details include BSSID, signal/quality, frequency, channel/band, width, advertised security and approximate distance.
-- Selectable detail values and Copy MAC address with confirmation feedback.
+- Selectable detail values adapt to narrow screens and large text; Copy MAC address gives confirmation feedback.
 - Search text stays synchronized when navigating between screens.
 
 ### Channel planning
@@ -74,7 +74,7 @@ For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrom
 - System, light and dark themes with saved theme preference.
 - Circular theme reveal growing from the tapped header toggle or Settings theme control, retaining navigation, search and focus state.
 - Finite page/chart reveals, animated exact signal values, channel bars, fresh-scan pulses and detail-sheet transitions.
-- Mobile selection/impact haptics for supported actions, plus hover/focus/press feedback and accessible standard controls.
+- Mobile selection/impact haptics for supported actions, including chart-mode changes, plus hover/focus/press feedback and accessible standard controls. Shared detail/troubleshooting sheet motion honors reduced-motion and accessible-navigation preferences.
 - Reduced-motion/accessibility preferences honored by custom motion; stable ordinary scan-status space and onboarding copy reduce unintended layout shifts.
 - Android requests the highest advertised refresh mode at the current resolution; iOS ProMotion opt-in is enabled. Sampled theme/Rive motion reached approximately 120 Hz active cadence with touch activity on the tested phone. Constant 120 fps is not qualified; see [measured performance and limits](docs/MOTION_VERIFICATION.md).
 
@@ -96,7 +96,7 @@ For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrom
 
 No location coordinates are collected. Distance is a free-space estimate and can be inaccurate indoors; chart envelopes are illustrative rather than RF spectrum measurements. Local channel recommendations do not configure routers.
 
-Saved measurement sessions, device discovery, speed tests, network aliases, AI/cloud diagnostics, home-screen widgets and router administration are not included. Remaining additions are recommendations, not committed scope; see the [product manager review](docs/PRODUCT_REVIEW.md).
+Saved measurement sessions, device discovery, speed tests, network aliases, AI/cloud diagnostics, home-screen widgets and router administration are not included. Remaining additions are recommendations, not committed scope; see the [product manager review](docs/PRODUCT_REVIEW.md). User-requested Overview-to-Spectrum navigation, focused charts and touch axis inspection are planned in the [roadmap](docs/ROADMAP.md).
 
 ## Architecture: MVVM + Riverpod 3.4.3
 
@@ -126,6 +126,8 @@ Graphs use reported center frequency for wide channels when available. Envelopes
 Preference edits survive delayed loading; serialized saves show recoverable errors separately from scan status. Signal sliders preview immediately and persist on release. Search text stays synchronized across navigation. Shared filtering/rating providers avoid recomputation for unrelated preferences, and equivalent chart content skips repaint.
 
 See [original review](docs/ARCHITECTURE_REVIEW.md) and [completed fixes](docs/ARCHITECTURE_REVIEW_FOLLOWUP.md) for architecture evidence.
+
+See [premium interaction review](docs/PREMIUM_REVIEW.md) for reviewed polish, fixes and verification.
 
 See [motion and display refresh](docs/MOTION_AND_REFRESH.md) for native verification and physical-device 120 fps qualification, and [verification evidence](docs/MOTION_VERIFICATION.md) for completed checks and measured limits. Android requests maximum refresh at the current resolution; iOS enables ProMotion.
 

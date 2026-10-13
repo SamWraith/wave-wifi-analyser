@@ -13,6 +13,11 @@ abstract final class WaveMotion {
   static Duration duration(BuildContext context, [int milliseconds = 280]) =>
       reduced(context) ? Duration.zero : Duration(milliseconds: milliseconds);
 
+  static AnimationStyle sheetStyle(BuildContext context) => AnimationStyle(
+    duration: duration(context, 320),
+    reverseDuration: duration(context, 220),
+  );
+
   static const curve = Curves.easeOutCubic;
 }
 

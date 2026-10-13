@@ -26,6 +26,7 @@ Start with `git status --short`, then use `rg` and focused file reads. Preserve 
 ## Delivery and review
 
 - Preserve modern light/dark/system themes and responsive phone/desktop behavior.
+- Treat minor interaction details as product requirements: intuitive affordances, complete feedback and restrained motion. Apply the interaction-quality section in `ai/rules/flutter-architecture.md` to every UI change.
 - For multi-page changes, provider lifetime changes, persistence changes or native contract changes, review architecture before finalizing. Use an independent review agent when delegation is available and authorized; otherwise make a separate review pass and state that limitation.
 - Delegate only independent owned file groups; share interface changes before editing overlapping files. Integration and final validation remain the primary agent's responsibility. Do not create unrelated user chats.
 - Fix concrete findings within authorized scope. Avoid feature expansion, speculative frameworks and repeated broad validation after a clean final run.

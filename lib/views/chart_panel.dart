@@ -102,7 +102,10 @@ class _ChartPanelState extends ConsumerState<ChartPanel> {
                 : 'Signal strength across ${band.label}',
             trailing: IconButton(
               tooltip: timeGraph ? 'Show channel graph' : 'Show signal history',
-              onPressed: () => setState(() => timeGraph = !timeGraph),
+              onPressed: () {
+                WaveHaptics.selection();
+                setState(() => timeGraph = !timeGraph);
+              },
               icon: Icon(
                 timeGraph ? Icons.stacked_line_chart : Icons.timeline_rounded,
               ),

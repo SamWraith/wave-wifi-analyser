@@ -6,6 +6,7 @@ import '../viewmodels/analyser_view_model.dart';
 import '../viewmodels/wifi_guidance_view_model.dart';
 import '../widgets/wave_components.dart';
 import '../widgets/wave_haptics.dart';
+import '../widgets/wave_motion.dart';
 import 'analyser_navigation.dart';
 
 void showWifiGuidance(BuildContext context) {
@@ -15,6 +16,7 @@ void showWifiGuidance(BuildContext context) {
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: true,
+    sheetAnimationStyle: WaveMotion.sheetStyle(context),
     builder: (_) => const WifiGuidanceSheet(),
   );
 }

@@ -24,6 +24,33 @@ Theme reveals must preserve the live route/widget tree, dispose captured images 
 
 For Rive, await runtime initialization before accessing factories. The owning illustration disposes its painter, artboard and file, ignores late loads, and pauses background advancement. Verify bundled artboard/timeline names against the real asset and test actual runtime playback when changing integration; mocked illustrations only validate the surrounding flow. Verify visibly changed rendered pixels, not merely a running ticker or existing timeline. Reserve known variable-copy slots for stable onboarding controls while retaining responsive width and accessibility text scaling.
 
+## Interaction quality and product detail
+
+Small details are part of correctness. For each UI change, walk through discovery,
+action, feedback, cancellation and recovery. A control must do what its label and
+visual treatment promise; avoid invisible gestures, dead-looking actions, confusing
+disabled states and navigation that loses the user's context. Prioritize a clear
+next step over more controls or decoration.
+
+Keep spacing, typography, alignment, touch targets, focus order and selected states
+consistent with the existing design system. Verify narrow screens, desktop pointers
+and keyboards, large text, light/dark themes and screen-reader labels. Provide text
+or semantics for information that would otherwise depend only on color or gesture.
+Important content and dismiss/recovery controls must remain reachable without clipping.
+
+Use motion, transitions and tactile feedback where they explain a state change or
+confirm user intent. Reuse the existing motion curves, durations, Material controls
+and haptic helpers. Keep feedback subtle, finite and consistent; one intentional
+selection or impact is enough. Avoid decorative loops, repeated haptics during
+continuous dragging, unrelated scan-driven effects, delayed input and transitions
+that move the target under the user's finger. Honor reduced motion, accessible
+navigation and platform feedback settings; preserve focus and state when motion ends.
+
+Premium quality means reliable, intuitive behavior and restraint, not animating
+every widget. Review loading, empty, stale, error and success states as carefully
+as the happy path. Verify actual outcomes and remaining limits; never equate added
+animation or a passing widget test with measured smoothness or a polished device experience.
+
 ## State, async work and failures
 
 Public immutable models must defensively freeze collections, including nested history. Preserve unchanged frozen collections on copyWith. Native payload errors become typed recoverable repository errors, not arbitrary cast failures leaking into UI callbacks.

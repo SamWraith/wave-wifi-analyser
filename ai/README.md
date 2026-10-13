@@ -4,7 +4,7 @@ The root [AGENTS.md](../AGENTS.md) is the entrypoint. This folder contains proje
 
 | Resource | Read/use when |
 | --- | --- |
-| [Flutter architecture rules](rules/flutter-architecture.md) | Changing Dart/Flutter application code; read only relevant sections on follow-up tasks. |
+| [Flutter architecture rules](rules/flutter-architecture.md) | Changing Dart/Flutter application code, including required interaction-quality checks for UI details; read relevant sections on follow-up tasks. |
 | [Architecture review skill](skills/wave-architecture-review/SKILL.md) | Reviewing structure/quality or implementing a substantial refactor. |
 | [Validation script](scripts/check.sh) | Running repeatable format, analysis and unit/widget checks. |
 

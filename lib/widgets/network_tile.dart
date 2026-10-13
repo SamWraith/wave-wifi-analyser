@@ -5,6 +5,7 @@ import '../models/access_point.dart';
 import 'signal_charts.dart';
 import 'wave_motion.dart';
 import 'wave_haptics.dart';
+import 'access_point_detail_row.dart';
 
 class NetworkTile extends StatelessWidget {
   const NetworkTile({super.key, required this.ap});
@@ -88,10 +89,7 @@ Future<void> showAccessPointDetails(BuildContext context, AccessPoint ap) {
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    sheetAnimationStyle: AnimationStyle(
-      duration: WaveMotion.duration(context, 320),
-      reverseDuration: WaveMotion.duration(context, 220),
-    ),
+    sheetAnimationStyle: WaveMotion.sheetStyle(context),
     builder: (context) => AccessPointDetailsSheet(ap: ap),
   );
 }
@@ -123,26 +121,7 @@ class AccessPointDetailsSheet extends StatelessWidget {
             'Security': ap.security,
             'Distance estimate': '~${ap.distance.toStringAsFixed(1)} m',
           }.entries.map(
-            (e) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 9),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      e.key,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ),
-                  SelectableText(
-                    e.value,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            (e) => AccessPointDetailRow(label: e.key, value: e.value),
           ),
           const SizedBox(height: 16),
           Text(
