@@ -47,7 +47,7 @@ void main() {
         tester.getTopLeft(find.byType(ChartInspection)) + const Offset(90, 90);
     await tester.dragFrom(position, const Offset(120, 0));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Cursor coordinates:'), findsOneWidget);
+    expect(find.textContaining('Envelope:'), findsOneWidget);
     await tester.tap(find.byTooltip('Dismiss inspection'));
     await tester.pumpAndSettle();
     final before = tester.getTopLeft(find.byType(ChartInspection)).dy;
@@ -57,7 +57,7 @@ void main() {
       tester.getTopLeft(find.byType(ChartInspection)).dy,
       greaterThan(before),
     );
-    expect(find.textContaining('Cursor coordinates:'), findsNothing);
+    expect(find.textContaining('Envelope:'), findsNothing);
     await tester.ensureVisible(find.byTooltip('Show signal history'));
     await tester.tap(find.byTooltip('Show signal history'));
     await tester.pumpAndSettle();

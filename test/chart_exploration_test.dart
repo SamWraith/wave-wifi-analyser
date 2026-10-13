@@ -163,24 +163,24 @@ void main() {
       final position = tester.getTopLeft(chart) + const Offset(90, 90);
       await tester.dragFrom(position, const Offset(200, 0));
       await tester.pump();
-      expect(find.textContaining('Cursor coordinates:'), findsOneWidget);
+      expect(find.textContaining('Envelope:'), findsOneWidget);
       expect(scroll.offset, 0);
       await tester.tap(find.byTooltip('Dismiss inspection'));
       await tester.pump();
       await tester.dragFrom(position, const Offset(0, -180));
       await tester.pumpAndSettle();
       expect(scroll.offset, greaterThan(0));
-      expect(find.textContaining('Cursor coordinates:'), findsNothing);
+      expect(find.textContaining('Envelope:'), findsNothing);
       scroll.jumpTo(0);
       await tester.pump();
       await tester.tapAt(position);
       await tester.pump();
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
       await tester.pump();
-      expect(find.textContaining('Cursor coordinates:'), findsOneWidget);
+      expect(find.textContaining('Envelope:'), findsOneWidget);
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await tester.pump();
-      expect(find.textContaining('Cursor coordinates:'), findsNothing);
+      expect(find.textContaining('Envelope:'), findsNothing);
     },
   );
 

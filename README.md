@@ -40,8 +40,8 @@ For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrom
 - Channel landscape showing illustrative signal envelopes from reported frequency, channel width and received power.
 - **Open Spectrum** on Overview carries band, graph mode and legend selection into Spectrum.
 - **Focus chart** opens a larger chart with scan freshness, band controls and legends. Close, Back or Escape returns to the same Spectrum scroll position and selection; no forced orientation.
-- Tap or drag horizontally to inspect cursor frequency/channel, time and dBm coordinates in normal or focused charts. Vertical gestures scroll the page; pointer hover and focused arrow keys provide alternatives. Dismiss clears inspection.
-- Readouts identify cursor coordinates rather than AP measurements; exceptional channels use their correct centers, with nearby coordinates qualified as **Near CH**. History only plots retained observations and breaks lines across missing observations or gaps longer than two foreground scan intervals.
+- Tap or drag horizontally to follow visible envelope curves or recorded history samples in normal or focused charts. Markers stay on plotted data, with network name/BSSID and frequency/channel or observation time plus dBm. Vertical gestures scroll the page; pointer hover and focused arrow keys provide alternatives. Dismiss clears inspection.
+- Landscape readouts explicitly label illustrative envelope values; history snaps only to recorded samples and shows their actual timestamps. Hidden curves cannot be selected. Exceptional channels use their correct centers, with nearby coordinates qualified as **Near CH**. History only plots retained observations and breaks lines across missing observations or gaps longer than two foreground scan intervals.
 - Per-access-point signal history with up to 60 fresh samples per BSSID. Cached or duplicate scan timestamps never become fresh history samples.
 - Switch between channel landscape and signal history; filter 2.4 GHz, 5 GHz or 6 GHz bands.
 - Tap a WiFi legend name through this cycle: **hide → include again → show only this WiFi → restore all**.

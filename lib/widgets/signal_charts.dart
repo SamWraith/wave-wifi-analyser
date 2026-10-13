@@ -1,11 +1,10 @@
-import 'dart:math' as math;
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../models/access_point.dart';
 import '../models/analyser_state.dart';
 import 'spectrum_axis.dart';
+import 'spectrum_envelope.dart';
 import 'chart_coordinates.dart';
 import 'chart_inspection.dart';
 
@@ -40,23 +39,28 @@ class SignalChart extends StatelessWidget {
   final VoidCallback? onEscape;
   final Set<String> hiddenBssids;
   @override
-  Widget build(BuildContext context) => ChartInspection(
-    height: height,
-    onEscape: onEscape,
-    time: time,
-    coordinates: ChartCoordinates(band, points, history ?? {}),
-    child: CustomPaint(
-      painter: _SignalPainter(
-        points,
-        band,
-        history ?? {},
-        time,
-        Theme.of(context).colorScheme.onSurfaceVariant,
-        Theme.of(context).colorScheme.outlineVariant,
-        hiddenBssids,
+  Widget build(BuildContext context) {
+    final coordinates = ChartCoordinates(band, points, history ?? {});
+    return ChartInspection(
+      height: height,
+      onEscape: onEscape,
+      time: time,
+      coordinates: coordinates,
+      hiddenBssids: hiddenBssids,
+      child: CustomPaint(
+        painter: _SignalPainter(
+          points,
+          band,
+          history ?? {},
+          time,
+          Theme.of(context).colorScheme.onSurfaceVariant,
+          Theme.of(context).colorScheme.outlineVariant,
+          hiddenBssids,
+          coordinates,
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _SignalPainter extends CustomPainter {
@@ -68,6 +72,7 @@ class _SignalPainter extends CustomPainter {
     this.labelColor,
     this.gridColor,
     Set<String> hiddenBssids,
+    this.coordinates,
   ) : hiddenBssids = Set.unmodifiable(hiddenBssids),
       points = List.unmodifiable(points),
       history = Map.unmodifiable({
@@ -76,8 +81,7 @@ class _SignalPainter extends CustomPainter {
             history[point.bssid] ?? const [],
           ),
       }),
-      axis = SpectrumAxis.forPoints(band, points),
-      coordinates = ChartCoordinates(band, points, history);
+      axis = coordinates.spectrum;
 
   final List<AccessPoint> points;
   final WifiBand band;
@@ -172,20 +176,9 @@ class _SignalPainter extends CustomPainter {
   }
 
   void _paintSpectrum(Canvas canvas, Rect area) {
-    double x(num frequency) =>
-        area.left + axis.fraction(frequency) * area.width;
     for (final point in points.reversed) {
       if (hiddenBssids.contains(point.bssid)) continue;
-      // Illustrative envelope; bandwidth and center derive from the scan.
-      final width = math.max(point.width, 20);
-      final center = x(point.spectralCenter);
-      final left = x(point.spectralCenter - width / 2);
-      final right = x(point.spectralCenter + width / 2);
-      final y = _y(area, point.rssi);
-      final path = Path()
-        ..moveTo(left, area.bottom)
-        ..cubicTo(left, y, center - (right - left) / 6, y, center, y)
-        ..cubicTo(center + (right - left) / 6, y, right, y, right, area.bottom);
+      final path = SpectrumEnvelope.path(point, axis, area);
       canvas.drawPath(
         Path.from(path)..close(),
         Paint()..color = pointColor(point).withValues(alpha: .13),

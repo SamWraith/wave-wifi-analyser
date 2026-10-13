@@ -13,12 +13,14 @@ class ChartInspection extends StatefulWidget {
     required this.height,
     required this.child,
     this.onEscape,
+    this.hiddenBssids = const {},
   });
   final ChartCoordinates coordinates;
   final bool time;
   final double height;
   final Widget child;
   final VoidCallback? onEscape;
+  final Set<String> hiddenBssids;
   @override
   State<ChartInspection> createState() => _ChartInspectionState();
 }
@@ -57,112 +59,134 @@ class _ChartInspectionState extends State<ChartInspection> {
     _cursor = Offset(next.dx.clamp(0, 1), next.dy.clamp(0, 1));
   });
   void _dismiss() => setState(() => _cursor = null);
-  String get _readout {
-    final cursor = _cursor!;
-    final at = widget.coordinates.time(cursor.dx);
-    final x = widget.time
-        ? at == null
-              ? 'No fresh history samples'
-              : '${at.hour.toString().padLeft(2, '0')}:${at.minute.toString().padLeft(2, '0')}:${at.second.toString().padLeft(2, '0')}'
-        : widget.coordinates.spectrumLabel(cursor.dx);
-    return '$x · ${ChartCoordinates.strength(cursor.dy).toStringAsFixed(1)} dBm';
+  String _readout(ChartHit hit) {
+    final identity = '${hit.point.name} (${hit.point.bssid})';
+    if (hit.sample case final sample?) {
+      final at = sample.at
+          .toIso8601String()
+          .replaceFirst('T', ' ')
+          .split('.')
+          .first;
+      final clipped = sample.rssi < -100 || sample.rssi > -20
+          ? ' • marker clipped to axis'
+          : '';
+      return 'Recorded sample: $identity · $at · ${sample.rssi} dBm$clipped';
+    }
+    return 'Envelope: $identity · ${widget.coordinates.spectrumLabel(hit.fraction.dx)} · ${hit.rssi.toStringAsFixed(1)} dBm (illustrative)';
   }
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      CallbackShortcuts(
-        bindings: {
-          const SingleActivator(LogicalKeyboardKey.arrowLeft): () =>
-              _step(const Offset(-.01, 0)),
-          const SingleActivator(LogicalKeyboardKey.arrowRight): () =>
-              _step(const Offset(.01, 0)),
-          const SingleActivator(LogicalKeyboardKey.arrowUp): () =>
-              _step(const Offset(0, -.025)),
-          const SingleActivator(LogicalKeyboardKey.arrowDown): () =>
-              _step(const Offset(0, .025)),
-          const SingleActivator(LogicalKeyboardKey.escape):
-              widget.onEscape ?? _dismiss,
-        },
-        child: Focus(
-          focusNode: _focus,
-          child: Semantics(
-            label: 'Inspect chart coordinates. Drag horizontally, tap, or focus and use arrow keys.',
-            child: SizedBox(
-              height: widget.height,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final size = Size(constraints.maxWidth, widget.height);
-                  final area = ChartCoordinates.area(size);
-                  return MouseRegion(
-                    cursor: SystemMouseCursors.precise,
-                    onHover: (event) => _inspect(event.localPosition, size),
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTapUp: (event) {
-                        _focus.requestFocus();
-                        _inspect(event.localPosition, size);
-                      },
-                      onHorizontalDragStart: (event) =>
-                          _inspect(event.localPosition, size),
-                      onHorizontalDragUpdate: (event) =>
-                          _inspect(event.localPosition, size),
-                      child: Stack(
-                        children: [
-                          Positioned.fill(child: widget.child),
-                          if (_cursor != null &&
-                              area.width > 0 &&
-                              area.height > 0)
-                            Positioned.fromRect(
-                              rect: area,
-                              child: IgnorePointer(
-                                child: CustomPaint(
-                                  foregroundPainter: _Crosshair(
-                                    _cursor!,
-                                    Theme.of(context).colorScheme.primary,
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final plot = ChartCoordinates.area(
+        Size(constraints.maxWidth, widget.height),
+      );
+      final hit = _cursor == null
+          ? null
+          : widget.coordinates.inspect(
+              _cursor!,
+              plot.size,
+              timeGraph: widget.time,
+              hiddenBssids: widget.hiddenBssids,
+            );
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CallbackShortcuts(
+            bindings: {
+              const SingleActivator(LogicalKeyboardKey.arrowLeft): () =>
+                  _step(const Offset(-.01, 0)),
+              const SingleActivator(LogicalKeyboardKey.arrowRight): () =>
+                  _step(const Offset(.01, 0)),
+              const SingleActivator(LogicalKeyboardKey.arrowUp): () =>
+                  _step(const Offset(0, -.025)),
+              const SingleActivator(LogicalKeyboardKey.arrowDown): () =>
+                  _step(const Offset(0, .025)),
+              const SingleActivator(LogicalKeyboardKey.escape):
+                  widget.onEscape ?? _dismiss,
+            },
+            child: Focus(
+              focusNode: _focus,
+              child: Semantics(
+                label: 'Inspect visible chart data. Drag horizontally, tap, or focus and use arrow keys. Marker follows curves; history selects recorded samples.',
+                child: SizedBox(
+                  height: widget.height,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final size = Size(constraints.maxWidth, widget.height);
+                      final area = ChartCoordinates.area(size);
+                      return MouseRegion(
+                        cursor: SystemMouseCursors.precise,
+                        onHover: (event) => _inspect(event.localPosition, size),
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTapUp: (event) {
+                            _focus.requestFocus();
+                            _inspect(event.localPosition, size);
+                          },
+                          onHorizontalDragStart: (event) =>
+                              _inspect(event.localPosition, size),
+                          onHorizontalDragUpdate: (event) =>
+                              _inspect(event.localPosition, size),
+                          child: Stack(
+                            children: [
+                              Positioned.fill(child: widget.child),
+                              if (hit != null &&
+                                  area.width > 0 &&
+                                  area.height > 0)
+                                Positioned.fromRect(
+                                  rect: area,
+                                  child: IgnorePointer(
+                                    child: CustomPaint(
+                                      foregroundPainter: _Crosshair(
+                                        hit.fraction,
+                                        Theme.of(context).colorScheme.primary,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ),
-      Row(
-        children: [
-          Expanded(
-            child: Semantics(
-              liveRegion: true,
-              child: Text(
-                _cursor == null
-                    ? 'Drag sideways or tap to inspect • arrow keys when focused'
-                    : 'Cursor coordinates: $_readout',
-                style: Theme.of(context).textTheme.bodySmall,
+          Row(
+            children: [
+              Expanded(
+                child: Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    hit != null
+                        ? _readout(hit)
+                        : _cursor == null
+                        ? 'Drag sideways to follow curves • tap or use arrow keys'
+                        : 'No visible ${widget.time ? 'history samples' : 'curves'}. Include a network in the legend.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
               ),
-            ),
+              if (_cursor != null)
+                IconButton(
+                  tooltip: 'Dismiss inspection',
+                  onPressed: _dismiss,
+                  icon: const Icon(Icons.close_rounded),
+                ),
+            ],
           ),
-          if (_cursor != null)
-            IconButton(
-              tooltip: 'Dismiss inspection',
-              onPressed: _dismiss,
-              icon: const Icon(Icons.close_rounded),
-            ),
+          Text(
+            widget.time
+                ? 'Snaps to recorded observations • never interpolates missing samples.'
+                : 'Marker follows illustrative envelopes • not an RF measurement.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ],
-      ),
-      Text(
-        widget.time
-            ? 'Cursor is not a measured sample. Lines connect fresh observations; no readings between samples.'
-            : 'Illustrative envelopes • cursor is not an AP measurement.',
-        style: Theme.of(context).textTheme.bodySmall,
-      ),
-    ],
+      );
+    },
   );
 }
 
