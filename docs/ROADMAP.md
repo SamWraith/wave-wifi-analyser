@@ -2,9 +2,9 @@
 
 This file records user-requested work and its delivery status. Planned work has
 no promised date. Existing feature inventory lives in README.md.
-Ranks 1–5 from [PRODUCT_REVIEW.md](PRODUCT_REVIEW.md) are delivered. Rank 6
-is authorized next, followed by native macOS scanning only. Windows/Linux/iOS
-live scanning remains deferred.
+Ranks 1–6 from [PRODUCT_REVIEW.md](PRODUCT_REVIEW.md) are delivered.
+Native macOS scanning is authorized next. Windows/Linux/iOS live scanning remains
+deferred.
 
 ## Saved room comparison sessions
 
@@ -52,12 +52,29 @@ noise or throughput and cannot guarantee improvement.
 Verification: [channel planning](CHANNEL_PLANNING.md). Physical verification deferred
 at user request until remaining features are complete.
 
+## Private comparison export/share
+
+Requested and implemented: 2026-10-13. Rank 6 only.
+
+Select compatible saved sessions, review exact summary/CSV text, optionally reveal
+SSID/BSSID or room labels separately, then explicitly open the system share chooser.
+Defaults exclude identifiers, labels, aliases and internal record IDs. Generic file
+names/metadata, escaped CSV text, exact samples/times, separate raw radio contexts,
+empty records and honest gaps/limitations preserve evidence without inferred RF claims.
+Bounded preview parts, fixed actions and explicit cancellation/failure recovery retain
+context. Changed/deleted selections and disposed previews block late sharing during
+preparation. Linux offers preview/copy recovery; unsupported web sharing has no
+implicit download/email fallback. Two owned temporary files are overwritten on the
+next share; system/receiving apps can keep copies. No anonymity or delivery guarantee.
+
+Verification: [comparison export](COMPARISON_EXPORT.md). Physical verification remains
+deferred by user until remaining features are complete.
+
 ## Next authorized work
 
-1. Rank 6: private previewed comparison export/share, identifiers hidden by default.
-2. Native macOS live scanning. Android remains the current live platform.
+1. Native macOS live scanning. Android remains the current live platform.
 
-These are separate future slices; no promised dates or completed implementation.
+No promised date; native macOS scanning is not implemented yet.
 
 ## Detailed chart exploration
 

@@ -70,7 +70,15 @@ For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrom
 - Select two or more sessions for the same BSSID/source. Each band/channel/primary frequency/width/center-frequency context shows sample count, observation time range, median RSSI and RSSI range separately. Median delta appears only when every selected session has one identical context; stronger signal is not proof of faster WiFi.
 - Gaps remain visible: initial wait, longest interval between observations and silence before stop. No interpolated signal samples. Observation times use monotonic elapsed time anchored to recording start, so wall-clock corrections cannot break a saved session.
 - Retain up to 24 sessions with 120 fresh samples each; recording stops at the sample cap. Delete records to free space. Labels use a consistent 64 UTF-16-code-unit limit; storage is a validated version 1 envelope capped at 1 MiB. Loading gates recording while preserving entered labels; checked, serialized/coalesced writes expose recoverable storage errors separately from scanning.
-- No GPS coordinates, background service, extra permissions, cloud sync, heatmap, export or distance-accuracy claim. See [session verification](docs/SAVED_COMPARISON_SESSIONS.md).
+- No GPS coordinates, background service, extra permissions, cloud sync, heatmap or distance-accuracy claim. See [session verification](docs/SAVED_COMPARISON_SESSIONS.md).
+
+### Private comparison export
+
+- Select one or more saved sessions for the same BSSID/source in **Compare rooms**, then **Preview private export**. Review a readable summary and CSV before opening the system share chooser. Both files use neutral filenames; summary and CSV previews are selectable, with bounded text parts and always-reachable actions.
+- SSID/BSSID and room labels are excluded by default. Each has a separate explicit opt-in; aliases, internal record IDs and arbitrary stored stop reasons are never exported. Labels may themselves contain sensitive identifiers. Timing/radio data can reveal context; this is not an anonymity guarantee.
+- CSV preserves accepted UTC timestamps, RSSI, reported frequency/width/center, source, counts and empty-session metadata. Summary separates raw radio contexts, including unknown centers, and reports medians/ranges and exact session gaps. No fabricated samples, combined-context delta, noise/throughput estimate or improvement guarantee. Text cells guard spreadsheet formulas; numeric measurements remain unchanged.
+- Sharing occurs only after a button press. No account, server upload, automatic telemetry, router changes or new runtime permission. Two owned temporary files are overwritten on the next share; system/receiving apps may retain their own copies. Cancellation, retryable failure and unknown delivery outcomes remain explicit. Linux file sharing is unsupported; preview text remains copyable. Web file sharing requires browser support; automatic download/email fallbacks are disabled.
+- A changed/deleted snapshot cannot be shared; leaving preview during file preparation prevents a late chooser. Recording and versioned local storage remain unchanged. See [export verification](docs/COMPARISON_EXPORT.md).
 
 ### Channel planning
 
@@ -115,7 +123,7 @@ For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrom
 
 No location coordinates are collected. Distance is a free-space estimate and can be inaccurate indoors; chart envelopes are illustrative rather than RF spectrum measurements. Local channel recommendations do not configure routers.
 
-Device discovery, speed tests, AI/cloud diagnostics, home-screen widgets and router administration are not included. Next authorized Android slice is private comparison export/share; afterward, native macOS scanning. Windows/Linux/iOS live scanning remains deferred. See delivered work and next scope in the [roadmap](docs/ROADMAP.md); original feature recommendations remain in the [product review](docs/PRODUCT_REVIEW.md).
+Device discovery, speed tests, AI/cloud diagnostics, home-screen widgets and router administration are not included. Ranks 1–6 are delivered. Next authorized slice is native macOS scanning. Windows/Linux/iOS live scanning remains deferred. See delivered work and next scope in the [roadmap](docs/ROADMAP.md); original feature recommendations remain in the [product review](docs/PRODUCT_REVIEW.md).
 
 ## Architecture: MVVM + Riverpod 3.4.3
 
@@ -124,7 +132,8 @@ Device discovery, speed tests, AI/cloud diagnostics, home-screen widgets and rou
 - `lib/viewmodels/channel_planning_view_model.dart`: immutable session-local per-band assumptions and derived unfiltered plans.
 - `lib/models/analyser_state.dart`: immutable view state and typed native snapshots.
 - `lib/models/comparison_session.dart`, `lib/repositories/comparison_sessions_repository.dart`, `lib/viewmodels/comparison_sessions_view_model.dart`: immutable bounded session evidence, versioned local storage and foreground recording/persistence orchestration.
-- `lib/views/sessions_page.dart`: AP selection, recording feedback, saved-session comparison and deletion.
+- `lib/views/sessions_page.dart`: AP selection, recording feedback, saved-session comparison, deletion and private-export discovery.
+- `lib/models/comparison_export.dart`, `lib/repositories/comparison_share_repository.dart`, `lib/viewmodels/comparison_export_view_model.dart`, `lib/views/comparison_export_page.dart`: independent privacy serializer, injectable bounded native share boundary and route-owned review flow.
 - `lib/models/scan_freshness.dart` / `wifi_guidance.dart`: elapsed-age rules and offline evidence/guidance.
 - `lib/viewmodels/wifi_guidance_view_model.dart`: ephemeral same-AP baseline/recheck workflow.
 - `lib/views/wifi_guidance_sheet.dart`: scrollable guide using shared scan recovery controls.

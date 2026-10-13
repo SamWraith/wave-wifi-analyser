@@ -10,6 +10,7 @@ import '../viewmodels/comparison_sessions_view_model.dart';
 import '../widgets/wave_components.dart';
 import '../widgets/wave_haptics.dart';
 import '../widgets/wave_motion.dart';
+import 'comparison_export_page.dart';
 
 void showComparisonSessions(BuildContext context) {
   WaveHaptics.selection();
@@ -339,7 +340,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage>
               const SizedBox(height: 24),
               const SectionHeading(
                 title: 'Saved sessions',
-                subtitle: 'Select two or more for the same BSSID and source.',
+                subtitle: 'Select sessions for private export, or two or more to compare. Keep the same BSSID and source.',
               ),
               const SizedBox(height: 12),
               if (!sessions.loading && sessions.sessions.isEmpty)
@@ -387,6 +388,20 @@ class _SessionsPageState extends ConsumerState<SessionsPage>
                     setState(_selected.clear);
                   },
                   child: const Text('Clear selection'),
+                ),
+              if (selected.isNotEmpty)
+                OutlinedButton.icon(
+                  onPressed: () {
+                    WaveHaptics.selection();
+                    Navigator.of(context).push<void>(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            ComparisonExportPage(sessions: selected),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.ios_share_rounded),
+                  label: const Text('Preview private export'),
                 ),
               if (selected.length >= 2)
                 WaveReveal(child: SessionComparison(sessions: selected)),
@@ -485,7 +500,7 @@ class SessionPolicy extends StatelessWidget {
   const SessionPolicy({super.key});
   @override
   Widget build(BuildContext context) => Text(
-    'Foreground only. Pause, background or changing source ends and saves recording; resume starts no recording. Relaunch restores saved sessions. Force-closing can lose an unfinished recording. Cached results and missing APs add no samples. Up to $maxComparisonSessions sessions and $maxSessionSamples samples per session. Labels stay on this device.',
+    'Foreground only. Pause, background or changing source ends and saves recording; resume starts no recording. Relaunch restores saved sessions. Force-closing can lose an unfinished recording. Cached results and missing APs add no samples. Up to $maxComparisonSessions sessions and $maxSessionSamples samples per session. Labels stay on this device unless explicitly included in a reviewed export.',
     style: Theme.of(context).textTheme.bodySmall,
   );
 }
