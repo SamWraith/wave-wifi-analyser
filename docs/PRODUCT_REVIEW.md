@@ -33,7 +33,7 @@ ranking uses a fixed candidate list and an overlap heuristic. Sources reviewed:
 The user subsequently approved ranks 1 and 2. Both are implemented in the
 2026-10-13 follow-up; see [freshness and guidance verification](FRESHNESS_AND_GUIDANCE.md).
 The original ranking and hypotheses below remain historical recommendations.
-Ranks 3–6 remain proposed, outside this slice.
+Rank 3 was subsequently authorized and delivered: BSSID favorites, local aliases, missing-favorite identity and bounded versioned storage. See [favorites and aliases verification](FAVORITES_AND_ALIASES.md) and README for delivered behavior. Ranks 4–6 remain proposals, outside authorized scope.
 
 ## Ranked feature recommendations
 

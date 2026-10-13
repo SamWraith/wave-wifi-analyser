@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/access_point.dart';
+import '../models/ap_preference.dart';
+import '../viewmodels/ap_preferences_view_model.dart';
 import '../viewmodels/analyser_view_model.dart';
 
 final accessPointsProvider = Provider<List<AccessPoint>>(
@@ -20,9 +22,19 @@ final visiblePointsProvider = Provider<List<AccessPoint>>((ref) {
     analyserProvider.select((state) => (state.minimumRssi, state.query)),
   );
   final normalized = query.toLowerCase();
+  final preferences = ref.watch(
+    apPreferencesProvider.select((state) => state.entries),
+  );
   return List.unmodifiable(
     points.where(
-      (ap) => ap.rssi >= minimum && ap.name.toLowerCase().contains(normalized),
+      (ap) =>
+          ap.rssi >= minimum &&
+          (ap.name.toLowerCase().contains(normalized) ||
+              (preferences[preferenceKey(ap.bssid)]?.alias
+                      ?.toLowerCase()
+                      .contains(normalized) ??
+                  false) ||
+              ap.bssid.toLowerCase().contains(normalized)),
     ),
   );
 });

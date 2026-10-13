@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wifi_analyser/models/access_point.dart';
 import 'package:wifi_analyser/models/analyser_state.dart';
 import 'package:wifi_analyser/viewmodels/analyser_view_model.dart';
@@ -42,6 +43,7 @@ class SheetObserver extends NavigatorObserver {
 }
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
   for (final scale in [1.0, 2.0, 3.0]) {
     for (final brightness in Brightness.values) {
       testWidgets('selectable details fit 360px at ${scale}x in $brightness', (
@@ -52,11 +54,13 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
         await tester.pumpWidget(
-          MaterialApp(
-            theme: ThemeData(brightness: brightness),
-            home: MediaQuery(
-              data: MediaQueryData(textScaler: TextScaler.linear(scale)),
-              child: const Scaffold(body: AccessPointDetailsSheet(ap: point)),
+          ProviderScope(
+            child: MaterialApp(
+              theme: ThemeData(brightness: brightness),
+              home: MediaQuery(
+                data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+                child: const Scaffold(body: AccessPointDetailsSheet(ap: point)),
+              ),
             ),
           ),
         );

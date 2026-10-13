@@ -50,6 +50,8 @@ void main() {
         await tester.pump();
         expect(find.text('Studio Network'), findsOneWidget);
         expect(find.text('Neighbourhood'), findsNothing);
+        await tester.ensureVisible(find.text('Studio Network'));
+        await tester.pumpAndSettle();
         await tester.tap(find.text('Studio Network'));
         await tester.pumpAndSettle();
         expect(find.text('Copy MAC address'), findsOneWidget);

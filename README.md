@@ -53,7 +53,10 @@ For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrom
 
 ### Networks and access-point details
 
-- Search by network name, strongest-signal-first ordering and a display-only minimum-signal filter.
+- Search by original SSID, local alias or BSSID, strongest-signal-first ordering and a display-only minimum-signal filter.
+- Add/remove favorites and add/edit/remove local aliases from access-point details. Aliases appear alongside original SSIDs in Networks and chart legends; channel and BSSID context distinguishes same-SSID APs.
+- Favorites remain pinned in a dedicated Networks section across all bands, search and signal filters. A separate Saved aliases section keeps alias-only APs manageable even when absent. Missing saved APs show **Not seen** with saved identity only; no invented signal, channel, history or timestamp.
+- Preferences persist by BSSID across scans, reorder and relaunch, capped at 256 saved AP identities and 64 characters per alias. Versioned local storage preserves early edits during loading, serializes writes and exposes separate retry feedback for load/save failures. No extra permissions or services.
 - Hidden-SSID entries, connected/nearby identification and access-point detail sheets.
 - Details include BSSID, signal/quality, frequency, channel/band, width, advertised security and approximate distance.
 - Selectable detail values adapt to narrow screens and large text; Copy MAC address gives confirmation feedback.
