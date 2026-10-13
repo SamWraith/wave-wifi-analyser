@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import '../models/access_point.dart';
 import '../models/analyser_state.dart';
 import 'spectrum_axis.dart';
+import 'chart_coordinates.dart';
+import 'chart_inspection.dart';
 
 const graphColors = [
   Color(0xFF7C6EF6),
@@ -27,16 +29,22 @@ class SignalChart extends StatelessWidget {
     this.history,
     this.time = false,
     this.hiddenBssids = const {},
+    this.height = 270,
+    this.onEscape,
   });
   final List<AccessPoint> points;
   final WifiBand band;
   final Map<String, List<SignalSample>>? history;
   final bool time;
+  final double height;
+  final VoidCallback? onEscape;
   final Set<String> hiddenBssids;
   @override
-  Widget build(BuildContext context) => SizedBox(
-    height: 270,
-    width: double.infinity,
+  Widget build(BuildContext context) => ChartInspection(
+    height: height,
+    onEscape: onEscape,
+    time: time,
+    coordinates: ChartCoordinates(band, points, history ?? {}),
     child: CustomPaint(
       painter: _SignalPainter(
         points,
@@ -68,7 +76,8 @@ class _SignalPainter extends CustomPainter {
             history[point.bssid] ?? const [],
           ),
       }),
-      axis = SpectrumAxis.forPoints(band, points);
+      axis = SpectrumAxis.forPoints(band, points),
+      coordinates = ChartCoordinates(band, points, history);
 
   final List<AccessPoint> points;
   final WifiBand band;
@@ -76,6 +85,7 @@ class _SignalPainter extends CustomPainter {
   final bool time;
   final Color labelColor, gridColor;
   final SpectrumAxis axis;
+  final ChartCoordinates coordinates;
   final Set<String> hiddenBssids;
 
   void _label(Canvas canvas, String value, Offset at, {double size = 10}) {
@@ -95,7 +105,7 @@ class _SignalPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final area = Rect.fromLTRB(38, 18, size.width - 10, size.height - 35);
+    final area = ChartCoordinates.area(size);
     if (area.width <= 0 || area.height <= 0) return;
     _paintGrid(canvas, area);
     canvas.save();
@@ -109,8 +119,7 @@ class _SignalPainter extends CustomPainter {
     _paintAxis(canvas, area);
   }
 
-  double _y(Rect area, num rssi) =>
-      area.bottom - (rssi.clamp(-100, -20) + 100) / 80 * area.height;
+  double _y(Rect area, num rssi) => ChartCoordinates.y(area, rssi);
 
   void _paintGrid(Canvas canvas, Rect area) {
     final paint = Paint()
@@ -125,25 +134,16 @@ class _SignalPainter extends CustomPainter {
   }
 
   void _paintHistory(Canvas canvas, Rect area) {
-    final all = history.values.expand((samples) => samples);
-    if (all.isEmpty) return;
-    final newest = all
-        .map((sample) => sample.at.millisecondsSinceEpoch)
-        .reduce(math.max);
-    final oldest = all
-        .map((sample) => sample.at.millisecondsSinceEpoch)
-        .reduce(math.min);
-    final span = math.max(1000, newest - oldest);
+    if (coordinates.oldest == null) return;
     for (final point in points) {
       if (hiddenBssids.contains(point.bssid)) continue;
       final samples = history[point.bssid]!;
       final path = Path();
       for (var i = 0; i < samples.length; i++) {
         final x =
-            area.left +
-            (samples[i].at.millisecondsSinceEpoch - oldest) / span * area.width;
+            area.left + coordinates.historyFraction(samples[i]) * area.width;
         final y = _y(area, samples[i].rssi);
-        if (i == 0) {
+        if (i == 0 || coordinates.hasGap(samples[i - 1], samples[i])) {
           path.moveTo(x, y);
         } else {
           path.lineTo(x, y);
@@ -157,9 +157,13 @@ class _SignalPainter extends CustomPainter {
           ..strokeWidth = 2.5
           ..strokeCap = StrokeCap.round,
       );
-      if (samples.length == 1) {
+      // Dots retain isolated observations when adjacent path segments have gaps.
+      for (final sample in samples) {
         canvas.drawCircle(
-          Offset(area.left, _y(area, samples.first.rssi)),
+          Offset(
+            area.left + coordinates.historyFraction(sample) * area.width,
+            _y(area, sample.rssi),
+          ),
           3,
           Paint()..color = pointColor(point),
         );

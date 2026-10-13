@@ -8,6 +8,7 @@ import 'networks_page.dart';
 import 'overview_page.dart';
 import 'settings_page.dart';
 import 'spectrum_page.dart';
+import 'chart_selection.dart';
 
 class AnalyserHome extends StatefulWidget {
   const AnalyserHome({super.key});
@@ -17,6 +18,7 @@ class AnalyserHome extends StatefulWidget {
 
 class _AnalyserHomeState extends State<AnalyserHome> {
   int selected = 0;
+  final _chartSelection = ChartSelection();
   final _scrollController = ScrollController();
 
   void _select(int value) {
@@ -29,6 +31,7 @@ class _AnalyserHomeState extends State<AnalyserHome> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _chartSelection.dispose();
     super.dispose();
   }
 
@@ -66,8 +69,10 @@ class _AnalyserHomeState extends State<AnalyserHome> {
                                 child: switch (selected) {
                                   0 => OverviewPage(
                                     onViewNetworks: () => _select(2),
+                                    onOpenSpectrum: () => _select(1),
+                                    selection: _chartSelection,
                                   ),
-                                  1 => const SpectrumPage(),
+                                  1 => SpectrumPage(selection: _chartSelection),
                                   2 => const NetworksPage(),
                                   3 => const ChannelsPage(),
                                   _ => const SettingsPage(),

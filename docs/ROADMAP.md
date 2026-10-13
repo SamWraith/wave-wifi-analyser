@@ -1,13 +1,29 @@
 # Wave roadmap
 
-This file records user-requested future work. Items below are planned, not shipped;
-no delivery date is promised. Existing feature inventory lives in README.md.
+This file records user-requested work and its delivery status. Planned work has
+no promised date. Existing feature inventory lives in README.md.
 The four remaining product-manager recommendations in
 [PRODUCT_REVIEW.md](PRODUCT_REVIEW.md) remain proposals, not approved scope.
 
 ## Detailed chart exploration
 
-Requested: 2026-10-13. Status: planned; implementation not started.
+Requested: 2026-10-13. Status: implemented 2026-10-13.
+
+Delivered: Open Spectrum preserves band, graph and legend context; Focus chart
+opens a larger route with freshness and controls while retaining Spectrum scroll
+position; ordinary/focused charts support horizontal drag, tap, hover and keyboard
+coordinate inspection with explicit measurement qualifiers and dismissal. Shared
+geometry handles exceptional frequencies, stable hidden-curve bounds and history
+positions. History paths retain gaps and mark actual observations with dots.
+
+Verified: full unit/widget suite, static analysis, release APK build and Android
+emulator exploration regression. Narrow/large-text light/dark/reduced-motion focus
+and Back/Escape return are covered. Independent architecture review findings were
+fixed and rechecked. OnePlus release updated using `install -r`, retaining data and
+permissions; physical touch validation was interrupted when the phone was needed
+away from USB and remains pending. No frame-rate qualification claimed.
+
+Original acceptance scope follows.
 
 ### Overview to Spectrum
 

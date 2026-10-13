@@ -9,143 +9,154 @@ import '../widgets/signal_charts.dart';
 import '../widgets/chart_legend_item.dart';
 import '../widgets/chart_legend.dart';
 import '../widgets/wave_haptics.dart';
+import 'chart_selection.dart';
+import 'focused_spectrum_page.dart';
 
 class ChartPanel extends ConsumerStatefulWidget {
-  const ChartPanel({super.key, this.compactLegend = false});
+  const ChartPanel({
+    super.key,
+    this.compactLegend = false,
+    this.selection,
+    this.onOpenSpectrum,
+    this.focused = false,
+  });
   final bool compactLegend;
+  final ChartSelection? selection;
+  final VoidCallback? onOpenSpectrum;
+  final bool focused;
   @override
   ConsumerState<ChartPanel> createState() => _ChartPanelState();
 }
 
-enum _LegendPhase { hidden, restored }
-
 class _ChartPanelState extends ConsumerState<ChartPanel> {
-  bool timeGraph = false;
-  final Map<String, _LegendPhase> _phases = {};
-  String? _soloBssid;
+  late final ChartSelection _local = ChartSelection();
+  ChartSelection get selection => widget.selection ?? _local;
 
-  void _resetLegend() {
-    _phases.clear();
-    _soloBssid = null;
-  }
-
-  void _cycleLegend(String bssid, Set<String> visibleIds) {
-    WaveHaptics.selection();
-    setState(() {
-      final currentIds = ref
-          .read(accessPointsProvider)
-          .map((ap) => ap.bssid)
-          .toSet();
-      _phases.removeWhere((id, _) => !currentIds.contains(id));
-      if (!visibleIds.contains(_soloBssid)) _soloBssid = null;
-      if (_soloBssid != null) {
-        if (_soloBssid == bssid) {
-          _resetLegend();
-        } else {
-          _soloBssid = bssid;
-        }
-        return;
-      }
-      switch (_phases[bssid]) {
-        case null:
-          _phases[bssid] = _LegendPhase.hidden;
-        case _LegendPhase.hidden:
-          _phases[bssid] = _LegendPhase.restored;
-        case _LegendPhase.restored:
-          _soloBssid = bssid;
-      }
-    });
+  @override
+  void dispose() {
+    _local.dispose();
+    super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    final points = ref.watch(visiblePointsProvider);
-    final band = ref.watch(analyserProvider.select((state) => state.band));
-    final history = ref.watch(
-      analyserProvider.select((state) => state.history),
-    );
-    final visibleIds = points.map((ap) => ap.bssid).toSet();
-    final solo = visibleIds.contains(_soloBssid) ? _soloBssid : null;
-    final hidden = {
-      for (final ap in points)
-        if (solo != null
-            ? ap.bssid != solo
-            : _phases[ap.bssid] == _LegendPhase.hidden)
-          ap.bssid,
-    };
-    final legendItems = <Widget>[
-      for (final ap in points)
-        ChartLegendItem(
-          key: ValueKey(ap.bssid),
-          point: ap,
-          compact: widget.compactLegend,
-          visible: !hidden.contains(ap.bssid),
-          solo: solo == ap.bssid,
-          nextAction: solo == ap.bssid
-              ? 'Show all networks'
-              : solo != null || _phases[ap.bssid] == _LegendPhase.restored
-              ? 'Show only this network'
-              : hidden.contains(ap.bssid)
-              ? 'Include this network'
-              : 'Exclude this network',
-          onTap: () => _cycleLegend(ap.bssid, visibleIds),
-        ),
-    ];
-    return WavePanel(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SectionHeading(
-            title: timeGraph ? 'Signal over time' : 'Channel landscape',
-            subtitle: timeGraph
-                ? 'Fresh scan samples only • up to 60 per access point'
-                : 'Signal strength across ${band.label}',
-            trailing: IconButton(
-              tooltip: timeGraph ? 'Show channel graph' : 'Show signal history',
-              onPressed: () {
-                WaveHaptics.selection();
-                setState(() => timeGraph = !timeGraph);
-              },
-              icon: Icon(
-                timeGraph ? Icons.stacked_line_chart : Icons.timeline_rounded,
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: selection,
+    builder: (context, _) {
+      final timeGraph = selection.timeGraph;
+      final points = ref.watch(visiblePointsProvider);
+      final band = ref.watch(analyserProvider.select((state) => state.band));
+      final history = ref.watch(
+        analyserProvider.select((state) => state.history),
+      );
+      final visibleIds = points.map((ap) => ap.bssid).toSet();
+      final solo = selection.solo(visibleIds);
+      final hidden = selection.hidden(visibleIds);
+      final legendItems = <Widget>[
+        for (final ap in points)
+          ChartLegendItem(
+            key: ValueKey(ap.bssid),
+            point: ap,
+            compact: widget.compactLegend,
+            visible: !hidden.contains(ap.bssid),
+            solo: solo == ap.bssid,
+            nextAction: selection.nextAction(ap.bssid, visibleIds),
+            onTap: () {
+              WaveHaptics.selection();
+              selection.cycle(
+                ap.bssid,
+                visibleIds,
+                ref.read(accessPointsProvider).map((ap) => ap.bssid).toSet(),
+              );
+            },
+          ),
+      ];
+      return WavePanel(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SectionHeading(
+              title: timeGraph ? 'Signal over time' : 'Channel landscape',
+              subtitle: timeGraph
+                  ? 'Fresh scan samples only • up to 60 per access point'
+                  : 'Signal strength across ${band.label}',
+              trailing: IconButton(
+                tooltip: timeGraph
+                    ? 'Show channel graph'
+                    : 'Show signal history',
+                onPressed: () {
+                  WaveHaptics.selection();
+                  selection.toggleGraph();
+                },
+                icon: Icon(
+                  timeGraph ? Icons.stacked_line_chart : Icons.timeline_rounded,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-          if (points.isEmpty)
-            EmptyState(
-              text: 'No scan results yet. Scan nearby networks or enable demo in Settings.',
-            )
-          else ...[
-            WaveReveal(
-              key: ValueKey((timeGraph, band)),
-              child: SignalChart(
-                points: points,
-                band: band,
-                history: history,
-                time: timeGraph,
-                hiddenBssids: hidden,
-              ),
+            Wrap(
+              spacing: 8,
+              children: [
+                if (widget.onOpenSpectrum != null)
+                  TextButton.icon(
+                    onPressed: widget.onOpenSpectrum,
+                    icon: const Icon(Icons.arrow_outward_rounded),
+                    label: const Text('Open Spectrum'),
+                  ),
+                if (!widget.compactLegend && !widget.focused)
+                  TextButton.icon(
+                    onPressed: () {
+                      WaveHaptics.selection();
+                      openFocusedSpectrum(context, selection);
+                    },
+                    icon: const Icon(Icons.fullscreen_rounded),
+                    label: const Text('Focus chart'),
+                  ),
+              ],
             ),
             const SizedBox(height: 12),
-            ChartLegend(
-              compact: widget.compactLegend,
-              items: legendItems,
-              onReset: _phases.isEmpty && _soloBssid == null
-                  ? null
-                  : () {
-                      WaveHaptics.selection();
-                      setState(_resetLegend);
-                    },
-            ),
-            if (timeGraph && history.isEmpty)
-              Text(
-                'History begins with the next fresh scan.',
-                style: Theme.of(context).textTheme.bodySmall,
+            if (points.isEmpty)
+              EmptyState(
+                text: 'No scan results yet. Scan nearby networks or enable demo in Settings.',
+              )
+            else ...[
+              WaveReveal(
+                key: ValueKey((timeGraph, band)),
+                child: SignalChart(
+                  height: widget.focused
+                      ? (MediaQuery.sizeOf(context).height * .52).clamp(
+                          320,
+                          720,
+                        )
+                      : 270,
+                  onEscape: widget.focused
+                      ? () => Navigator.pop(context)
+                      : null,
+                  points: points,
+                  band: band,
+                  history: history,
+                  time: timeGraph,
+                  hiddenBssids: hidden,
+                ),
               ),
+              const SizedBox(height: 12),
+              ChartLegend(
+                compact: widget.compactLegend,
+                items: legendItems,
+                onReset: !selection.canReset
+                    ? null
+                    : () {
+                        WaveHaptics.selection();
+                        selection.reset();
+                      },
+              ),
+              if (timeGraph && history.isEmpty)
+                Text(
+                  'History begins with the next fresh scan.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+            ],
           ],
-        ],
-      ),
-    );
-  }
+        ),
+      );
+    },
+  );
 }

@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 
 import '../widgets/wave_components.dart';
 import 'chart_panel.dart';
+import 'chart_selection.dart';
 
 class SpectrumPage extends StatelessWidget {
-  const SpectrumPage({super.key});
+  const SpectrumPage({super.key, this.selection});
+  final ChartSelection? selection;
   @override
   Widget build(BuildContext context) => Column(
     children: [
-      const ChartPanel(),
+      ChartPanel(selection: selection),
       const SizedBox(height: 18),
       WavePanel(
         child: Text(

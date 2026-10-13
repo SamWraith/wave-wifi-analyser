@@ -7,11 +7,19 @@ import 'analyser_providers.dart';
 import '../widgets/connection_card.dart';
 import '../widgets/network_tile.dart';
 import 'chart_panel.dart';
+import 'chart_selection.dart';
 import 'wifi_guidance_sheet.dart';
 
 class OverviewPage extends ConsumerWidget {
-  const OverviewPage({super.key, required this.onViewNetworks});
+  const OverviewPage({
+    super.key,
+    required this.onViewNetworks,
+    this.onOpenSpectrum,
+    this.selection,
+  });
   final VoidCallback onViewNetworks;
+  final VoidCallback? onOpenSpectrum;
+  final ChartSelection? selection;
   @override
   Widget build(BuildContext context, WidgetRef ref) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -24,7 +32,11 @@ class OverviewPage extends ConsumerWidget {
         label: const Text('Improve my WiFi'),
       ),
       const SizedBox(height: 22),
-      const ChartPanel(compactLegend: true),
+      ChartPanel(
+        compactLegend: true,
+        selection: selection,
+        onOpenSpectrum: onOpenSpectrum,
+      ),
       const SizedBox(height: 22),
       ResponsivePair(
         first: const NetworkInsights(),

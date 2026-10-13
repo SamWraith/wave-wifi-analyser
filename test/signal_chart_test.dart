@@ -139,6 +139,58 @@ void main() {
     );
     expect(changedTime.shouldRepaint(previous), isTrue);
   });
+  testWidgets(
+    'isolated history observations paint at their shared timeline positions',
+    (tester) async {
+      final first = point();
+      const later = AccessPoint(
+        ssid: 'Later',
+        bssid: 'later',
+        frequency: 5180,
+        rssi: -60,
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SignalChart(
+            points: [first, later],
+            band: WifiBand.ghz5,
+            time: true,
+            history: {
+              first.bssid: [SignalSample(DateTime(2026), -50)],
+              later.bssid: [SignalSample(DateTime(2026, 1, 1, 0, 1), -60)],
+            },
+          ),
+        ),
+      );
+      final painter = tester
+          .widget<CustomPaint>(
+            find.descendant(
+              of: find.byType(SignalChart),
+              matching: find.byType(CustomPaint),
+            ),
+          )
+          .painter!;
+      await tester.runAsync(() async {
+        final recorder = ui.PictureRecorder();
+        painter.paint(Canvas(recorder), const Size(300, 270));
+        final picture = recorder.endRecording();
+        final image = await picture.toImage(300, 270);
+        try {
+          final data = (await image.toByteData(
+            format: ui.ImageByteFormat.rawRgba,
+          ))!;
+          final pixel = (126 * 300 + 288) * 4;
+          final color = pointColor(later);
+          expect(data.getUint8(pixel), (color.r * 255).round());
+          expect(data.getUint8(pixel + 1), (color.g * 255).round());
+          expect(data.getUint8(pixel + 2), (color.b * 255).round());
+        } finally {
+          image.dispose();
+          picture.dispose();
+        }
+      });
+    },
+  );
   testWidgets('hidden curves disappear from spectrum and history pixels', (
     tester,
   ) async {
