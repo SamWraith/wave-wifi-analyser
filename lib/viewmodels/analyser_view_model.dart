@@ -146,6 +146,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
       }
     }
     state = state.copyWith(
+      cached: !observed,
       permission: snapshot.permission,
       locationEnabled: snapshot.locationEnabled,
       wifiEnabled: snapshot.wifiEnabled,
@@ -217,6 +218,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
       _record(history, ap.bssid, now, ap.rssi);
     }
     state = state.copyWith(
+      cached: false,
       accessPoints: points,
       history: history,
       lastUpdated: now,
@@ -324,6 +326,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     _evictedTimestampFloor = 0;
     state = state.copyWith(
       demo: value,
+      cached: true,
       busy: false,
       history: {},
       accessPoints: [],
@@ -344,9 +347,11 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     _schedule();
   }
 
-  Future<void> openSettings() async {
+  Future<void> openSettings({
+    WifiSettingsTarget target = WifiSettingsTarget.wifi,
+  }) async {
     try {
-      await _wifi.openSettings();
+      await _wifi.openSettings(target: target);
     } on MissingPluginException {
       if (ref.mounted) {
         state = state.copyWith(

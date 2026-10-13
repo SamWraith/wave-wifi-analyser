@@ -127,5 +127,7 @@ class _EmptyWifiRepository implements WifiRepository {
   @override
   Future<bool> requestPermission() async => false;
   @override
-  Future<void> openSettings() async {}
+  Future<void> openSettings({
+    WifiSettingsTarget target = WifiSettingsTarget.wifi,
+  }) async {}
 }

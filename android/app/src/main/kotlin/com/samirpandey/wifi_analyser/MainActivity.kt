@@ -8,6 +8,7 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.net.wifi.WifiManager
+import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import io.flutter.embedding.android.FlutterSurfaceView
@@ -57,7 +58,15 @@ class MainActivity : FlutterActivity() {
                             result.success(state)
                         } catch (e: SecurityException) { result.error("permission", "Location permission required for WiFi scanning", null) }
                     }
-                    "openSettings" -> { startActivity(Intent(Settings.ACTION_WIFI_SETTINGS)); result.success(null) }
+                    "openSettings" -> {
+                        val intent = when (call.argument<String>("target")) {
+                            "location" -> Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                            "permission" -> Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
+                            else -> Intent(Settings.ACTION_WIFI_SETTINGS)
+                        }
+                        try { startActivity(intent); result.success(null) }
+                        catch (e: android.content.ActivityNotFoundException) { result.error("settings_unavailable", "Android settings unavailable", null) }
+                    }
                     else -> result.notImplemented()
                 }
             }

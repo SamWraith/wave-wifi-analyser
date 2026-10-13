@@ -9,6 +9,8 @@ import '../widgets/wave_haptics.dart';
 import '../widgets/theme_reveal.dart';
 import '../widgets/stable_text_slot.dart';
 import '../widgets/scan_activity.dart';
+import '../widgets/scan_freshness.dart';
+import '../repositories/wifi_repository.dart';
 import 'analyser_providers.dart';
 
 const pages = ['Overview', 'Spectrum', 'Networks', 'Channels', 'Settings'];
@@ -286,8 +288,30 @@ class ScanStatusBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final (demo, paused, busy, status) = ref.watch(
-      analyserProvider.select((s) => (s.demo, s.paused, s.busy, s.status)),
+    final (
+      demo,
+      paused,
+      busy,
+      status,
+      cached,
+      updated,
+      permission,
+      location,
+      wifi,
+    ) = ref.watch(
+      analyserProvider.select(
+        (s) => (
+          s.demo,
+          s.paused,
+          s.busy,
+          s.status,
+          s.cached,
+          s.lastUpdated,
+          s.permission,
+          s.locationEnabled,
+          s.wifiEnabled,
+        ),
+      ),
     );
     final c = ref.read(analyserProvider.notifier);
     return Container(
@@ -300,44 +324,89 @@ class ScanStatusBar extends ConsumerWidget {
                 .withValues(alpha: .08),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const ScanActivity(),
-          const SizedBox(width: 10),
-          Expanded(
-            child: StableTextSlot(
-              text: paused ? 'Scanning paused. Last results retained.' : status,
-              alternatives: const [
-                'Scanning… Cached results shown until new scan arrives.',
-                'Allow precise location to discover nearby WiFi networks.',
-                'Enable Location services in Android settings to scan WiFi.',
-                'WiFi scans temporarily unavailable. Showing cached results.',
-                'Scanning paused. Last results retained.',
+          Row(
+            children: [
+              const ScanActivity(),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    StableTextSlot(
+                      text: paused
+                          ? 'Scanning paused. Last results retained.'
+                          : busy
+                          ? 'Request pending. Waiting for Android results.'
+                          : status,
+                      alternatives: const [
+                        'Scanning… Cached results shown until new scan arrives.',
+                        'Allow precise location to discover nearby WiFi networks.',
+                        'Enable Location services in Android settings to scan WiFi.',
+                        'WiFi scans temporarily unavailable. Showing cached results.',
+                        'Scanning paused. Last results retained.',
+                      ],
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    ScanFreshness(updated: updated, demo: demo, cached: cached),
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: paused ? 'Resume scanning' : 'Pause scanning',
+                onPressed: () {
+                  WaveHaptics.selection();
+                  c.togglePause();
+                },
+                icon: Icon(
+                  paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                  size: 18,
+                ),
+              ),
+              IconButton(
+                tooltip: 'Scan now',
+                onPressed: busy || paused
+                    ? null
+                    : () {
+                        WaveHaptics.impact();
+                        c.scan();
+                      },
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+              ),
+            ],
+          ),
+          if (!demo && !paused && !busy && (!permission || !location || !wifi))
+            Wrap(
+              spacing: 8,
+              children: [
+                if (!permission) ...[
+                  TextButton(
+                    onPressed: () {
+                      WaveHaptics.selection();
+                      c.scan();
+                    },
+                    child: const Text('Allow precise location'),
+                  ),
+                  TextButton(
+                    onPressed: () =>
+                        c.openSettings(target: WifiSettingsTarget.permission),
+                    child: const Text('App permissions'),
+                  ),
+                ] else if (!location)
+                  TextButton(
+                    onPressed: () =>
+                        c.openSettings(target: WifiSettingsTarget.location),
+                    child: const Text('Enable Location'),
+                  )
+                else if (!wifi)
+                  TextButton(
+                    onPressed: c.openSettings,
+                    child: const Text('Enable WiFi'),
+                  ),
               ],
-              style: Theme.of(context).textTheme.bodySmall,
             ),
-          ),
-          IconButton(
-            tooltip: paused ? 'Resume scanning' : 'Pause scanning',
-            onPressed: () {
-              WaveHaptics.selection();
-              c.togglePause();
-            },
-            icon: Icon(
-              paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
-              size: 18,
-            ),
-          ),
-          IconButton(
-            tooltip: 'Scan now',
-            onPressed: busy || paused
-                ? null
-                : () {
-                    WaveHaptics.impact();
-                    c.scan();
-                  },
-            icon: const Icon(Icons.refresh_rounded, size: 18),
-          ),
         ],
       ),
     );

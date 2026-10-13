@@ -60,7 +60,9 @@ class _WifiProbe implements WifiRepository {
   }
 
   @override
-  Future<void> openSettings() async {
+  Future<void> openSettings({
+    WifiSettingsTarget target = WifiSettingsTarget.wifi,
+  }) async {
     calls++;
   }
 }

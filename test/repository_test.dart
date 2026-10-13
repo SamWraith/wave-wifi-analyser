@@ -9,6 +9,29 @@ import 'package:wifi_analyser/repositories/wifi_repository.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  test('recovery settings routes explicit Android destinations', () async {
+    const channel = MethodChannel('com.samirpandey.wifi_analyser/wifi');
+    final calls = <MethodCall>[];
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          calls.add(call);
+          return null;
+        });
+    addTearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null),
+    );
+    final repository = AndroidWifiRepository();
+    for (final target in WifiSettingsTarget.values) {
+      await repository.openSettings(target: target);
+    }
+    expect(calls.map((c) => c.method), everyElement('openSettings'));
+    expect(calls.map((c) => (c.arguments as Map)['target']), [
+      'wifi',
+      'location',
+      'permission',
+    ]);
+  });
   test('malformed native data becomes recoverable platform failure', () {
     for (final value in [
       null,

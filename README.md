@@ -22,7 +22,8 @@ For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrom
 - Connected access-point card with network name, band, channel, measured signal in dBm, signal quality, advertised security and channel width.
 - Nearby-network count, strongest nearby access points, clearest channel candidate and local signal/channel/security insights.
 - Android live scans, manual Scan action, automatic scanning and pause/resume. Automatic requests run every 35 seconds while foregrounded; Android determines actual scan availability.
-- Permission, Location-off, WiFi-off, throttled/cached, empty and recoverable scan-error states, plus a shortcut to Android WiFi settings.
+- Permission, Location-off, WiFi-off, throttled/cached, empty and recoverable scan-error states. Contextual shortcuts request precise location or open Android app permissions, Location or WiFi settings.
+- Visible last-fresh-result age, pending/cached/paused labels and separate simulated-update age. Older observations are marked after two minutes; presentation clocks never add history or promise a next scan.
 - Clearly labelled demo mode on every target, with simulated updates every 3 seconds. Backgrounding or pausing stops automatic updates.
 
 ### Spectrum, signal history and interactive legends

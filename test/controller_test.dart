@@ -34,7 +34,9 @@ class FakeWifiRepository implements WifiRepository {
   @override
   Future<bool> requestPermission() async => permission;
   @override
-  Future<void> openSettings() async {}
+  Future<void> openSettings({
+    WifiSettingsTarget target = WifiSettingsTarget.wifi,
+  }) async {}
 }
 
 class FakeSettings implements SettingsRepository {
@@ -103,11 +105,14 @@ void main() {
     expect(container.read(analyserProvider).accessPoints.length, 1);
     expect(container.read(analyserProvider).history, isEmpty);
     wifi.events.add(sample(true, 100));
+    expect(container.read(analyserProvider).cached, isFalse);
     final first = container.read(analyserProvider);
     expect(first.history.values.single.length, 1);
     wifi.events.add(sample(true, 100));
     expect(container.read(analyserProvider).history.values.single.length, 1);
     wifi.events.add(sample(false, 200));
+    expect(container.read(analyserProvider).cached, isTrue);
+    expect(container.read(analyserProvider).lastUpdated, first.lastUpdated);
     expect(container.read(analyserProvider).history.values.single.length, 1);
     wifi.events.add(sample(true, 200));
     expect(container.read(analyserProvider).history.values.single.length, 2);

@@ -14,6 +14,7 @@ class AnalyserState {
   AnalyserState({
     required this.demo,
     this.busy = false,
+    this.cached = true,
     this.paused = false,
     this.permission = false,
     this.locationEnabled = false,
@@ -38,6 +39,7 @@ class AnalyserState {
   const AnalyserState._fromFrozen({
     required this.demo,
     this.busy = false,
+    this.cached = true,
     this.paused = false,
     this.permission = false,
     this.locationEnabled = false,
@@ -55,6 +57,7 @@ class AnalyserState {
   });
   final bool demo,
       busy,
+      cached,
       paused,
       permission,
       locationEnabled,
@@ -71,6 +74,7 @@ class AnalyserState {
   AnalyserState copyWith({
     bool? demo,
     bool? busy,
+    bool? cached,
     bool? paused,
     bool? permission,
     bool? locationEnabled,
@@ -90,6 +94,7 @@ class AnalyserState {
   }) => AnalyserState._fromFrozen(
     demo: demo ?? this.demo,
     busy: busy ?? this.busy,
+    cached: cached ?? this.cached,
     paused: paused ?? this.paused,
     permission: permission ?? this.permission,
     locationEnabled: locationEnabled ?? this.locationEnabled,

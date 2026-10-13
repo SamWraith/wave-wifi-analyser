@@ -4,13 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/analyser_state.dart';
 
+enum WifiSettingsTarget { wifi, location, permission }
+
 abstract interface class WifiRepository {
   bool get supported;
   Stream<WifiSnapshot> get scanResults;
   Future<WifiSnapshot> snapshot();
   Future<WifiSnapshot> scan();
   Future<bool> requestPermission();
-  Future<void> openSettings();
+  Future<void> openSettings({
+    WifiSettingsTarget target = WifiSettingsTarget.wifi,
+  });
 }
 
 final wifiRepositoryProvider = Provider<WifiRepository>(
@@ -47,7 +51,9 @@ class AndroidWifiRepository implements WifiRepository {
   Future<bool> requestPermission() async =>
       await _native.invokeMethod<bool>('requestPermission') ?? false;
   @override
-  Future<void> openSettings() => _native.invokeMethod<void>('openSettings');
+  Future<void> openSettings({
+    WifiSettingsTarget target = WifiSettingsTarget.wifi,
+  }) => _native.invokeMethod<void>('openSettings', {'target': target.name});
 }
 
 /// Keep malformed native payloads inside the repository error boundary.
