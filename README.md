@@ -62,6 +62,16 @@ For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrom
 - Selectable detail values adapt to narrow screens and large text; Copy MAC address gives confirmation feedback.
 - Search text stays synchronized when navigating between screens.
 
+### Saved room comparisons
+
+- **Compare rooms** on Overview opens a foreground recording for one BSSID, with an optional manual room/session label. Favorites and aliases help identify APs; original SSID, full BSSID and radio context remain visible.
+- Start waits for new observations; cached/duplicate native timestamps, chart visibility and existing history never add samples. Recordings report missing-AP updates and updates without fresh data. Demo sessions stay explicitly simulated and cannot compare with measured sessions.
+- Stop saves locally; discard cancels. Pause, leaving the foreground or changing data source ends and saves with a reason. Resume never restarts recording. Relaunch restores completed sessions; forced termination may lose an unfinished recording or pending save.
+- Select two or more sessions for the same BSSID/source. Each band/channel/primary frequency/width/center-frequency context shows sample count, observation time range, median RSSI and RSSI range separately. Median delta appears only when every selected session has one identical context; stronger signal is not proof of faster WiFi.
+- Gaps remain visible: initial wait, longest interval between observations and silence before stop. No interpolated signal samples. Observation times use monotonic elapsed time anchored to recording start, so wall-clock corrections cannot break a saved session.
+- Retain up to 24 sessions with 120 fresh samples each; recording stops at the sample cap. Delete records to free space. Labels use a consistent 64 UTF-16-code-unit limit; storage is a validated version 1 envelope capped at 1 MiB. Loading gates recording while preserving entered labels; checked, serialized/coalesced writes expose recoverable storage errors separately from scanning.
+- No GPS coordinates, background service, extra permissions, cloud sync, heatmap, export or distance-accuracy claim. See [session verification](docs/SAVED_COMPARISON_SESSIONS.md).
+
 ### Channel planning
 
 - Channel candidates ranked by bandwidth overlap weighted by received power, with relative overlap bars and Clear/Low/Moderate/High labels.
@@ -103,12 +113,14 @@ For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrom
 
 No location coordinates are collected. Distance is a free-space estimate and can be inaccurate indoors; chart envelopes are illustrative rather than RF spectrum measurements. Local channel recommendations do not configure routers.
 
-Saved measurement sessions, device discovery, speed tests, network aliases, AI/cloud diagnostics, home-screen widgets and router administration are not included. Remaining additions are recommendations, not committed scope; see the [product manager review](docs/PRODUCT_REVIEW.md). User-requested Overview-to-Spectrum navigation, focused charts and touch axis inspection are planned in the [roadmap](docs/ROADMAP.md).
+Device discovery, speed tests, AI/cloud diagnostics, home-screen widgets and router administration are not included. Next authorized Android slices are explainable channel planning and private comparison export/share; afterward, native macOS scanning. Windows/Linux/iOS live scanning remains deferred. See delivered work and next scope in the [roadmap](docs/ROADMAP.md); original feature recommendations remain in the [product review](docs/PRODUCT_REVIEW.md).
 
 ## Architecture: MVVM + Riverpod 3.4.3
 
 - `lib/models/access_point.dart`: scan model, frequency/channel conversion, distance, overlap heuristic.
 - `lib/models/analyser_state.dart`: immutable view state and typed native snapshots.
+- `lib/models/comparison_session.dart`, `lib/repositories/comparison_sessions_repository.dart`, `lib/viewmodels/comparison_sessions_view_model.dart`: immutable bounded session evidence, versioned local storage and foreground recording/persistence orchestration.
+- `lib/views/sessions_page.dart`: AP selection, recording feedback, saved-session comparison and deletion.
 - `lib/models/scan_freshness.dart` / `wifi_guidance.dart`: elapsed-age rules and offline evidence/guidance.
 - `lib/viewmodels/wifi_guidance_view_model.dart`: ephemeral same-AP baseline/recheck workflow.
 - `lib/views/wifi_guidance_sheet.dart`: scrollable guide using shared scan recovery controls.

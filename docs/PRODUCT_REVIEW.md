@@ -33,7 +33,7 @@ ranking uses a fixed candidate list and an overlap heuristic. Sources reviewed:
 The user subsequently approved ranks 1 and 2. Both are implemented in the
 2026-10-13 follow-up; see [freshness and guidance verification](FRESHNESS_AND_GUIDANCE.md).
 The original ranking and hypotheses below remain historical recommendations.
-Rank 3 was subsequently authorized and delivered: BSSID favorites, local aliases, missing-favorite identity and bounded versioned storage. See [favorites and aliases verification](FAVORITES_AND_ALIASES.md) and README for delivered behavior. Ranks 4–6 remain proposals, outside authorized scope.
+Rank 3 was subsequently authorized and delivered: BSSID favorites, local aliases, missing-favorite identity and bounded versioned storage. See [favorites and aliases verification](FAVORITES_AND_ALIASES.md) and README for delivered behavior. Rank 4 was subsequently authorized and delivered: bounded foreground room sessions and same-BSSID comparisons with separate radio contexts. See [session verification](SAVED_COMPARISON_SESSIONS.md). Ranks 5–6 are now authorized as later Android slices; this session slice does not implement them. Native macOS scanning follows those slices; other native platforms remain deferred.
 
 ## Ranked feature recommendations
 
@@ -51,7 +51,7 @@ expanding later items.
 | 5 | Explainable channel planning | Help users understand why a candidate ranks well and whether it is relevant to their router. | Medium–large | Explain strongest overlap contributors for each candidate. Allow desired channel width and a user-entered allowed-channel shortlist; recalculate using that width. Display selected assumptions and fresh-data age. Verify wide-channel frequency handling with domain tests. A shortlist is user input, not proof of local regulatory availability or router support. |
 | 6 | Private export/share of a comparison | Help users send useful evidence to household members or support. | Small–medium after rank 4 | Export a selected session as CSV and a concise readable summary. Preview before sharing; hide SSID/BSSID by default, make inclusion explicit, and distinguish demo/measured data. Include timestamps, sample counts and heuristic limitations. Share only on user action; no account, server upload or automatic telemetry. |
 
-Proposed next slice: rank 1, then rank 2. Ask participants to diagnose a known
+Original proposed next slice: rank 1, then rank 2. Ask participants to diagnose a known
 weak-signal location and explain the next action in their own words. Record
 task completion and misunderstandings; this is a proposed validation exercise,
 not research already performed.

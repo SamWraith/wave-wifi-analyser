@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../viewmodels/analyser_view_model.dart';
+import '../viewmodels/comparison_sessions_view_model.dart';
 import '../widgets/wave_components.dart';
 import 'analyser_providers.dart';
 import '../widgets/connection_card.dart';
@@ -9,6 +10,7 @@ import '../widgets/network_tile.dart';
 import 'chart_panel.dart';
 import 'chart_selection.dart';
 import 'wifi_guidance_sheet.dart';
+import 'sessions_page.dart';
 
 class OverviewPage extends ConsumerWidget {
   const OverviewPage({
@@ -26,10 +28,17 @@ class OverviewPage extends ConsumerWidget {
     children: [
       const OverviewSummary(),
       const SizedBox(height: 16),
-      OutlinedButton.icon(
-        onPressed: () => showWifiGuidance(context),
-        icon: const Icon(Icons.wifi_find_rounded),
-        label: const Text('Improve my WiFi'),
+      Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        children: [
+          OutlinedButton.icon(
+            onPressed: () => showWifiGuidance(context),
+            icon: const Icon(Icons.wifi_find_rounded),
+            label: const Text('Improve my WiFi'),
+          ),
+          const RoomComparisonButton(),
+        ],
       ),
       const SizedBox(height: 22),
       ChartPanel(
@@ -44,6 +53,34 @@ class OverviewPage extends ConsumerWidget {
       ),
     ],
   );
+}
+
+class RoomComparisonButton extends ConsumerWidget {
+  const RoomComparisonButton({super.key});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final active = ref.watch(
+      comparisonSessionsProvider.select(
+        (s) => (s.active?.id, s.active?.label, s.active?.demo),
+      ),
+    );
+    final label = active.$1 == null
+        ? 'Compare rooms'
+        : active.$2?.isNotEmpty == true
+        ? 'Recording · ${active.$2}'
+        : 'Recording session';
+    return OutlinedButton.icon(
+      onPressed: () => showComparisonSessions(context),
+      icon: Icon(
+        active.$1 == null
+            ? Icons.compare_arrows_rounded
+            : Icons.fiber_manual_record_rounded,
+      ),
+      label: Text(
+        active.$3 == true && active.$1 != null ? '$label (simulated)' : label,
+      ),
+    );
+  }
 }
 
 class OverviewSummary extends ConsumerWidget {

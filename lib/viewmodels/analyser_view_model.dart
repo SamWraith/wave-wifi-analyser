@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/access_point.dart';
+import '../models/ap_preference.dart';
+import 'comparison_sessions_view_model.dart';
 import '../models/analyser_state.dart';
 import '../repositories/demo_wifi_source.dart';
 import '../repositories/wifi_repository.dart';
@@ -134,17 +136,23 @@ class AnalyserViewModel extends Notifier<AnalyserState>
       (key, value) => MapEntry(key, List<SignalSample>.of(value)),
     );
     var observed = false;
+    final fresh = <String, AccessPoint>{};
     // Keep one floor for the whole batch: eviction during this scan must not
     // suppress other first-time APs from the same hardware scan.
     final timestampFloor = _evictedTimestampFloor;
     for (final ap in snapshot.accessPoints) {
       if (snapshot.fresh &&
-          ap.timestamp > (_lastTimestamp[ap.bssid] ?? timestampFloor)) {
+          ap.timestamp >
+              (_lastTimestamp[preferenceKey(ap.bssid)] ?? timestampFloor)) {
         _record(history, ap.bssid, now, ap.rssi);
-        _lastTimestamp[ap.bssid] = ap.timestamp;
+        _lastTimestamp[preferenceKey(ap.bssid)] = ap.timestamp;
         observed = true;
+        fresh[preferenceKey(ap.bssid)] = ap;
       }
     }
+    ref
+        .read(comparisonSessionsProvider.notifier)
+        .observe(snapshot.accessPoints, fresh, demo: false);
     state = state.copyWith(
       cached: !observed,
       permission: snapshot.permission,
@@ -169,7 +177,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     if (history.length > 256) {
       final oldest = history.keys.first;
       history.remove(oldest);
-      final evicted = _lastTimestamp.remove(oldest);
+      final evicted = _lastTimestamp.remove(preferenceKey(oldest));
       if (evicted != null && evicted > _evictedTimestampFloor) {
         _evictedTimestampFloor = evicted;
       }
@@ -217,6 +225,9 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     for (final ap in points) {
       _record(history, ap.bssid, now, ap.rssi);
     }
+    ref.read(comparisonSessionsProvider.notifier).observe(points, {
+      for (final ap in points) preferenceKey(ap.bssid): ap,
+    }, demo: true);
     state = state.copyWith(
       cached: false,
       accessPoints: points,
@@ -320,6 +331,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
   }
 
   Future<void> setDemo(bool value) async {
+    ref.read(comparisonSessionsProvider.notifier).stop('Data source changed');
     _epoch++;
     _deadline?.cancel();
     _lastTimestamp.clear();
@@ -341,6 +353,9 @@ class AnalyserViewModel extends Notifier<AnalyserState>
   }
 
   void togglePause() {
+    if (!state.paused) {
+      ref.read(comparisonSessionsProvider.notifier).stop('Scanning paused');
+    }
     _epoch++;
     _deadline?.cancel();
     state = state.copyWith(paused: !state.paused, busy: false);
@@ -370,6 +385,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     if (!ref.mounted) return;
     _active = state == AppLifecycleState.resumed;
     if (!_active) {
+      ref.read(comparisonSessionsProvider.notifier).stop('App left foreground');
       _epoch++;
       _deadline?.cancel();
       this.state = this.state.copyWith(busy: false);

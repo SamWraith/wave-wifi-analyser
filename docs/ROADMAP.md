@@ -2,8 +2,41 @@
 
 This file records user-requested work and its delivery status. Planned work has
 no promised date. Existing feature inventory lives in README.md.
-The four remaining product-manager recommendations in
-[PRODUCT_REVIEW.md](PRODUCT_REVIEW.md) remain proposals, not approved scope.
+Ranks 1–4 from [PRODUCT_REVIEW.md](PRODUCT_REVIEW.md) are delivered. Ranks 5–6
+are authorized next, followed by native macOS scanning only. Windows/Linux/iOS
+live scanning remains deferred.
+
+## Saved room comparison sessions
+
+Requested and implemented: 2026-10-13. Rank 4 only.
+
+Overview opens **Compare rooms**. Record one explicitly selected BSSID with an
+optional manual room/session label, stop/save or discard, select compatible saved
+sessions and delete records. Favorites and aliases retain original SSID and BSSID
+context. Only newly accepted observations add samples; demo stays simulated and
+separate. Compare sample count, observation time range, median/range RSSI and gaps
+for each reported band/channel/frequency/width/center-frequency context. Changed
+contexts suppress combined deltas.
+
+Pause, background and source changes end/save recording with a reason. Resume
+requires a new start. Completed sessions survive relaunch; unfinished drafts and
+pending writes may be lost on forced termination. Storage caps: 24 sessions, 120
+samples/session, 1 MiB versioned envelope; no automatic deletion. Loading gates
+recording and retains page-local edits, writes coalesce/serialize, errors offer
+retry separately from scan status. Time ranges use monotonic elapsed time anchored
+to start, preserving chronology across phone clock corrections.
+
+Verification and limits: [saved comparison sessions](SAVED_COMPARISON_SESSIONS.md).
+No export, GPS, heatmap, background service or new permission in this slice.
+
+## Next authorized work
+
+1. Rank 5: explainable channel planning, requested widths and user-entered allowed
+   shortlist with honest assumptions and contributor evidence.
+2. Rank 6: private previewed comparison export/share, identifiers hidden by default.
+3. Native macOS live scanning. Android remains the current live platform.
+
+These are separate future slices; no promised dates or completed implementation.
 
 ## Detailed chart exploration
 
