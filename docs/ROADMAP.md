@@ -20,8 +20,15 @@ Verified: full unit/widget suite, static analysis, release APK build and Android
 emulator exploration regression. Narrow/large-text light/dark/reduced-motion focus
 and Back/Escape return are covered. Independent architecture review findings were
 fixed and rechecked. OnePlus release updated using `install -r`, retaining data and
-permissions; physical touch validation was interrupted when the phone was needed
-away from USB and remains pending. No frame-rate qualification claimed.
+permissions. After reconnection, physical OnePlus 15 checks passed with the normal
+release app and live scan data: Overview navigation retained 2.4 GHz; normal
+landscape/history and focused history accepted horizontal drag inspection;
+vertical chart gestures scrolled the page; cursor dismissal worked; Close and
+Android Back returned to the same Spectrum scroll position and history mode;
+legend hiding carried back from focus and Show all reset it. Freshness qualifiers
+and actual history gaps remained visible. These were ADB-injected touchscreen
+interactions inspected through screenshots and accessibility output, not a
+frame-rate qualification or a full physical accessibility audit.
 
 Original acceptance scope follows.
 
