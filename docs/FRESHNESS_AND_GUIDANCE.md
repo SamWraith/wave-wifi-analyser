@@ -65,3 +65,51 @@ routes remain covered by typed channel tests/native compilation, without OEM UI
 coverage. Refreshed installable artifact: `dist/wave-wifi-release.apk` (ignored by
 Git, normal app entrypoint). Release still uses existing development signing.
 No additional refresh-rate or physical RF qualification was claimed.
+
+## Physical follow-up: OnePlus 15
+
+Date: 2026-10-13. ADB target `3C161500AUB00000`, model CPH2745,
+Android 16 / API 36. Device was connected with WiFi and Location services enabled.
+
+`native_wifi_test.dart` passed on this physical device, opening both guided choices
+and exercising the real Android bridge/UI. The opt-in `physical_wifi_test.dart`
+then passed with real RF observations:
+
+- Fresh scan contained 50 APs across 2.4 GHz and 5 GHz; 50 AP histories recorded.
+- Displayed age advanced while paused; observation time and history collection
+  remained unchanged, and busy state stayed false.
+- Both guided choices established a measured connected-AP baseline.
+- After a 35-second pause to avoid rapid scan requests, recheck completed for the
+  same BSSID with a strictly newer native timestamp and observation time.
+- Connected AP history contained two fresh samples; observed RSSI delta was +8 dB.
+  No router or location intervention was performed. This is sample variation, not
+  proof of lasting improvement or a causal diagnosis.
+- No Flutter test exception remained. Logs record aggregate evidence, not SSIDs
+  or BSSIDs. Analysis and nine focused freshness/recovery/guidance tests passed.
+
+The preliminary RF run stopped at missing scan permission after test installation.
+The successful run awaited ViewModel initialization and used the normal Android
+permission prompt before checking prerequisites. Flutter integration runs remove
+the test installation and can clear app data/permission grants; normal release APK
+was reinstalled and launched afterward. Recheck app permission when repeating.
+
+Reproduce with a physical Android phone connected to WiFi:
+
+```sh
+PATH="$PWD/.fvm/flutter_sdk/bin:$PATH" .fvm/flutter_sdk/bin/flutter test \
+  integration_test/physical_wifi_test.dart \
+  --dart-define=WAVE_PHYSICAL_RF=true -d <physical-device-id>
+```
+
+The RF test is skipped without explicit opt-in. It fails rather than silently
+claiming coverage when fresh scan/connected-AP prerequisites are unavailable.
+
+Remaining device coverage: denied/revoked/permanently-denied permissions, WiFi and
+Location disabled/re-enabled, OEM settings destinations, native cached/throttled
+and duplicate events, AP disappearance/roaming/same-SSID multiplicity, and 6 GHz.
+Unit/widget regressions cover several logical cases, but this physical run did
+not force those RF/OS scenarios. No new refresh-rate or battery/thermal claim.
+
+After restoration, the normal release app showed Scan complete and a fresh-result
+age in the guide on OnePlus. Precise/coarse location grants were confirmed active.
+No test entrypoint was left installed.

@@ -139,7 +139,7 @@ fvm flutter test integration_test/native_wifi_test.dart -d <android-device-id>
 fvm flutter test integration_test/native_motion_test.dart -d <android-or-ios-device-id>
 ```
 
-Widget tests cover phone and desktop layouts in both themes, search/details/navigation, chart width, legend hide/include/isolate/reset cycles, duplicate-SSID identity, scan reordering, compact scrolling/expansion at normal and large text scales, and rendered curve visibility. Analysis tests cover frequency exceptions, connected-AP exclusion, bandwidth overlap, and signal weighting. ViewModel tests check fresh/cached/duplicate timestamps, immutable history, pause behavior, stale in-flight scan responses, and settings persistence. Native integration test checks the Android bridge on an emulator. Physical RF scanning still requires a real Android device; emulator success does not validate real RF measurements.
+Widget tests cover phone and desktop layouts in both themes, search/details/navigation, chart width, legend hide/include/isolate/reset cycles, duplicate-SSID identity, scan reordering, compact scrolling/expansion at normal and large text scales, and rendered curve visibility. Analysis tests cover frequency exceptions, connected-AP exclusion, bandwidth overlap, and signal weighting. ViewModel tests check fresh/cached/duplicate timestamps, immutable history, pause behavior, stale in-flight scan responses, and settings persistence. Native integration checks the Android bridge on an emulator and OnePlus 15 (CPH2745, Android 16). Opt-in `physical_wifi_test.dart` verified live 2.4/5 GHz observations, paused age/history behavior and a newer same-BSSID guided recheck on that phone. Permission-revocation, disabled-service, throttling, roaming and 6 GHz coverage remain open; see [device evidence](docs/FRESHNESS_AND_GUIDANCE.md).
 
 ## Research
 
@@ -149,6 +149,6 @@ Installable artifact: `dist/wave-wifi-release.apk` (normal app entry point, pres
 
 [Original platform branding](assets/branding/README.md) includes editable SVG, Android adaptive/themed/night icons, and iOS Any/Dark/Tinted appearances.
 
-See [Rive onboarding](docs/RIVE_ONBOARDING.md) for editable artwork, runtime ownership, and native library setup. Keep Flutter/Dart on PATH for Rive's Android build hook. Independent architecture review found no actionable onboarding issues. Physical RF validation remains open.
+See [Rive onboarding](docs/RIVE_ONBOARDING.md) for editable artwork, runtime ownership, and native library setup. Keep Flutter/Dart on PATH for Rive's Android build hook. Independent architecture review found no actionable onboarding issues. Remaining physical RF edge cases are listed in [freshness/guidance verification](docs/FRESHNESS_AND_GUIDANCE.md).
 
 APK output: `build/app/outputs/flutter-apk/app-release.apk`. Release mode currently uses development signing; production signing is not configured.
