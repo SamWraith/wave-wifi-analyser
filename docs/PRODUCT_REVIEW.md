@@ -33,7 +33,7 @@ ranking uses a fixed candidate list and an overlap heuristic. Sources reviewed:
 The user subsequently approved ranks 1 and 2. Both are implemented in the
 2026-10-13 follow-up; see [freshness and guidance verification](FRESHNESS_AND_GUIDANCE.md).
 The original ranking and hypotheses below remain historical recommendations.
-Rank 3 was subsequently authorized and delivered: BSSID favorites, local aliases, missing-favorite identity and bounded versioned storage. See [favorites and aliases verification](FAVORITES_AND_ALIASES.md) and README for delivered behavior. Rank 4 was subsequently authorized and delivered: bounded foreground room sessions and same-BSSID comparisons with separate radio contexts. See [session verification](SAVED_COMPARISON_SESSIONS.md). Ranks 5–6 are now authorized as later Android slices; this session slice does not implement them. Native macOS scanning follows those slices; other native platforms remain deferred.
+Rank 3 was subsequently authorized and delivered: BSSID favorites, local aliases, missing-favorite identity and bounded versioned storage. See [favorites and aliases verification](FAVORITES_AND_ALIASES.md) and README for delivered behavior. Rank 4 was subsequently authorized and delivered: bounded foreground room sessions and same-BSSID comparisons with separate radio contexts. See [session verification](SAVED_COMPARISON_SESSIONS.md). Rank 5 was subsequently authorized and delivered: explainable width-aware plans with manual primary-channel inputs and BSSID contributor evidence. See [channel planning verification](CHANNEL_PLANNING.md). Rank 6 remains authorized as the next Android slice. Native macOS scanning follows those slices; other native platforms remain deferred.
 
 ## Ranked feature recommendations
 

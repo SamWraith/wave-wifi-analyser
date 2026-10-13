@@ -120,11 +120,17 @@ double estimateChannelOverlap(
   for (final ap in aps.where(
     (a) => a.band == band && !(excludeConnected && a.connected),
   )) {
-    final overlap = math.max(
-      0.0,
-      1 - (frequency - ap.spectralCenter).abs() / (ap.width / 2 + 10),
-    );
-    score += overlap * math.pow(10, (ap.rssi + 60) / 10);
+    score += overlapContribution(ap, frequency, 20);
   }
   return score;
+}
+
+/// Triangular bandwidth overlap weighted by received power.
+/// Uses reported source geometry; never modifies source observations.
+double overlapContribution(AccessPoint ap, int center, int width) {
+  final overlap = math.max(
+    0.0,
+    1 - (center - ap.spectralCenter).abs() / (ap.width / 2 + width / 2),
+  );
+  return overlap * math.pow(10, (ap.rssi + 60) / 10);
 }

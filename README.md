@@ -74,7 +74,9 @@ For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrom
 
 ### Channel planning
 
-- Channel candidates ranked by bandwidth overlap weighted by received power, with relative overlap bars and Clear/Low/Moderate/High labels.
+- Explainable channel plans rank primary channels by bandwidth overlap weighted by received power. Expand each candidate for its strongest three BSSID-specific contributors, aliases plus original SSIDs, reported source widths/centers and share of that candidate’s score. Same-SSID APs stay distinct.
+- Change desired width (20/40 MHz in 2.4 GHz; 20/40/80/160 MHz in 5/6 GHz) and enter a manual allowed-primary-channel shortlist. Scores use calculated bonded centers; 2.4 GHz 40 MHz shows extension above/below. Blank restores example candidates; duplicates merge; invalid edits stay open. Cancel, clear and per-band reset are explicit. Assumptions last for this app session only.
+- Fresh-result age, cached/demo/paused/error status and selected assumptions stay visible. Candidate pages hold eight rows; all candidates remain reachable and bars normalize against the whole plan. No observations means no ranking.
 - Option to exclude the connected access point when planning its channel.
 - Display filters and legend visibility do not remove scanned access points from scoring. Recommendations are a local heuristic, not measured noise, throughput or regulatory availability.
 
@@ -113,11 +115,13 @@ For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrom
 
 No location coordinates are collected. Distance is a free-space estimate and can be inaccurate indoors; chart envelopes are illustrative rather than RF spectrum measurements. Local channel recommendations do not configure routers.
 
-Device discovery, speed tests, AI/cloud diagnostics, home-screen widgets and router administration are not included. Next authorized Android slices are explainable channel planning and private comparison export/share; afterward, native macOS scanning. Windows/Linux/iOS live scanning remains deferred. See delivered work and next scope in the [roadmap](docs/ROADMAP.md); original feature recommendations remain in the [product review](docs/PRODUCT_REVIEW.md).
+Device discovery, speed tests, AI/cloud diagnostics, home-screen widgets and router administration are not included. Next authorized Android slice is private comparison export/share; afterward, native macOS scanning. Windows/Linux/iOS live scanning remains deferred. See delivered work and next scope in the [roadmap](docs/ROADMAP.md); original feature recommendations remain in the [product review](docs/PRODUCT_REVIEW.md).
 
 ## Architecture: MVVM + Riverpod 3.4.3
 
-- `lib/models/access_point.dart`: scan model, frequency/channel conversion, distance, overlap heuristic.
+- `lib/models/access_point.dart`: scan model, frequency/channel conversion, distance, shared overlap heuristic.
+- `lib/models/channel_plan.dart`: validated primary-channel inputs, bonded candidate geometry and contributor evidence.
+- `lib/viewmodels/channel_planning_view_model.dart`: immutable session-local per-band assumptions and derived unfiltered plans.
 - `lib/models/analyser_state.dart`: immutable view state and typed native snapshots.
 - `lib/models/comparison_session.dart`, `lib/repositories/comparison_sessions_repository.dart`, `lib/viewmodels/comparison_sessions_view_model.dart`: immutable bounded session evidence, versioned local storage and foreground recording/persistence orchestration.
 - `lib/views/sessions_page.dart`: AP selection, recording feedback, saved-session comparison and deletion.

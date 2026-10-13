@@ -8,7 +8,8 @@ import 'package:wifi_analyser/repositories/wifi_repository.dart';
 import 'package:wifi_analyser/viewmodels/analyser_view_model.dart';
 import 'package:wifi_analyser/views/analyser_navigation.dart';
 import 'package:wifi_analyser/views/analyser_providers.dart';
-import 'package:wifi_analyser/views/channels_page.dart';
+import 'package:wifi_analyser/widgets/channel_plan_tile.dart';
+import 'package:wifi_analyser/viewmodels/channel_planning_view_model.dart';
 import 'package:wifi_analyser/views/settings_page.dart';
 import 'package:wifi_analyser/widgets/network_tile.dart';
 
@@ -67,27 +68,26 @@ void main() {
     (tester) async {
       final container = await start(tester);
       final vm = container.read(analyserProvider.notifier);
-      final ratings = container.read(channelRatingsProvider);
+      final ratings = container.read(channelPlansProvider);
       vm.setQuery('nothing matches');
       await tester.pump();
-      expect(
-        identical(ratings, container.read(channelRatingsProvider)),
-        isTrue,
-      );
+      expect(identical(ratings, container.read(channelPlansProvider)), isTrue);
       await tester.tap(find.text('Channels').last);
       await tester.pumpAndSettle();
-      expect(find.byType(ChannelRatingTile), findsNWidgets(3));
+      expect(find.byType(ChannelPlanTile), findsNWidgets(3));
       final amounts = tester
-          .widgetList<ChannelRatingTile>(find.byType(ChannelRatingTile))
+          .widgetList<ChannelPlanTile>(find.byType(ChannelPlanTile))
           .map((tile) => tile.amount)
           .toList();
       expect(amounts.every((value) => value >= 0 && value <= 1), isTrue);
       expect(amounts, contains(1.0));
       await tester.runAsync(() => vm.setDemo(false));
       await tester.pumpAndSettle();
-      expect(find.byType(ChannelRatingTile), findsNothing);
+      expect(find.byType(ChannelPlanTile), findsNothing);
       expect(
-        find.text('Scan this band before comparing channels.'),
+        find.text(
+          'No observations in this band. Scan or select a band with results before planning.',
+        ),
         findsOneWidget,
       );
       await tester.pumpWidget(const SizedBox.shrink());

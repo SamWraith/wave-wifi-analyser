@@ -2,8 +2,8 @@
 
 This file records user-requested work and its delivery status. Planned work has
 no promised date. Existing feature inventory lives in README.md.
-Ranks 1–4 from [PRODUCT_REVIEW.md](PRODUCT_REVIEW.md) are delivered. Ranks 5–6
-are authorized next, followed by native macOS scanning only. Windows/Linux/iOS
+Ranks 1–5 from [PRODUCT_REVIEW.md](PRODUCT_REVIEW.md) are delivered. Rank 6
+is authorized next, followed by native macOS scanning only. Windows/Linux/iOS
 live scanning remains deferred.
 
 ## Saved room comparison sessions
@@ -29,12 +29,33 @@ to start, preserving chronology across phone clock corrections.
 Verification and limits: [saved comparison sessions](SAVED_COMPARISON_SESSIONS.md).
 No export, GPS, heatmap, background service or new permission in this slice.
 
+## Explainable channel planning
+
+Requested and implemented: 2026-10-13. Rank 5 only.
+
+Channels displays desired width and a manually entered primary-channel shortlist,
+calculates bonded centers, ranks relative overlap and explains strongest contributors
+by BSSID with alias/original SSID and unchanged reported source geometry. 2.4 GHz
+40 MHz extension alternatives are explicit. Shortlist validation rejects unsupported
+geometry; it cannot establish regulatory availability, DFS or router support.
+Blank restores example channels; duplicates merge; Cancel preserves applied inputs;
+Clear and per-band reset are explicit. Inputs stay in current app session, separately
+for each band. No persistence or router configuration added.
+
+Plans use every observed AP in selected band independently of search, RSSI filters
+or hidden/solo chart curves. Connected exclusion remains BSSID-specific. Eight-row
+pages retain access to every candidate and whole-plan normalization. Fresh-result
+age and demo/cached/paused/error status qualify the evidence; empty observations
+never produce recommendations. Relative overlap is not measured interference,
+noise or throughput and cannot guarantee improvement.
+
+Verification: [channel planning](CHANNEL_PLANNING.md). Physical verification deferred
+at user request until remaining features are complete.
+
 ## Next authorized work
 
-1. Rank 5: explainable channel planning, requested widths and user-entered allowed
-   shortlist with honest assumptions and contributor evidence.
-2. Rank 6: private previewed comparison export/share, identifiers hidden by default.
-3. Native macOS live scanning. Android remains the current live platform.
+1. Rank 6: private previewed comparison export/share, identifiers hidden by default.
+2. Native macOS live scanning. Android remains the current live platform.
 
 These are separate future slices; no promised dates or completed implementation.
 

@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:wifi_analyser/models/access_point.dart';
-import 'package:wifi_analyser/views/channels_page.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wifi_analyser/models/channel_plan.dart';
+import 'package:wifi_analyser/widgets/channel_plan_tile.dart';
 import 'package:wifi_analyser/widgets/wave_motion.dart';
 
-Widget harness(Widget child, {bool reduced = false}) => MaterialApp(
-  home: MediaQuery(
-    data: MediaQueryData(disableAnimations: reduced),
-    child: Scaffold(body: Center(child: child)),
+Widget harness(Widget child, {bool reduced = false}) => ProviderScope(
+  child: MaterialApp(
+    home: MediaQuery(
+      data: MediaQueryData(disableAnimations: reduced),
+      child: Scaffold(body: Center(child: child)),
+    ),
   ),
 );
 
@@ -39,7 +42,7 @@ void main() {
     expect(tester.widget<Opacity>(find.byType(Opacity)).opacity, 1);
     await tester.pumpWidget(
       harness(
-        const ChannelRatingTile(rating: ChannelRating(6, 2437, 1), amount: .8),
+        ChannelPlanTile(plan: ChannelPlan(6, 2437, 20, []), amount: .8),
         reduced: true,
       ),
     );
@@ -124,9 +127,9 @@ void main() {
     tester,
   ) async {
     Widget bar(double amount) => harness(
-      ChannelRatingTile(
+      ChannelPlanTile(
         key: const ValueKey(6),
-        rating: const ChannelRating(6, 2437, 1),
+        plan: ChannelPlan(6, 2437, 20, []),
         amount: amount,
       ),
     );
