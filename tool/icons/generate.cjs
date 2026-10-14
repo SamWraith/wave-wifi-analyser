@@ -71,6 +71,16 @@ async function generateIos(paths) {
   await write(path.join(ios, 'Contents.json'), JSON.stringify({ images, info: { author: 'xcode', version: 1 } }, null, 2) + '\n');
 }
 
+async function generateMacos(paths) {
+  const catalog = path.join(root, 'macos/Runner/Assets.xcassets/AppIcon.appiconset');
+  // Same Wave mark and light palette, with a rounded tile and transparent
+  // outer margin for the macOS Dock/Finder silhouette.
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 320 320"><g transform="translate(32 32)"><rect width="256" height="256" rx="56" fill="${palettes.light.background}"/>${mark(paths, palettes.light.ink, false)}</g></svg>`;
+  for (const size of [16, 32, 64, 128, 256, 512, 1024]) {
+    await png(svg, path.join(catalog, `app_icon_${size}.png`), size, false);
+  }
+}
+
 async function generateAndroid(paths) {
   await write(path.join(android, 'drawable/wave_icon_foreground.xml'), vector(paths, false));
   await write(path.join(android, 'drawable/wave_icon_monochrome.xml'), vector(paths, true));
@@ -124,8 +134,9 @@ async function generate() {
   if (paths.length !== 3) throw new Error('Expected three named Wave mark paths.');
   await generateIos(paths);
   await generateAndroid(paths);
+  await generateMacos(paths);
   await generatePreview(paths);
-  console.log('Generated Wave SVG masters, iOS appearances, Android adaptive/themed/legacy icons and store artwork.');
+  console.log('Generated Wave SVG masters, iOS appearances, Android adaptive/themed/legacy icons, macOS icon sizes and store artwork.');
 }
 
 generate().catch((error) => { console.error(error); process.exitCode = 1; });

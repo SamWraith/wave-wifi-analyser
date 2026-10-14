@@ -20,6 +20,23 @@ async function verify() {
     assert.equal(tinted[i], tinted[i + 1], 'Tint source must be grayscale');
     assert.equal(tinted[i], tinted[i + 2]);
   }
+  const macos = path.join(root, 'macos/Runner/Assets.xcassets/AppIcon.appiconset');
+  const macContents = JSON.parse(await fs.readFile(path.join(macos, 'Contents.json'), 'utf8'));
+  for (const image of macContents.images) {
+    const size = Number(image.size.split('x')[0]) * Number(image.scale.replace('x', ''));
+    const metadata = await sharp(path.join(macos, image.filename)).metadata();
+    assert.equal(metadata.width, size);
+    assert.equal(metadata.height, size);
+    assert.equal(metadata.hasAlpha, true, 'macOS icon must preserve its transparent outer margin');
+  }
+  const macPixels = await sharp(path.join(macos, 'app_icon_1024.png')).ensureAlpha().raw().toBuffer();
+  assert.equal(macPixels[3], 0, 'macOS icon corners must be transparent');
+  let violetPixels = 0;
+  for (let i = 0; i < macPixels.length; i += 4) {
+    if (Math.abs(macPixels[i] - 112) < 3 && Math.abs(macPixels[i + 1] - 84) < 3 &&
+        Math.abs(macPixels[i + 2] - 215) < 3 && macPixels[i + 3] === 255) violetPixels++;
+  }
+  assert(violetPixels > 10000, 'macOS icon must contain Wave violet artwork, not the Flutter placeholder');
   const android = path.join(root, 'android/app/src/main/res');
   for (const night of [false, true]) {
     for (const [density, size] of Object.entries({ mdpi: 48, hdpi: 72, xhdpi: 96, xxhdpi: 144, xxxhdpi: 192 })) {
@@ -48,7 +65,7 @@ async function verify() {
     }
   }
   assert(maxX - minX >= 480 && maxY - minY >= 480, 'Mark must occupy at least 48x48dp');
-  console.log('Verified iOS opaque 1024px appearances, grayscale tint, Android density/adaptive layers and 66dp safe-circle containment.');
+  console.log('Verified macOS catalog sizes, transparency and Wave branding; iOS opaque 1024px appearances, grayscale tint, Android density/adaptive layers and 66dp safe-circle containment.');
 }
 
 verify().catch((error) => { console.error(error); process.exitCode = 1; });
