@@ -3,7 +3,7 @@
 This file records user-requested work and its delivery status. Planned work has
 no promised date. Existing feature inventory lives in README.md.
 Ranks 1–6 from [PRODUCT_REVIEW.md](PRODUCT_REVIEW.md) are delivered.
-Native macOS scanning implemented 2026-10-14; foreground live scans hardware-confirmed. Recording/export and recovery checks remain open. Windows/Linux/iOS live scanning remains
+Native macOS scanning implemented 2026-10-14; foreground live scans, recording/comparison and private export hardware-confirmed. Permission recovery and other remaining checks are documented. Windows/Linux/iOS live scanning remains
 deferred.
 
 ## Saved room comparison sessions

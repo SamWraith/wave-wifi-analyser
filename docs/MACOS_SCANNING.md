@@ -73,16 +73,36 @@ theme reveal and deliberate feedback retain reduced-motion behavior.
 - Completion-age/cache qualifiers and unavailable individual radio age were visible.
   Pointer chart inspection showed the illustrative envelope qualifier. Room
   comparisons opened and the connected 5 GHz BSSID could be selected by keyboard.
-  No recording/export completion is claimed from that partial flow.
+  Subsequent recording/export checks are detailed below.
 - Earlier computer-use launches left the app in background, where foreground-only
   scans rejected requests. Opening the built app through Finder resolved that
   context and established successful live scanning. Already-granted Location access
   was used; first grant, denial and permission recovery were not qualified.
   A prior network-client entitlement trial was reverted; no sandbox exception or
   privacy bypass is retained.
-- On resuming October 15, both Wave and Finder captures returned blank and keyboard
-  navigation did not reach Wave. Further recording/export, pause/resume and resize
-  checks are blocked pending restoration of an interactive foreground desktop.
+- October 15 foreground access was restored after blank desktop captures. On
+  macOS 26.3.1 (25D771280a), two stationary sessions for the same connected 5 GHz
+  BSSID started with zero samples. Session A accepted one -48 dBm observation;
+  pause ended/saved it with the scanning-paused reason. Resume started no recording.
+  Session B accepted two -50 dBm observations from separate scan completions,
+  including repeated RSSI, and explicit Stop and save retained both. Each session
+  counted one cache-only update without adding a sample. Native cooldown feedback
+  disclosed the 35-second spacing; this does not guarantee fresh radio readings.
+- Same-source/BSSID comparison rendered one radio context with unknown center,
+  medians -48/-50 dBm, -2 dB delta, sample windows and unfilled silence/gap durations.
+  The Mac stayed stationary; these observations do not establish a room improvement.
+- Private summary and CSV previews defaulted both identifier and label switches off.
+  Native chooser opened with two local files and was cancelled; cancellation feedback
+  explicitly confirmed no delivery. Local file inspection verified excluded network
+  identifiers/test labels, macOS freshness qualifiers, exact UTC microsecond times,
+  -48 dBm, 5240 MHz primary, 80 MHz reported width and empty unknown center field.
+  No receiving service was selected and no external sharing was performed.
+- Quitting and relaunching the normal release restored both sessions, sample counts
+  and stop reasons. Two clearly labelled hardware-check sessions remain local.
+  Pointer selection, scrolling, keyboard AP selection and Escape route return worked.
+  Resize/zoom and Cmd/Ctrl page shortcuts could not be reliably established through
+  this automation, so no hardware pass is claimed for them. Permission revoke/regrant,
+  background recording termination, 6 GHz and perceived haptics remain unqualified.
 - Three native XCTest cases passed: client-vended interface fallback, identity
   exclusions and frequency/width unknowns. Real Apple/Flutter SDK compilation passed.
 - Dart regressions cover completion de-duplication without fake timestamps, cache-only
@@ -97,8 +117,9 @@ tests. Android emulator native bridge/guidance integration passed (virtual hardw
 not RF accuracy). Independent native/domain/persistence/desktop review findings
 were fixed and re-reviewed; no remaining concrete findings. Normal Android release APK and macOS release `.app` builds passed sequentially.
 Final source-specific recording copy passed 15 focused checks plus clean analysis.
-Live scanning is hardware-confirmed; GUI resizing, recording/export, pause/resume,
-permission recovery and tactile behavior remain unverified. No frame-rate claim.
+Live scanning, recording, pause/resume, same-source comparison, private export/chooser
+cancellation and saved-session restoration are hardware-confirmed. Remaining physical
+checks are listed above. No calibrated RF accuracy or frame-rate claim.
 
 ## Primary API references
 
