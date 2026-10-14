@@ -87,6 +87,29 @@ transitions without changing input state.
   inspected; source geometry, BSSID identity and simulated-data labels visible.
   Screenshots and local build/test logs stay outside Git.
 
-Physical OnePlus testing intentionally pending until remaining features are built,
-per user request. Emulator fixtures do not establish real RF correctness, actual
-haptic feel, full screen-reader usability or measured frame rate. No 120 fps claim.
+## Physical OnePlus verification — 2026-10-14
+
+OnePlus 15 (CPH2745, Android 16), normal release from `770aaeb`, updated with
+`install -r`. Existing fine/coarse location grants retained; no router settings or
+phone security settings changed by test actions. Native touchscreen inputs, screenshots and
+accessibility output exercised live Android observations in both app themes:
+
+- 2.4 GHz 40 MHz, manual channel 6 and duplicate merging; extension-above/below
+  centers and separate candidates visible. Expanded strongest-three BSSID reasons
+  preserved reported geometry; remaining APs remained in whole-candidate totals.
+- 5 GHz 80 MHz manual channels; invalid channel 144/160 MHz rejected. Cancel
+  retained prior 80 MHz plan. Light/dark dialogs and scrolling kept actions usable.
+- Twelve manual 5 GHz candidates reached through both eight-row pages. Connected
+  BSSID exclusion changed candidate score, and original switch state was restored.
+- A paused live snapshot retained the same nonzero candidate score after an
+  unmatched network search. Per-band inputs remained independent; reset restored
+  examples/20 MHz. Search was cleared after testing.
+- Cached, fresh, older-than-two-minute and paused qualifiers remained explicit.
+  Empty 6 GHz observations showed no ranking and a clear next step.
+
+No application defect found in these physical flows. These are functional checks
+with available nearby APs, not calibrated RF/throughput evidence, regulatory/router
+qualification, a full screen-reader audit, perceived haptic testing or a frame-rate
+measurement. No 120 fps claim. Device identifiers, screenshots and logs remain
+outside Git. Original dark theme/live-scanning state was restored after testing; theme selection
+was checked again after restart.

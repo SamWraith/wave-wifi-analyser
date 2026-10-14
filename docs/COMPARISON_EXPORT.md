@@ -23,7 +23,8 @@ primary frequency, reported width and raw reported center. Null centers remain
 blank in raw columns and unknown in descriptions; zero and explicit centers remain
 distinct. Summary groups raw radio tuples without pooling contexts, reporting
 counts, median/range RSSI, wait to first sample, longest session gap and silence to
-stop in millisecond units retaining accepted microsecond precision. Missing/cached update counts remain metadata. Empty sessions
+stop in millisecond units retaining accepted microsecond precision. Missing/cached
+update counts remain metadata. Empty sessions
 export metadata and an explicit no-samples summary without synthetic observations.
 Source is explicitly MEASURED or SIMULATED DEMO. Foreground/heuristic limitations
 travel with both outputs; no noise, interference, throughput, combined-context delta
@@ -74,7 +75,47 @@ disabled. macOS/iOS/Windows plugin support is not device-qualified in this slice
   cancellation and return. A final `install -r` retained saved sessions and verified
   private defaults, sub-millisecond gap precision and chooser cancellation.
 
-Physical OnePlus verification remains deferred by user; phone deliberately unplugged
-and untouched. Emulator/test evidence does not qualify RF behavior, share delivery,
-physical haptics, frame cadence or 120 fps. Existing Rive future Kotlin compatibility
-warning remains non-blocking.
+## Physical OnePlus verification — 2026-10-14
+
+OnePlus 15 (CPH2745, Android 16), normal release from `770aaeb`, updated using
+`install -r` while retaining existing fine/coarse location grants. Actual foreground
+Android scans recorded two stationary sessions for one live 5 GHz BSSID: two accepted
+samples in the first and one in the second. Start showed zero despite existing scan
+history; cached replies remained counters rather than samples.
+
+Native touch checks covered selection/discovery, both themes, summary/CSV preview,
+independent privacy switches, chooser cancellation/retry and return with selection
+and scroll retained. Opening a new preview restored private defaults. Dark/light
+private exports produced identical bytes for the same immutable saved evidence.
+
+A temporary local-only Android receiver, with no network permission, consumed only
+the two explicitly granted share URIs. Actual received payload checks verified:
+
+- Neutral TXT/CSV names, UTF-8 and CSV CRLF; default files omitted SSID, BSSID and
+  room labels, including corresponding CSV columns.
+- MEASURED source, exact accepted RSSI, UTC timestamps, reported frequency/width/
+  center, per-session counts and missing/cached metadata. Summary medians, gaps,
+  wait to first sample and silence before stop matched independent calculations
+  from received CSV, retaining microsecond precision.
+- Identifier-only opt-in revealed SSID/BSSID while labels stayed excluded.
+  Label-only opt-in kept identifiers excluded; formula-leading test labels gained
+  spreadsheet-safe apostrophes in CSV. Accepted evidence remained unchanged.
+- An additional recording background-saved with zero samples. Its single-session
+  export contained one metadata row with empty sample/radio cells and explicit
+  “No fresh samples. No signal estimate.” summary; no synthetic values.
+- Actual local handoff returned honest “Delivery is not confirmed” app feedback;
+  cancellation and subsequent retry remained reachable in both themes.
+
+Test sessions survived phone/app reconnection before cleanup. Only the three
+uniquely named test sessions were deleted; the temporary receiver was uninstalled.
+Original dark theme was explicitly restored and checked after restart; live scanning
+and existing grants were retained. Test-record deletion also survived restart. No contact, email,
+cloud or other external recipient was selected. Screenshots, raw received files,
+helper APK and device identifiers stay outside Git.
+
+No application defect found in these physical flows. This verifies available live
+observations and local file handoff, not external delivery, calibrated RF accuracy,
+room improvement, perceived haptic feel, full screen-reader usability or measured
+frame cadence/120 fps. Automated coverage still supplies bounded-record, malformed
+input, storage-failure and async-race checks. Existing Rive future Kotlin warning
+remains non-blocking.

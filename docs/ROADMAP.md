@@ -49,8 +49,8 @@ age and demo/cached/paused/error status qualify the evidence; empty observations
 never produce recommendations. Relative overlap is not measured interference,
 noise or throughput and cannot guarantee improvement.
 
-Verification: [channel planning](CHANNEL_PLANNING.md). Physical verification deferred
-at user request until remaining features are complete.
+Verification: [channel planning](CHANNEL_PLANNING.md). Physical OnePlus functional
+checks passed 2026-10-14 using live observations and both themes.
 
 ## Private comparison export/share
 
@@ -67,8 +67,9 @@ preparation. Linux offers preview/copy recovery; unsupported web sharing has no
 implicit download/email fallback. Two owned temporary files are overwritten on the
 next share; system/receiving apps can keep copies. No anonymity or delivery guarantee.
 
-Verification: [comparison export](COMPARISON_EXPORT.md). Physical verification remains
-deferred by user until remaining features are complete.
+Verification: [comparison export](COMPARISON_EXPORT.md). Physical OnePlus checks passed
+2026-10-14, including actual local payloads, private defaults, opt-ins, cancellation
+and empty-session evidence.
 
 ## Next authorized work
 
