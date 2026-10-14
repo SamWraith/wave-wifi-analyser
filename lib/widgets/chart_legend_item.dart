@@ -35,42 +35,68 @@ class ChartLegendItem extends ConsumerWidget {
     final shortBssid = point.bssid.length > 8
         ? point.bssid.substring(point.bssid.length - 8)
         : point.bssid;
-    return Tooltip(
-      message: '$name · CH ${point.channel} · ${point.bssid}\n$nextAction',
-      child: FilterChip(
-        key: ValueKey('chart-legend-${point.bssid}'),
-        selected: visible,
-        showCheckmark: false,
-        selectedColor: pointColor(point).withValues(alpha: .15),
-        avatar: Icon(
-          solo
-              ? Icons.radio_button_checked_rounded
-              : visible
-              ? Icons.circle
-              : Icons.remove_circle_outline_rounded,
-          size: visible && !solo ? 10 : 18,
-          color: pointColor(point),
-        ),
-        label: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: compact ? 140 : double.infinity,
-          ),
-          child: Text(
-            '$name · CH ${point.channel} · $shortBssid',
-            maxLines: compact ? 1 : null,
-            overflow: compact ? TextOverflow.ellipsis : null,
-            style:
-                (compact
-                        ? Theme.of(context).textTheme.labelMedium
-                        : const TextStyle())
-                    ?.copyWith(
-                      decoration: visible
-                          ? TextDecoration.none
-                          : TextDecoration.lineThrough,
+    return LayoutBuilder(
+      builder: (context, bounds) => Tooltip(
+        message: '$name · CH ${point.channel} · ${point.bssid}\n$nextAction',
+        child: FilterChip(
+          key: ValueKey('chart-legend-${point.bssid}'),
+          selected: visible,
+          showCheckmark: false,
+          selectedColor: pointColor(point).withValues(alpha: .15),
+          // Keep icon and text in one measured label. Chip avatars reserve
+          // height-dependent width, which can clip a multiline label on relayout.
+          label: Builder(
+            builder: (context) => ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: compact
+                    ? 140
+                    : (bounds.maxWidth - 32).clamp(0, double.infinity),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 20,
+                    child: Icon(
+                      solo
+                          ? Icons.radio_button_checked_rounded
+                          : visible
+                          ? Icons.circle
+                          : Icons.remove_circle_outline_rounded,
+                      size: visible && !solo ? 10 : 18,
+                      color: pointColor(point),
                     ),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: DefaultTextStyle(
+                      style: DefaultTextStyle.of(context).style,
+                      softWrap: !compact,
+                      overflow: compact
+                          ? TextOverflow.ellipsis
+                          : TextOverflow.clip,
+                      child: Text(
+                        '$name · CH ${point.channel} · $shortBssid',
+                        maxLines: compact ? 1 : null,
+                        overflow: compact ? TextOverflow.ellipsis : null,
+                        style:
+                            (compact
+                                    ? Theme.of(context).textTheme.labelMedium
+                                    : const TextStyle())
+                                ?.copyWith(
+                                  decoration: visible
+                                      ? TextDecoration.none
+                                      : TextDecoration.lineThrough,
+                                ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
+          onSelected: (_) => onTap(),
         ),
-        onSelected: (_) => onTap(),
       ),
     );
   }

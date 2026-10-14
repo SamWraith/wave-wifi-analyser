@@ -64,87 +64,98 @@ class _ComparisonExportPageState
     return Scaffold(
       appBar: AppBar(title: const Text('Review comparison export')),
       bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (!valid || sharing.message != null)
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.sizeOf(context).height * .2,
-                  ),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (!valid)
-                          const Text(
-                            'Saved selection changed or was deleted. Return to saved sessions and select again; this preview cannot be shared.',
-                          ),
-                        if (sharing.message != null)
-                          Semantics(
-                            liveRegion: true,
-                            child: Text(sharing.message!),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 12,
-                runSpacing: 8,
+        child: Center(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 960),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Builder(
-                    builder: (buttonContext) => FilledButton.icon(
-                      onPressed: !valid || sharing.busy || sharing.unsupported
-                          ? null
-                          : () {
-                              WaveHaptics.impact();
-                              final box =
-                                  buttonContext.findRenderObject()!
-                                      as RenderBox;
-                              ref
-                                  .read(comparisonExportProvider.notifier)
-                                  .share(
-                                    export,
-                                    box.localToGlobal(Offset.zero) & box.size,
-                                    isCurrent: () =>
-                                        mounted &&
-                                        widget.sessions.every(
-                                          (snapshot) => ref
-                                              .read(comparisonSessionsProvider)
-                                              .sessions
-                                              .any(
-                                                (s) => identical(s, snapshot),
-                                              ),
-                                        ),
-                                  );
-                            },
-                      icon: const Icon(Icons.ios_share_rounded),
-                      label: Text(
-                        sharing.busy
-                            ? 'Opening share chooser…'
-                            : sharing.unsupported
-                            ? 'File sharing unavailable'
-                            : sharing.message == null
-                            ? 'Share reviewed files'
-                            : 'Share again',
+                  if (!valid || sharing.message != null)
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: MediaQuery.sizeOf(context).height * .2,
+                      ),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (!valid)
+                              const Text(
+                                'Saved selection changed or was deleted. Return to saved sessions and select again; this preview cannot be shared.',
+                              ),
+                            if (sharing.message != null)
+                              Semantics(
+                                liveRegion: true,
+                                child: Text(sharing.message!),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      WaveHaptics.selection();
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Return to saved sessions'),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
+                    children: [
+                      Builder(
+                        builder: (buttonContext) => FilledButton.icon(
+                          onPressed:
+                              !valid || sharing.busy || sharing.unsupported
+                              ? null
+                              : () {
+                                  WaveHaptics.impact();
+                                  final box =
+                                      buttonContext.findRenderObject()!
+                                          as RenderBox;
+                                  ref
+                                      .read(comparisonExportProvider.notifier)
+                                      .share(
+                                        export,
+                                        box.localToGlobal(Offset.zero) &
+                                            box.size,
+                                        isCurrent: () =>
+                                            mounted &&
+                                            widget.sessions.every(
+                                              (snapshot) => ref
+                                                  .read(
+                                                    comparisonSessionsProvider,
+                                                  )
+                                                  .sessions
+                                                  .any(
+                                                    (s) =>
+                                                        identical(s, snapshot),
+                                                  ),
+                                            ),
+                                      );
+                                },
+                          icon: const Icon(Icons.ios_share_rounded),
+                          label: Text(
+                            sharing.busy
+                                ? 'Opening share chooser…'
+                                : sharing.unsupported
+                                ? 'File sharing unavailable'
+                                : sharing.message == null
+                                ? 'Share reviewed files'
+                                : 'Share again',
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          WaveHaptics.selection();
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Return to saved sessions'),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -235,7 +246,10 @@ class _ComparisonExportPageState
                 ),
               ),
               const SizedBox(height: 16),
-              ComparisonExportPreview(text: _csv ? export.csv : export.summary),
+              ComparisonExportPreview(
+                text: _csv ? export.csv : export.summary,
+                csv: _csv,
+              ),
               const SizedBox(height: 16),
             ],
           ),

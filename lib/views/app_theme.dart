@@ -8,11 +8,13 @@ ThemeData buildAppTheme(Brightness brightness) {
         brightness: brightness,
       ).copyWith(
         primary: dark ? const Color(0xFFAD9EFF) : const Color(0xFF7054D7),
+        secondary: dark ? const Color(0xFF70D7C7) : const Color(0xFF167B70),
+        tertiary: dark ? const Color(0xFF8FB8FF) : const Color(0xFF4267AC),
         surface: dark ? const Color(0xFF171A25) : const Color(0xFFFFFFFF),
         onSurface: dark ? const Color(0xFFF1F1F8) : const Color(0xFF222437),
         onSurfaceVariant: dark
-            ? const Color(0xFF969AAF)
-            : const Color(0xFF73758B),
+            ? const Color(0xFFA4A9BE)
+            : const Color(0xFF676B80),
         outlineVariant: dark
             ? const Color(0xFF2C3041)
             : const Color(0xFFE8E9F1),

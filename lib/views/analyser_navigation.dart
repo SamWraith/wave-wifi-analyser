@@ -402,22 +402,26 @@ class ScanStatusBar extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const ScanActivity(),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+          LayoutBuilder(
+            builder: (context, bounds) {
+              final expanded =
+                  bounds.maxWidth < 280 ||
+                  MediaQuery.textScalerOf(context).scale(12) > 16;
+              final message = paused
+                  ? 'Scanning paused. Last results retained.'
+                  : busy
+                  ? macos
+                        ? 'Request pending. Waiting for macOS scan completion.'
+                        : 'Request pending. Waiting for Android results.'
+                  : status;
+              final summary = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (expanded)
+                    Text(message, style: Theme.of(context).textTheme.bodySmall)
+                  else
                     StableTextSlot(
-                      text: paused
-                          ? 'Scanning paused. Last results retained.'
-                          : busy
-                          ? macos
-                                ? 'Request pending. Waiting for macOS scan completion.'
-                                : 'Request pending. Waiting for Android results.'
-                          : status,
+                      text: message,
                       alternatives: const [
                         'Scanning… Cached results shown until new scan arrives.',
                         'Allow precise location to discover nearby WiFi networks.',
@@ -429,37 +433,58 @@ class ScanStatusBar extends ConsumerWidget {
                       ],
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    ScanFreshness(
-                      updated: updated,
-                      demo: demo,
-                      cached: cached,
-                      source: source,
+                  ScanFreshness(
+                    updated: updated,
+                    demo: demo,
+                    cached: cached,
+                    source: source,
+                  ),
+                ],
+              );
+              final controls = Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: paused ? 'Resume scanning' : 'Pause scanning',
+                    onPressed: () {
+                      WaveHaptics.selection();
+                      c.togglePause();
+                    },
+                    icon: Icon(
+                      paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                      size: 18,
                     ),
-                  ],
-                ),
-              ),
-              IconButton(
-                tooltip: paused ? 'Resume scanning' : 'Pause scanning',
-                onPressed: () {
-                  WaveHaptics.selection();
-                  c.togglePause();
-                },
-                icon: Icon(
-                  paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
-                  size: 18,
-                ),
-              ),
-              IconButton(
-                tooltip: 'Scan now',
-                onPressed: busy || paused
-                    ? null
-                    : () {
-                        WaveHaptics.impact();
-                        c.scan();
-                      },
-                icon: const Icon(Icons.refresh_rounded, size: 18),
-              ),
-            ],
+                  ),
+                  IconButton(
+                    tooltip: 'Scan now',
+                    onPressed: busy || paused
+                        ? null
+                        : () {
+                            WaveHaptics.impact();
+                            c.scan();
+                          },
+                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                  ),
+                ],
+              );
+              return Column(
+                children: [
+                  Row(
+                    crossAxisAlignment: expanded
+                        ? CrossAxisAlignment.start
+                        : CrossAxisAlignment.center,
+                    children: [
+                      const ScanActivity(),
+                      const SizedBox(width: 10),
+                      Expanded(child: summary),
+                      if (!expanded) controls,
+                    ],
+                  ),
+                  if (expanded)
+                    Align(alignment: Alignment.centerRight, child: controls),
+                ],
+              );
+            },
           ),
           if (!demo &&
               !paused &&

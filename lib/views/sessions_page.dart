@@ -371,33 +371,38 @@ class _SessionsPageState extends ConsumerState<SessionsPage>
                     selected.isEmpty ||
                     (selected.first.bssid == session.bssid &&
                         selected.first.source == session.source);
-                return SavedSessionTile(
-                  session: session,
-                  alias: preferences[preferenceKey(session.bssid)]?.alias,
-                  selected: _selected.contains(session.id),
-                  onSelect: compatible
-                      ? (value) {
-                          WaveHaptics.selection();
-                          setState(() {
-                            value
-                                ? _selected.add(session.id)
-                                : _selected.remove(session.id);
-                          });
-                        }
-                      : null,
-                  onDelete: () async {
-                    if (await _confirm(
-                          context,
-                          'Delete saved session?',
-                          session.label.isEmpty ? session.ssid : session.label,
-                          'Delete',
-                        ) &&
-                        mounted) {
-                      WaveHaptics.selection();
-                      vm.delete(session.id);
-                      setState(() => _selected.remove(session.id));
-                    }
-                  },
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: SavedSessionTile(
+                    session: session,
+                    alias: preferences[preferenceKey(session.bssid)]?.alias,
+                    selected: _selected.contains(session.id),
+                    onSelect: compatible
+                        ? (value) {
+                            WaveHaptics.selection();
+                            setState(() {
+                              value
+                                  ? _selected.add(session.id)
+                                  : _selected.remove(session.id);
+                            });
+                          }
+                        : null,
+                    onDelete: () async {
+                      if (await _confirm(
+                            context,
+                            'Delete saved session?',
+                            session.label.isEmpty
+                                ? session.ssid
+                                : session.label,
+                            'Delete',
+                          ) &&
+                          mounted) {
+                        WaveHaptics.selection();
+                        vm.delete(session.id);
+                        setState(() => _selected.remove(session.id));
+                      }
+                    },
+                  ),
                 );
               }),
               if (selected.isNotEmpty)

@@ -98,7 +98,8 @@ Run desktop with `fvm flutter run -d macos`; macOS defaults to live scans. Andro
 ### Appearance, motion and feedback
 
 - Modern responsive phone/desktop layouts with Overview, Spectrum, Networks, Channels and Settings destinations.
-- System, light and dark themes with saved theme preference.
+- System, light and dark themes with saved theme preference. Violet primary actions, restrained teal/blue informational accents, a violet-to-blue connection gradient and neutral surfaces keep color focused.
+- Large-text status controls reflow without worst-case empty space. Narrow network rows stack readable metadata; bottom navigation uses accessible icon destinations when enlarged labels cannot fit. Chart axes scale with text and share geometry with cursor inspection.
 - Circular theme reveal growing from the tapped header toggle or Settings theme control, retaining navigation, search and focus state.
 - Finite page/chart reveals, animated exact signal values, channel bars, fresh-scan pulses and detail-sheet transitions.
 - Mobile selection/impact haptics for supported actions, including chart-mode changes, plus hover/focus/press feedback and accessible standard controls. Shared detail/troubleshooting sheet motion honors reduced-motion and accessible-navigation preferences.
@@ -172,6 +173,8 @@ fvm flutter build web
 fvm flutter test integration_test/native_wifi_test.dart -d <android-device-id>
 fvm flutter test integration_test/native_motion_test.dart -d <android-or-ios-device-id>
 ```
+
+Android UI/keyboard captures can be reproduced with `fvm flutter drive --driver=test_driver/ui_visual_test.dart --target=integration_test/ui_visual_test.dart -d <android-target>`. This runs the app with explicit demo data and in-memory preferences in light/dark themes at normal and 200% in-app text scale; it does not change system font settings or request RF permissions. Captures and keyboard-inset evidence stay local under `dist/ui-review/android/`. These checks do not establish physical RF accuracy or frame rate.
 
 Widget tests cover phone and desktop layouts in both themes, search/details/navigation, chart width, legend hide/include/isolate/reset cycles, duplicate-SSID identity, scan reordering, compact scrolling/expansion at normal and large text scales, and rendered curve visibility. Analysis tests cover frequency exceptions, connected-AP exclusion, bandwidth overlap, and signal weighting. ViewModel tests check fresh/cached/duplicate timestamps, immutable history, pause behavior, stale in-flight scan responses, and settings persistence. Native integration checks the Android bridge on an emulator and OnePlus 15 (CPH2745, Android 16). Opt-in `physical_wifi_test.dart` verified live 2.4/5 GHz observations, paused age/history behavior and a newer same-BSSID guided recheck on that phone. Permission-revocation, disabled-service, throttling, roaming and 6 GHz coverage remain open; see [device evidence](docs/FRESHNESS_AND_GUIDANCE.md).
 

@@ -30,6 +30,7 @@ class ChannelPlanningControls extends ConsumerWidget {
       const SizedBox(height: 8),
       Wrap(
         spacing: 8,
+        runSpacing: 8,
         children: [
           OutlinedButton.icon(
             icon: const Icon(Icons.tune_rounded),
@@ -128,6 +129,7 @@ class _PlanningAssumptionsDialogState extends State<PlanningAssumptionsDialog> {
           const Text('Desired width'),
           Wrap(
             spacing: 8,
+            runSpacing: 8,
             children: [
               for (final width in planningWidths(widget.band))
                 ChoiceChip(
@@ -144,6 +146,8 @@ class _PlanningAssumptionsDialogState extends State<PlanningAssumptionsDialog> {
             ],
           ),
           const SizedBox(height: 16),
+          const Text('Primary channels'),
+          const SizedBox(height: 8),
           TextField(
             controller: _channels,
             maxLength: 512,
@@ -155,13 +159,14 @@ class _PlanningAssumptionsDialogState extends State<PlanningAssumptionsDialog> {
               if (_error != null) setState(() => _error = null);
             },
             decoration: InputDecoration(
-              labelText: 'Allowed primary channels (your shortlist)',
+              labelText: 'Channels',
               hintText: defaultPlanningChannels(widget.band, _width).join(', '),
-              helperText: 'Comma or space separated. Blank restores examples. Duplicates merge.',
-              helperMaxLines: 4,
               errorText: _error,
               errorMaxLines: 4,
             ),
+          ),
+          const Text(
+            'Separate with commas or spaces. Blank restores examples; duplicates merge.',
           ),
           TextButton(
             onPressed: () {

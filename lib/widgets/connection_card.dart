@@ -18,7 +18,7 @@ class ConnectionCard extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF7965DB), Color(0xFF4D469D)],
+          colors: [Color(0xFF7058D5), Color(0xFF51459F), Color(0xFF315B87)],
         ),
       ),
       child: Column(
@@ -36,8 +36,8 @@ class ConnectionCard extends StatelessWidget {
                       ? 'CONNECTED NETWORK'
                       : 'CONNECTION',
                   style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 10,
+                    color: Color(0xFFEAE8FF),
+                    fontSize: 11,
                     letterSpacing: 1.5,
                   ),
                 ),
@@ -75,7 +75,7 @@ class ConnectionCard extends StatelessWidget {
             ap == null
                 ? 'Run a scan. Connection identity may be unavailable or private.'
                 : '${ap.band.label}  ·  ${ap.security}',
-            style: const TextStyle(color: Colors.white70, fontSize: 13),
+            style: const TextStyle(color: Color(0xFFEAE8FF), fontSize: 13),
           ),
           const SizedBox(height: 24),
           Wrap(

@@ -13,15 +13,16 @@ class ChartCoordinates {
   ChartCoordinates(
     this.band,
     List<AccessPoint> points,
-    Map<String, List<SignalSample>> history,
-  ) : points = List.unmodifiable(points),
-      history = Map.unmodifiable({
-        for (final point in points)
-          point.bssid: List<SignalSample>.unmodifiable(
-            history[point.bssid] ?? const [],
-          ),
-      }),
-      spectrum = SpectrumAxis.forPoints(band, points) {
+    Map<String, List<SignalSample>> history, {
+    this.plotInsets = defaultPlotInsets,
+  }) : points = List.unmodifiable(points),
+       history = Map.unmodifiable({
+         for (final point in points)
+           point.bssid: List<SignalSample>.unmodifiable(
+             history[point.bssid] ?? const [],
+           ),
+       }),
+       spectrum = SpectrumAxis.forPoints(band, points) {
     final times = [
       for (final ap in points)
         for (final sample in history[ap.bssid] ?? const <SignalSample>[])
@@ -51,6 +52,9 @@ class ChartCoordinates {
   final List<AccessPoint> points;
   final Map<String, List<SignalSample>> history;
   final SpectrumAxis spectrum;
+  final EdgeInsets plotInsets;
+  static const defaultPlotInsets = EdgeInsets.fromLTRB(38, 18, 10, 35);
+  Rect plotArea(Size size) => plotInsets.deflateRect(Offset.zero & size);
   late final int? oldest, newest;
   late final Map<int, int> _observationIndex;
   late final List<ChartHit> _historyHits;
@@ -64,7 +68,7 @@ class ChartCoordinates {
           1;
   int get span => (newest ?? 0) - (oldest ?? 0);
   static Rect area(Size size) =>
-      Rect.fromLTRB(38, 18, size.width - 10, size.height - 35);
+      defaultPlotInsets.deflateRect(Offset.zero & size);
   static double y(Rect area, num rssi) =>
       area.bottom - (rssi.clamp(-100, -20) + 100) / 80 * area.height;
   static double strength(double fraction) =>

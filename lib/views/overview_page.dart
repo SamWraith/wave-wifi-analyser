@@ -110,6 +110,7 @@ class OverviewSummary extends ConsumerWidget {
             value: '$count',
             note: 'On ${band.label}',
             icon: Icons.radar_rounded,
+            accent: Theme.of(context).colorScheme.secondary,
           ),
           const SizedBox(height: 14),
           MetricCard(
@@ -117,6 +118,7 @@ class OverviewSummary extends ConsumerWidget {
             value: count == 0 ? '—' : 'CH ${ratings.first.channel}',
             note: 'Relative overlap estimate',
             icon: Icons.auto_awesome_outlined,
+            accent: Theme.of(context).colorScheme.tertiary,
           ),
         ],
       ),
@@ -180,6 +182,7 @@ class NetworkInsights extends ConsumerWidget {
           const SizedBox(height: 20),
           InsightTile(
             icon: Icons.signal_cellular_alt_rounded,
+            accent: Theme.of(context).colorScheme.secondary,
             title: ap == null
                 ? 'No connected AP identified'
                 : '${ap.quality} signal',
@@ -192,6 +195,7 @@ class NetworkInsights extends ConsumerWidget {
           const SizedBox(height: 18),
           InsightTile(
             icon: Icons.layers_outlined,
+            accent: Theme.of(context).colorScheme.tertiary,
             title: 'Channel planning',
             text: points.isEmpty
                 ? 'Run a scan before comparing channels.'

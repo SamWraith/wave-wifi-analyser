@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -40,7 +42,26 @@ class SignalChart extends StatelessWidget {
   final Set<String> hiddenBssids;
   @override
   Widget build(BuildContext context) {
-    final coordinates = ChartCoordinates(band, points, history ?? {});
+    final labelStyle = Theme.of(context).textTheme.bodySmall!
+        .copyWith(fontSize: 12, fontWeight: FontWeight.w500, height: 1);
+    final textScaler = MediaQuery.textScalerOf(context);
+    final probe = TextPainter(
+      text: TextSpan(text: '-100', style: labelStyle),
+      textDirection: TextDirection.ltr,
+      textScaler: textScaler,
+    )..layout();
+    final coordinates = ChartCoordinates(
+      band,
+      points,
+      history ?? {},
+      plotInsets: EdgeInsets.fromLTRB(
+        math.max(38, probe.width + 8),
+        math.max(18, probe.height * 1.5),
+        10,
+        math.max(35, probe.height + 18),
+      ),
+    );
+    probe.dispose();
     return ChartInspection(
       height: height,
       onEscape: onEscape,
@@ -57,6 +78,8 @@ class SignalChart extends StatelessWidget {
           Theme.of(context).colorScheme.outlineVariant,
           hiddenBssids,
           coordinates,
+          labelStyle,
+          textScaler,
         ),
       ),
     );
@@ -73,6 +96,8 @@ class _SignalPainter extends CustomPainter {
     this.gridColor,
     Set<String> hiddenBssids,
     this.coordinates,
+    this.labelStyle,
+    this.textScaler,
   ) : hiddenBssids = Set.unmodifiable(hiddenBssids),
       points = List.unmodifiable(points),
       history = Map.unmodifiable({
@@ -91,25 +116,27 @@ class _SignalPainter extends CustomPainter {
   final SpectrumAxis axis;
   final ChartCoordinates coordinates;
   final Set<String> hiddenBssids;
+  final TextStyle labelStyle;
+  final TextScaler textScaler;
 
-  void _label(Canvas canvas, String value, Offset at, {double size = 10}) {
-    final text = TextPainter(
-      text: TextSpan(
-        text: value,
-        style: TextStyle(
-          color: labelColor,
-          fontSize: size,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    text.paint(canvas, at);
+  TextPainter _text(String value) => TextPainter(
+    text: TextSpan(
+      text: value,
+      style: labelStyle.copyWith(color: labelColor),
+    ),
+    textDirection: TextDirection.ltr,
+    textScaler: textScaler,
+  )..layout();
+
+  void _label(Canvas canvas, String value, Offset at, {bool right = false}) {
+    final text = _text(value);
+    text.paint(canvas, Offset(at.dx - (right ? text.width : 0), at.dy));
+    text.dispose();
   }
 
   @override
   void paint(Canvas canvas, Size size) {
-    final area = ChartCoordinates.area(size);
+    final area = coordinates.plotArea(size);
     if (area.width <= 0 || area.height <= 0) return;
     _paintGrid(canvas, area);
     canvas.save();
@@ -132,9 +159,9 @@ class _SignalPainter extends CustomPainter {
     for (var rssi = -100; rssi <= -20; rssi += 20) {
       final y = _y(area, rssi);
       canvas.drawLine(Offset(area.left, y), Offset(area.right, y), paint);
-      _label(canvas, '$rssi', Offset(0, y - 6));
+      _label(canvas, '$rssi', Offset(0, y - textScaler.scale(12) / 2));
     }
-    _label(canvas, 'dBm', const Offset(0, 0), size: 9);
+    _label(canvas, 'dBm', const Offset(0, 0));
   }
 
   void _paintHistory(Canvas canvas, Rect area) {
@@ -195,13 +222,43 @@ class _SignalPainter extends CustomPainter {
 
   void _paintAxis(Canvas canvas, Rect area) {
     if (time) {
-      _label(canvas, 'Oldest sample', Offset(area.left, area.bottom + 12));
-      _label(canvas, 'Latest', Offset(area.right - 32, area.bottom + 12));
+      final oldest = _text('Oldest sample');
+      final latest = _text('Latest');
+      final short = oldest.width + latest.width + 16 > area.width;
+      final compactOldest = _text('Oldest');
+      final showOldest =
+          !short || compactOldest.width + latest.width + 16 <= area.width;
+      oldest.dispose();
+      latest.dispose();
+      compactOldest.dispose();
+      if (showOldest) {
+        _label(
+          canvas,
+          short ? 'Oldest' : 'Oldest sample',
+          Offset(area.left, area.bottom + 12),
+        );
+      }
+      _label(
+        canvas,
+        'Latest',
+        Offset(area.right, area.bottom + 12),
+        right: true,
+      );
       return;
     }
+    double lastRight = double.negativeInfinity;
     for (final (channel, frequency) in axis.ticks) {
       final x = area.left + axis.fraction(frequency) * area.width;
-      _label(canvas, '$channel', Offset(x - 6, area.bottom + 12));
+      final text = _text('$channel');
+      final left = (x - text.width / 2).clamp(
+        area.left,
+        math.max(area.left, area.right - text.width),
+      );
+      if (left >= lastRight + 8) {
+        text.paint(canvas, Offset(left.toDouble(), area.bottom + 12));
+        lastRight = left + text.width;
+      }
+      text.dispose();
     }
   }
 
@@ -230,6 +287,9 @@ class _SignalPainter extends CustomPainter {
       time != oldDelegate.time ||
       labelColor != oldDelegate.labelColor ||
       gridColor != oldDelegate.gridColor ||
+      labelStyle != oldDelegate.labelStyle ||
+      textScaler != oldDelegate.textScaler ||
+      coordinates.plotInsets != oldDelegate.coordinates.plotInsets ||
       !setEquals(hiddenBssids, oldDelegate.hiddenBssids) ||
       !listEquals(_pointContent, oldDelegate._pointContent) ||
       (time && !listEquals(_historyContent, oldDelegate._historyContent));

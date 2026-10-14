@@ -73,6 +73,7 @@ class AppearanceCard extends ConsumerWidget {
           const SizedBox(height: 20),
           Wrap(
             spacing: 10,
+            runSpacing: 8,
             children: ThemeMode.values
                 .map(
                   (mode) => Builder(

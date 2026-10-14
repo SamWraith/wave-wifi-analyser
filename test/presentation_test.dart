@@ -104,7 +104,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(AccessPointDetailsSheet), findsOneWidget);
     expect(find.text('Copy MAC address'), findsOneWidget);
-    expect(find.text('A4:83:E7:12:80:4C'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AccessPointDetailsSheet),
+        matching: find.text('A4:83:E7:12:80:4C'),
+      ),
+      findsOneWidget,
+    );
     await tester.pumpWidget(const SizedBox.shrink());
   });
 }

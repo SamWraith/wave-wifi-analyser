@@ -184,6 +184,7 @@ class _AliasDialogState extends State<_AliasDialog> {
           labelText: 'Name on this device',
           hintText: 'e.g. Living room router',
           helperText: 'Original SSID remains visible.',
+          helperMaxLines: 3,
         ),
       ),
     ),

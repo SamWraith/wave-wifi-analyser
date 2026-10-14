@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'wave_motion.dart';
 
 class WavePanel extends StatelessWidget {
-  const WavePanel({super.key, required this.child, this.padding});
+  const WavePanel({super.key, required this.child, this.padding, this.color});
   final Widget child;
   final EdgeInsets? padding;
+  final Color? color;
   @override
   Widget build(BuildContext context) => Card(
+    color: color,
     child: Padding(padding: padding ?? const EdgeInsets.all(22), child: child),
   );
 }
@@ -71,14 +73,20 @@ class InsightTile extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.text,
+    this.accent,
   });
   final IconData icon;
   final String title, text;
+  final Color? accent;
   @override
   Widget build(BuildContext context) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+      Icon(
+        icon,
+        size: 20,
+        color: accent ?? Theme.of(context).colorScheme.primary,
+      ),
       const SizedBox(width: 12),
       Expanded(
         child: Column(
@@ -114,7 +122,10 @@ class HeroStat extends StatelessWidget {
         ),
       ),
       const SizedBox(height: 4),
-      Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+      Text(
+        label,
+        style: const TextStyle(color: Color(0xFFEAE8FF), fontSize: 12),
+      ),
     ],
   );
 }
@@ -126,23 +137,31 @@ class MetricCard extends StatelessWidget {
     required this.value,
     required this.note,
     required this.icon,
+    this.accent,
   });
   final String label, value, note;
   final IconData icon;
+  final Color? accent;
   @override
   Widget build(BuildContext context) => WavePanel(
+    color: Color.alphaBlend(
+      (accent ?? Theme.of(context).colorScheme.primary).withValues(alpha: .05),
+      Theme.of(context).colorScheme.surface,
+    ),
     padding: const EdgeInsets.all(18),
     child: Row(
       children: [
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: .1),
+            color: (accent ?? Theme.of(context).colorScheme.primary).withValues(
+              alpha: .12,
+            ),
             borderRadius: BorderRadius.circular(13),
           ),
           child: Icon(
             icon,
-            color: Theme.of(context).colorScheme.primary,
+            color: accent ?? Theme.of(context).colorScheme.primary,
             size: 22,
           ),
         ),
@@ -154,14 +173,14 @@ class MetricCard extends StatelessWidget {
               Text(
                 label,
                 style: Theme.of(context).textTheme.bodySmall
-                    ?.copyWith(fontSize: 9, letterSpacing: 1.2),
+                    ?.copyWith(fontSize: 11, letterSpacing: 1),
               ),
               const SizedBox(height: 4),
               WaveValue(value, style: Theme.of(context).textTheme.titleLarge),
               Text(
                 note,
                 style: Theme.of(context).textTheme.bodySmall
-                    ?.copyWith(fontSize: 10),
+                    ?.copyWith(fontSize: 12),
               ),
             ],
           ),

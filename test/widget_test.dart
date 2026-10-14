@@ -1,3 +1,4 @@
+import 'package:wifi_analyser/widgets/network_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -55,7 +56,13 @@ void main() {
         await tester.tap(find.text('Studio Network'));
         await tester.pumpAndSettle();
         expect(find.text('Copy MAC address'), findsOneWidget);
-        expect(find.text('A4:83:E7:12:80:4C'), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(AccessPointDetailsSheet),
+            matching: find.text('A4:83:E7:12:80:4C'),
+          ),
+          findsOneWidget,
+        );
         Navigator.of(tester.element(find.text('Copy MAC address'))).pop();
         await tester.pumpAndSettle();
         await tester.tap(find.text('Settings').last);

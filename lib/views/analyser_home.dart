@@ -57,6 +57,7 @@ class _AnalyserHomeState extends ConsumerState<AnalyserHome> {
       _ => false,
     };
     final rail = desktop && !wide && MediaQuery.sizeOf(context).width >= 700;
+    final iconOnlyNavigation = MediaQuery.textScalerOf(context).scale(14) > 18;
     return CallbackShortcuts(
       bindings: {
         for (final modifier in [
@@ -156,11 +157,16 @@ class _AnalyserHomeState extends ConsumerState<AnalyserHome> {
                         ),
                         if (!wide && !rail)
                           NavigationBar(
+                            height: iconOnlyNavigation ? 64 : null,
+                            labelBehavior: iconOnlyNavigation
+                                ? NavigationDestinationLabelBehavior.alwaysHide
+                                : NavigationDestinationLabelBehavior.alwaysShow,
                             selectedIndex: selected,
                             onDestinationSelected: _select,
                             destinations: List.generate(
                               pages.length,
                               (i) => NavigationDestination(
+                                tooltip: pages[i],
                                 icon: Icon(pageIcons[i]),
                                 label: pages[i],
                               ),

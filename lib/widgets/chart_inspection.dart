@@ -44,7 +44,7 @@ class _ChartInspectionState extends State<ChartInspection> {
   }
 
   void _inspect(Offset position, Size size) {
-    final area = ChartCoordinates.area(size);
+    final area = widget.coordinates.plotArea(size);
     if (area.width <= 0 || area.height <= 0) return;
     setState(
       () => _cursor = Offset(
@@ -78,7 +78,7 @@ class _ChartInspectionState extends State<ChartInspection> {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
-      final plot = ChartCoordinates.area(
+      final plot = widget.coordinates.plotArea(
         Size(constraints.maxWidth, widget.height),
       );
       final hit = _cursor == null
@@ -114,7 +114,7 @@ class _ChartInspectionState extends State<ChartInspection> {
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       final size = Size(constraints.maxWidth, widget.height);
-                      final area = ChartCoordinates.area(size);
+                      final area = widget.coordinates.plotArea(size);
                       return MouseRegion(
                         cursor: SystemMouseCursors.precise,
                         onHover: (event) => _inspect(event.localPosition, size),

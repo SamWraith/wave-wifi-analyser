@@ -24,80 +24,110 @@ class NetworkTile extends ConsumerWidget {
       borderRadius: BorderRadius.circular(12),
       onTap: () => showAccessPointDetails(context, ap),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 4),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: pointColor(ap).withValues(alpha: .1),
-                borderRadius: BorderRadius.circular(11),
-              ),
-              child: Icon(
-                ap.connected ? Icons.wifi_rounded : Icons.wifi_lock_rounded,
-                color: pointColor(ap),
-                size: 21,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    preference?.alias ?? ap.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                  if (preference?.alias != null)
-                    Text(ap.name, style: Theme.of(context).textTheme.bodySmall),
-                  const SizedBox(height: 4),
-                  Text(
-                    'CH ${ap.channel}  ·  ${ap.security}  ·  ${ap.width} MHz  ·  ${ap.bssid}',
-                    style: Theme.of(context).textTheme.bodySmall
-                        ?.copyWith(fontSize: 10),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+        child: LayoutBuilder(
+          builder: (context, bounds) {
+            final stacked =
+                bounds.maxWidth < 340 ||
+                MediaQuery.textScalerOf(context).scale(13) > 18;
+            final metadata = Wrap(
+              spacing: 12,
+              runSpacing: 4,
               children: [
-                WaveValue(
-                  '${ap.rssi}',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
+                Text(
+                  'CH ${ap.channel} · ${ap.security} · ${ap.width} MHz',
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
                 Text(
-                  'dBm',
+                  ap.bssid,
                   style: Theme.of(context).textTheme.bodySmall
-                      ?.copyWith(fontSize: 10),
+                      ?.copyWith(fontFamily: 'monospace'),
                 ),
               ],
-            ),
-            if (preference?.favorite == true)
-              const Padding(
-                padding: EdgeInsets.only(left: 8),
-                child: Icon(
-                  Icons.star_rounded,
-                  size: 18,
-                  semanticLabel: 'Favorite',
+            );
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: pointColor(ap).withValues(alpha: .1),
+                        borderRadius: BorderRadius.circular(11),
+                      ),
+                      child: Icon(
+                        ap.connected || ap.security == 'Open'
+                            ? Icons.wifi_rounded
+                            : Icons.wifi_lock_rounded,
+                        color: pointColor(ap),
+                        size: 21,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            preference?.alias ?? ap.name,
+                            maxLines: stacked ? 2 : 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          if (preference?.alias != null)
+                            Text(
+                              ap.name,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          if (!stacked) ...[
+                            const SizedBox(height: 4),
+                            metadata,
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        WaveValue(
+                          '${ap.rssi}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          'dBm',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                    if (preference?.favorite == true)
+                      const Padding(
+                        padding: EdgeInsets.only(left: 8),
+                        child: Icon(
+                          Icons.star_rounded,
+                          size: 18,
+                          semanticLabel: 'Favorite',
+                        ),
+                      ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ],
                 ),
-              ),
-            const SizedBox(width: 12),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 18,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ],
+                if (stacked) ...[const SizedBox(height: 8), metadata],
+              ],
+            );
+          },
         ),
       ),
     );
@@ -130,9 +160,24 @@ class AccessPointDetailsSheet extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              preference?.alias ?? ap.name,
-              style: Theme.of(context).textTheme.titleLarge,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    preference?.alias ?? ap.name,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Close access point details',
+                  onPressed: () {
+                    WaveHaptics.selection();
+                    Navigator.pop(context);
+                  },
+                  icon: const Icon(Icons.close_rounded),
+                ),
+              ],
             ),
             if (preference?.alias != null)
               Text(
