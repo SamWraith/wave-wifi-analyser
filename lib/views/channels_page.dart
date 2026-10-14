@@ -19,19 +19,21 @@ class ChannelsPage extends ConsumerWidget {
     final hasPoints = ref.watch(
       bandPointsProvider.select((points) => points.isNotEmpty),
     );
-    final (band, exclude, updated, demo, cached, paused, status) = ref.watch(
-      analyserProvider.select(
-        (s) => (
-          s.band,
-          s.excludeConnected,
-          s.lastUpdated,
-          s.demo,
-          s.cached,
-          s.paused,
-          s.status,
-        ),
-      ),
-    );
+    final (band, exclude, updated, demo, cached, paused, status, source) = ref
+        .watch(
+          analyserProvider.select(
+            (s) => (
+              s.band,
+              s.excludeConnected,
+              s.lastUpdated,
+              s.demo,
+              s.cached,
+              s.paused,
+              s.status,
+              s.source,
+            ),
+          ),
+        );
     return WavePanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,7 +43,12 @@ class ChannelsPage extends ConsumerWidget {
             subtitle: 'Compare overlap, then inspect what contributes.',
           ),
           const SizedBox(height: 16),
-          ScanFreshness(updated: updated, demo: demo, cached: cached),
+          ScanFreshness(
+            updated: updated,
+            demo: demo,
+            cached: cached,
+            source: source,
+          ),
           Text(
             paused
                 ? 'Paused • retained observations only. Resume scanning to recheck.'

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/access_point.dart';
+import '../models/wifi_data_source.dart';
 import '../models/ap_preference.dart';
 import 'comparison_sessions_view_model.dart';
 import '../models/analyser_state.dart';
@@ -14,6 +15,9 @@ import '../repositories/settings_repository.dart';
 
 final demoModeDefaultProvider = Provider<bool>(
   (ref) => !ref.read(wifiRepositoryProvider).supported,
+);
+final observationClockProvider = Provider<DateTime Function()>(
+  (ref) => DateTime.now,
 );
 final analyserProvider = NotifierProvider<AnalyserViewModel, AnalyserState>(
   AnalyserViewModel.new,
@@ -27,7 +31,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
   Timer? _timer, _deadline;
   StreamSubscription<WifiSnapshot>? _subscription;
   final Map<String, int> _lastTimestamp = {};
-  int _evictedTimestampFloor = 0;
+  int _evictedTimestampFloor = 0, _lastCompletionId = 0;
   bool _active = true;
   int _epoch = 0, _themeRevision = 0, _minimumRevision = 0;
   final _demo = DemoWifiSource();
@@ -40,13 +44,17 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     WidgetsBinding.instance.addObserver(this);
     ref.onDispose(() {
       _epoch++;
+      _cancelNativeScan();
       _timer?.cancel();
       _deadline?.cancel();
       _subscription?.cancel();
       WidgetsBinding.instance.removeObserver(this);
     });
     ready = Future.microtask(_initialize);
-    return AnalyserState(demo: ref.read(demoModeDefaultProvider));
+    return AnalyserState(
+      demo: ref.read(demoModeDefaultProvider),
+      liveSource: ref.read(liveWifiSourceProvider),
+    );
   }
 
   Future<void> _initialize() async {
@@ -124,14 +132,14 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     } on MissingPluginException {
       if (ref.mounted && epoch == _epoch) {
         state = state.copyWith(
-          status: 'Live scanning requires Android. Try demo mode.',
+          status: 'Live scanning requires Android or macOS. Try demo mode.',
         );
       }
     }
   }
 
   void _apply(WifiSnapshot snapshot) {
-    final now = DateTime.now();
+    final now = ref.read(observationClockProvider)();
     final history = state.history.map(
       (key, value) => MapEntry(key, List<SignalSample>.of(value)),
     );
@@ -140,28 +148,51 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     // Keep one floor for the whole batch: eviction during this scan must not
     // suppress other first-time APs from the same hardware scan.
     final timestampFloor = _evictedTimestampFloor;
+    final macosCompleted =
+        snapshot.source == WifiDataSource.macos &&
+        snapshot.scanCompleted &&
+        snapshot.completionId > _lastCompletionId;
+    if (snapshot.source != state.liveSource) return;
+    final batchIds = <String>{};
     for (final ap in snapshot.accessPoints) {
-      if (snapshot.fresh &&
-          ap.timestamp >
-              (_lastTimestamp[preferenceKey(ap.bssid)] ?? timestampFloor)) {
+      final key = preferenceKey(ap.bssid);
+      if (key.isEmpty || (macosCompleted && !batchIds.add(key))) continue;
+      if (macosCompleted ||
+          (snapshot.source == WifiDataSource.android &&
+              snapshot.fresh &&
+              ap.timestamp > (_lastTimestamp[key] ?? timestampFloor))) {
         _record(history, ap.bssid, now, ap.rssi);
-        _lastTimestamp[preferenceKey(ap.bssid)] = ap.timestamp;
+        if (snapshot.source == WifiDataSource.android) {
+          _lastTimestamp[key] = ap.timestamp;
+        }
         observed = true;
         fresh[preferenceKey(ap.bssid)] = ap;
       }
     }
+    if (macosCompleted) {
+      _lastCompletionId = snapshot.completionId;
+    }
     ref
         .read(comparisonSessionsProvider.notifier)
-        .observe(snapshot.accessPoints, fresh, demo: false);
+        .observe(
+          snapshot.accessPoints,
+          fresh,
+          demo: false,
+          source: state.source,
+        );
     state = state.copyWith(
-      cached: !observed,
+      acceptedScanId: macosCompleted ? snapshot.completionId : null,
+      cached: !(observed || macosCompleted),
       permission: snapshot.permission,
       locationEnabled: snapshot.locationEnabled,
       wifiEnabled: snapshot.wifiEnabled,
+      interfaceAvailable: snapshot.interfaceAvailable,
+      redactedCount: snapshot.redactedCount,
+      unavailableCount: snapshot.unavailableCount,
       status: snapshot.status,
       accessPoints: snapshot.accessPoints,
       history: history,
-      lastUpdated: observed ? now : null,
+      lastUpdated: observed || macosCompleted ? now : null,
     );
   }
 
@@ -194,6 +225,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     state = state.copyWith(busy: true, status: 'Scanning nearby networks…');
     try {
       if (!await _ensurePermission(requestPermission, epoch)) return;
+      if (!_isCurrent(epoch)) return;
       final snapshot = await _wifi.scan();
       if (!ref.mounted || epoch != _epoch) return;
       _apply(snapshot);
@@ -210,14 +242,14 @@ class AnalyserViewModel extends Notifier<AnalyserState>
       if (ref.mounted && epoch == _epoch) {
         state = state.copyWith(
           busy: false,
-          status: 'Live scanning requires Android. Try demo mode.',
+          status: 'Live scanning requires Android or macOS. Try demo mode.',
         );
       }
     }
   }
 
   void _scanDemo() {
-    final now = DateTime.now();
+    final now = ref.read(observationClockProvider)();
     final points = _demo.next();
     final history = state.history.map(
       (key, value) => MapEntry(key, List<SignalSample>.of(value)),
@@ -333,6 +365,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
   Future<void> setDemo(bool value) async {
     ref.read(comparisonSessionsProvider.notifier).stop('Data source changed');
     _epoch++;
+    _cancelNativeScan();
     _deadline?.cancel();
     _lastTimestamp.clear();
     _evictedTimestampFloor = 0;
@@ -357,6 +390,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
       ref.read(comparisonSessionsProvider.notifier).stop('Scanning paused');
     }
     _epoch++;
+    _cancelNativeScan();
     _deadline?.cancel();
     state = state.copyWith(paused: !state.paused, busy: false);
     _schedule();
@@ -370,13 +404,20 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     } on MissingPluginException {
       if (ref.mounted) {
         state = state.copyWith(
-          status: 'WiFi settings are available on Android.',
+          status: 'WiFi settings are available on Android and macOS.',
         );
       }
     } on PlatformException catch (e) {
       if (ref.mounted) {
         state = state.copyWith(status: e.message ?? 'Could not open settings');
       }
+    }
+  }
+
+  void _cancelNativeScan() {
+    final wifi = _wifi;
+    if (wifi is MacosWifiRepository) {
+      wifi.cancelScan().catchError((Object _) {});
     }
   }
 
@@ -387,6 +428,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     if (!_active) {
       ref.read(comparisonSessionsProvider.notifier).stop('App left foreground');
       _epoch++;
+      _cancelNativeScan();
       _deadline?.cancel();
       this.state = this.state.copyWith(busy: false);
     }

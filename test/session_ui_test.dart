@@ -281,7 +281,7 @@ void main() {
           tester.getSemantics(find.byType(Checkbox)),
           matchesSemantics(
             label:
-                'Select Study, Desk router (WiFi), aa, measured for comparison',
+                'Select Study, Desk router (WiFi), aa, Android for comparison',
             hasCheckedState: true,
             isChecked: enabled,
             hasEnabledState: true,

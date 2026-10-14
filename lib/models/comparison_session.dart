@@ -1,4 +1,5 @@
 import 'access_point.dart';
+import 'wifi_data_source.dart';
 
 const maxComparisonSessions = 24;
 const maxSessionSamples = 120;
@@ -24,11 +25,12 @@ class SessionSample {
       width: width,
       centerFrequency: centerFrequency,
     );
-    return '${ap.band.label} • CH ${ap.channel} ($frequency MHz) • $width MHz • center ${ap.spectralCenter} MHz';
+    return '${ap.band.label} • CH ${ap.channel} ($frequency MHz) • $width MHz • reported center ${centerFrequency == null ? 'unknown' : '$centerFrequency MHz'}';
   }
 
   Map<String, Object?> toJson() => {
     'at': at.millisecondsSinceEpoch,
+    'atMicros': at.microsecondsSinceEpoch,
     'rssi': rssi,
     'frequency': frequency,
     'width': width,
@@ -53,16 +55,19 @@ class ComparisonSession {
     required this.label,
     required this.start,
     this.end,
-    required this.demo,
+    bool demo = false,
+    WifiDataSource? source,
     this.reason = '',
     List<SessionSample> samples = const [],
     this.missingBatches = 0,
     this.cachedBatches = 0,
-  }) : samples = List.unmodifiable(samples);
+  }) : source = source ?? WifiDataSource.fromDemo(demo),
+       samples = List.unmodifiable(samples);
   final String id, bssid, ssid, label, reason;
   final DateTime start;
   final DateTime? end;
-  final bool demo;
+  final WifiDataSource source;
+  bool get demo => source == WifiDataSource.demo;
   final List<SessionSample> samples;
   final int missingBatches, cachedBatches;
   Map<String, List<SessionSample>> get groups {
@@ -90,7 +95,7 @@ class ComparisonSession {
     label: label,
     start: start,
     end: end ?? this.end,
-    demo: demo,
+    source: source,
     reason: reason ?? this.reason,
     samples: [...samples, ?sample],
     missingBatches: missingBatches + (missing ? 1 : 0),
@@ -102,8 +107,11 @@ class ComparisonSession {
     'ssid': ssid,
     'label': label,
     'start': start.millisecondsSinceEpoch,
+    'startMicros': start.microsecondsSinceEpoch,
     'end': end?.millisecondsSinceEpoch,
+    'endMicros': end?.microsecondsSinceEpoch,
     'demo': demo,
+    'source': source.name,
     'reason': reason,
     'samples': samples.map((s) => s.toJson()).toList(),
     'missing': missingBatches,

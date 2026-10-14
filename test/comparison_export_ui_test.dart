@@ -127,7 +127,8 @@ void main() {
       expect(find.text('Review comparison export'), findsOneWidget);
       expect(share.calls, 0);
       expect(find.textContaining('Private WiFi'), findsNothing);
-      await tap(tester, find.text('Return to saved sessions'));
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
       expect(find.byType(ComparisonExportPage), findsNothing);
       await tester.scrollUntilVisible(
         find.byWidgetPredicate(

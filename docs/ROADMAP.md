@@ -3,7 +3,7 @@
 This file records user-requested work and its delivery status. Planned work has
 no promised date. Existing feature inventory lives in README.md.
 Ranks 1–6 from [PRODUCT_REVIEW.md](PRODUCT_REVIEW.md) are delivered.
-Native macOS scanning is authorized next. Windows/Linux/iOS live scanning remains
+Native macOS scanning implemented 2026-10-14; GUI hardware verification remains limited in current automated environment. Windows/Linux/iOS live scanning remains
 deferred.
 
 ## Saved room comparison sessions
@@ -71,11 +71,22 @@ Verification: [comparison export](COMPARISON_EXPORT.md). Physical OnePlus checks
 2026-10-14, including actual local payloads, private defaults, opt-ins, cancellation
 and empty-session evidence.
 
-## Next authorized work
+## Native macOS live scanning
 
-1. Native macOS live scanning. Android remains the current live platform.
+Implemented: 2026-10-14. CoreWLAN/CoreLocation bridge, explicit Location recovery,
+public sandbox-compatible client interfaces, bounded serialized foreground scans,
+redacted/unavailable-data handling and source-aware history/recording/export.
+Desktop sidebar/medium rail, scrolling, keyboard navigation, Escape return and
+scaled layouts reuse existing pages. AppKit feedback is deliberate, best effort
+and governed by hardware/system preferences.
 
-No promised date; native macOS scanning is not implemented yet.
+macOS times describe scan completion, not individual radio measurements. Cache age
+is unavailable; successful scans may include cached observations. Missing BSSID or
+unsupported radio geometry is excluded, never fabricated. Android/demo/macOS
+sessions stay separate; v1 records survive v2 source/time storage.
+
+Verification and remaining GUI hardware limit: [macOS scanning](MACOS_SCANNING.md).
+Windows/Linux/iOS live scanning remains deferred. No new roadmap slice authorized.
 
 ## Detailed chart exploration
 

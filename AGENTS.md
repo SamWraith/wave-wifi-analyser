@@ -36,8 +36,8 @@ Start with `git status --short`, then use `rg` and focused file reads. Preserve 
 
 ## Operational invariants
 
-- Android performs live scans; unsupported targets use clearly labelled demo data.
-- Foreground requests are 35 seconds apart; Android controls actual scan availability. Demo updates every 3 seconds. Pause/background/disposal must stop timers and ignore late replies.
-- Cached/duplicate native timestamps must never create fresh history. Keep history and timestamp retention bounded together: 60 samples per AP, 256 AP histories.
+- Android and macOS perform live scans; unsupported targets use clearly labelled demo data.
+- Foreground automatic requests are 35 seconds apart; Android controls actual scan availability. macOS serializes actual starts at least 35 seconds apart; its completion IDs do not claim per-AP freshness. Demo updates every 3 seconds. Pause/background/disposal must stop timers and ignore late replies.
+- Android cached/duplicate native timestamps and macOS cache-only/duplicate completion IDs must never add history. macOS per-AP age/cache freshness remains unknown. Keep history and timestamp retention bounded together: 60 samples per AP, 256 AP histories.
 - Channel ratings are an independent overlap heuristic. Preserve frequency exceptions, reported width/center frequency and honest distance/graph limitations.
 - Persisted preferences must survive early edits during loading and recoverable write failures. Keep storage errors separate from scan status.

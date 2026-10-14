@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wifi_analyser/models/access_point.dart';
 import 'package:wifi_analyser/models/analyser_state.dart';
 import 'package:wifi_analyser/models/comparison_session.dart';
+import 'package:wifi_analyser/models/wifi_data_source.dart';
 import 'package:wifi_analyser/repositories/comparison_sessions_repository.dart';
 import 'package:wifi_analyser/repositories/settings_repository.dart';
 import 'package:wifi_analyser/repositories/wifi_repository.dart';
@@ -301,7 +302,7 @@ void main() {
     });
     expect(
       () => LocalComparisonSessionsRepository.decode(
-        raw.replaceFirst('"version":1', '"version":2'),
+        raw.replaceFirst('"version":1', '"version":3'),
       ),
       throwsFormatException,
     );
@@ -328,5 +329,159 @@ void main() {
       () => LocalComparisonSessionsRepository.decode('x' * 1048577),
       throwsFormatException,
     );
+  });
+
+  test(
+    'v1 Android/demo migration and v2 macOS retain exact accepted evidence',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final local = LocalComparisonSessionsRepository();
+      final start = DateTime.utc(2026, 10, 14, 1, 2, 3, 4, 567);
+      ComparisonSession session(WifiDataSource source) => ComparisonSession(
+        id: source.name,
+        bssid: ap.bssid,
+        ssid: ap.ssid,
+        label: 'Desk',
+        start: start,
+        end: start.add(const Duration(microseconds: 2345)),
+        source: source,
+        samples: [
+          SessionSample(
+            at: start.add(const Duration(microseconds: 123)),
+            rssi: -61,
+            frequency: 5180,
+            width: 80,
+            centerFrequency: 0,
+          ),
+        ],
+        cachedBatches: 2,
+        missingBatches: 3,
+      );
+      final legacy =
+          [session(WifiDataSource.android), session(WifiDataSource.demo)]
+              .map(
+                (s) => s.toJson()
+                  ..remove('source')
+                  ..remove('startMicros')
+                  ..remove('endMicros'),
+              )
+              .toList();
+      final migrated = LocalComparisonSessionsRepository.decode(
+        jsonEncode({'version': 1, 'sessions': legacy}),
+      );
+      expect(migrated.map((s) => s.source), [
+        WifiDataSource.android,
+        WifiDataSource.demo,
+      ]);
+      await local.save([...migrated, session(WifiDataSource.macos)]);
+      final loaded = await local.load();
+      final mac = loaded.last;
+      expect(mac.source, WifiDataSource.macos);
+      expect(mac.demo, isFalse);
+      expect(mac.start.microsecondsSinceEpoch, start.microsecondsSinceEpoch);
+      expect(
+        mac.end!.microsecondsSinceEpoch,
+        start.microsecondsSinceEpoch + 2345,
+      );
+      expect(
+        mac.samples.single.at.microsecondsSinceEpoch,
+        start.microsecondsSinceEpoch + 123,
+      );
+      expect(mac.samples.single.centerFrequency, 0);
+      expect(mac.cachedBatches, 2);
+      expect(mac.missingBatches, 3);
+      expect(
+        loaded.take(2).map((s) => s.toJson()),
+        migrated.map((s) => s.toJson()),
+      );
+      final raw = (await SharedPreferences.getInstance()).getString(
+        comparisonSessionsStorageKey,
+      )!;
+      expect(jsonDecode(raw)['version'], 2);
+      for (final source in ['unknown', 'demo']) {
+        final broken = mac.toJson()..['source'] = source;
+        expect(
+          () => LocalComparisonSessionsRepository.decode(
+            jsonEncode({
+              'version': 2,
+              'sessions': [broken],
+            }),
+          ),
+          throwsFormatException,
+        );
+      }
+      final brokenTime = mac.toJson()
+        ..['endMicros'] = start.microsecondsSinceEpoch - 1;
+      expect(
+        () => LocalComparisonSessionsRepository.decode(
+          jsonEncode({
+            'version': 2,
+            'sessions': [brokenTime],
+          }),
+        ),
+        throwsFormatException,
+      );
+    },
+  );
+
+  test('stored radio groups preserve null, zero and explicit centers', () {
+    final start = DateTime.utc(2026, 10, 14);
+    final session = ComparisonSession(
+      id: 'raw',
+      bssid: ap.bssid,
+      ssid: ap.ssid,
+      label: '',
+      start: start,
+      end: start,
+      source: WifiDataSource.macos,
+      samples: [
+        for (final center in <int?>[null, 0, 5180])
+          SessionSample(
+            at: start,
+            rssi: -55,
+            frequency: 5180,
+            width: 80,
+            centerFrequency: center,
+          ),
+      ],
+    );
+    expect(session.groups, hasLength(3));
+    expect(
+      session.groups.values.every((samples) => samples.length == 1),
+      isTrue,
+    );
+  });
+
+  test('macOS recording accepts only same source and uses monotonic completion time', () async {
+    final clock = FakeSessionClock();
+    container.dispose();
+    container = ProviderContainer(
+      overrides: [
+        comparisonSessionsRepositoryProvider.overrideWithValue(repo),
+        sessionClockProvider.overrideWithValue(clock),
+      ],
+    );
+    final vm = container.read(comparisonSessionsProvider.notifier);
+    await vm.ready;
+    expect(
+      vm.start(ap, 'Mac', demo: false, source: WifiDataSource.macos),
+      isTrue,
+    );
+    clock.uptime = const Duration(microseconds: 123456);
+    vm.observe([ap], {ap.bssid: ap}, demo: false);
+    vm.observe([ap], {ap.bssid: ap}, demo: true);
+    expect(container.read(comparisonSessionsProvider).active!.samples, isEmpty);
+    vm.observe([ap], {ap.bssid: ap}, demo: false, source: WifiDataSource.macos);
+    clock.wall = clock.wall.subtract(const Duration(days: 1));
+    clock.uptime = const Duration(microseconds: 234567);
+    vm.stop();
+    await settle();
+    final saved = repo.saved.single;
+    expect(saved.source, WifiDataSource.macos);
+    expect(
+      saved.samples.single.at,
+      saved.start.add(const Duration(microseconds: 123456)),
+    );
+    expect(saved.end, saved.start.add(const Duration(microseconds: 234567)));
   });
 }

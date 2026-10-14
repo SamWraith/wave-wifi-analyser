@@ -1,6 +1,6 @@
 # wave - wifi analyser
 
-A Flutter WiFi analyser with a modern responsive interface, system/light/dark themes, and a native Android WiFi scan bridge. Created in `~/Developer/personal/wave-wifi-analyser`.
+A Flutter WiFi analyser with a modern responsive interface, system/light/dark themes, and native Android and macOS WiFi scan bridges. Created in `~/Developer/personal/wave-wifi-analyser`.
 
 ## Run
 
@@ -13,7 +13,7 @@ fvm flutter pub get
 fvm flutter run -d <android-device-id>
 ```
 
-For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrome`. These platforms default to clearly labelled simulated data. Android defaults to live data. Tap Scan and grant **precise location**, then ensure WiFi and Android Location services are enabled. No location coordinates are collected.
+Run desktop with `fvm flutter run -d macos`; macOS defaults to live scans. Android also defaults to live data. Web, Windows, Linux and iOS default to labelled demo data. Android requires **precise location**; macOS requests Location access for WiFi identifiers. Enable WiFi and Location services. No location coordinates are collected. Normal macOS app-bundle verification and current hardware limits: [macOS scanning](docs/MACOS_SCANNING.md).
 
 ## Implemented features — 1.0.0
 
@@ -21,9 +21,9 @@ For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrom
 
 - Connected access-point card with network name, band, channel, measured signal in dBm, signal quality, advertised security and channel width.
 - Nearby-network count, strongest nearby access points, clearest channel candidate and local signal/channel/security insights.
-- Android live scans, manual Scan action, automatic scanning and pause/resume. Automatic requests run every 35 seconds while foregrounded; Android determines actual scan availability.
-- Permission, Location-off, WiFi-off, throttled/cached, empty and recoverable scan-error states. Contextual shortcuts request precise location or open Android app permissions, Location or WiFi settings.
-- Visible last-fresh-result age, pending/cached/paused labels and separate simulated-update age. Older observations are marked after two minutes; presentation clocks never add history or promise a next scan.
+- Android and macOS live scans, manual Scan, automatic scanning and pause/resume. Foreground requests run every 35 seconds; macOS also spaces actual starts by at least 35 seconds and serializes CoreWLAN work. Android controls availability. macOS replies time out after 20 seconds; blocking OS work cannot be physically cancelled, so late results are discarded.
+- Permission, Location-off, WiFi-off, throttled/cached, empty and recoverable scan-error states. Contextual shortcuts request precise location or open platform Location/privacy or WiFi settings. macOS distinguishes unavailable interfaces, redacted identifiers and unsupported radio fields; unidentified results are excluded, never given synthetic BSSIDs.
+- Visible Android last-fresh-result age, macOS completed-scan age, pending/cached/paused labels and separate simulated-update age. Older observations are marked after two minutes; presentation clocks never add history or promise a next scan.
 - Clearly labelled demo mode on every target, with simulated updates every 3 seconds. Backgrounding or pausing stops automatic updates.
 
 ### Guided Improve my WiFi
@@ -42,7 +42,7 @@ For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrom
 - **Focus chart** opens a larger chart with scan freshness, band controls and legends. Close, Back or Escape returns to the same Spectrum scroll position and selection; no forced orientation.
 - Tap or drag horizontally to follow visible envelope curves or recorded history samples in normal or focused charts. Markers stay on plotted data, with network name/BSSID and frequency/channel or observation time plus dBm. Vertical gestures scroll the page; pointer hover and focused arrow keys provide alternatives. Dismiss clears inspection.
 - Landscape readouts explicitly label illustrative envelope values; history snaps only to recorded samples and shows their actual timestamps. Hidden curves cannot be selected. Exceptional channels use their correct centers, with nearby coordinates qualified as **Near CH**. History only plots retained observations and breaks lines across missing observations or gaps longer than two foreground scan intervals.
-- Per-access-point signal history with up to 60 fresh samples per BSSID. Cached or duplicate scan timestamps never become fresh history samples.
+- Per-access-point signal history with up to 60 accepted samples per BSSID and 256 AP histories. Android cached/duplicate radio timestamps add no samples. macOS accepts each completed scan once using a completion ID; CoreWLAN supplies no per-AP timestamps/cache age, so repeated values can include cached radio observations. Completion time is explicitly qualified.
 - Switch between channel landscape and signal history; filter 2.4 GHz, 5 GHz or 6 GHz bands.
 - Tap a WiFi legend name through this cycle: **hide → include again → show only this WiFi → restore all**.
 - While one WiFi is isolated, tap another legend name to switch focus. **Show all** resets legend selections anytime.
@@ -69,7 +69,7 @@ For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrom
 - Stop saves locally; discard cancels. Pause, leaving the foreground or changing data source ends and saves with a reason. Resume never restarts recording. Relaunch restores completed sessions; forced termination may lose an unfinished recording or pending save.
 - Select two or more sessions for the same BSSID/source. Each band/channel/primary frequency/width/center-frequency context shows sample count, observation time range, median RSSI and RSSI range separately. Median delta appears only when every selected session has one identical context; stronger signal is not proof of faster WiFi.
 - Gaps remain visible: initial wait, longest interval between observations and silence before stop. No interpolated signal samples. Observation times use monotonic elapsed time anchored to recording start, so wall-clock corrections cannot break a saved session.
-- Retain up to 24 sessions with 120 fresh samples each; recording stops at the sample cap. Delete records to free space. Labels use a consistent 64 UTF-16-code-unit limit; storage is a validated version 1 envelope capped at 1 MiB. Loading gates recording while preserving entered labels; checked, serialized/coalesced writes expose recoverable storage errors separately from scanning.
+- Retain up to 24 sessions with 120 accepted samples each; recording stops at the sample cap. Delete records to free space. Labels use a consistent 64 UTF-16-code-unit limit; storage is a validated version 2 envelope (version 1 Android/demo records remain readable) capped at 1 MiB. Loading gates recording while preserving entered labels; checked, serialized/coalesced writes expose recoverable storage errors separately from scanning.
 - No GPS coordinates, background service, extra permissions, cloud sync, heatmap or distance-accuracy claim. See [session verification](docs/SAVED_COMPARISON_SESSIONS.md).
 
 ### Private comparison export
@@ -108,7 +108,7 @@ For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrom
 ### Settings and platform branding
 
 - Saved theme and minimum-signal preferences, immediate slider preview with persistence on release, and separate recoverable preference-error feedback.
-- Demo mode, automatic scanning controls, Android WiFi settings shortcut and Replay welcome.
+- Explicit demo mode, automatic scanning controls, platform WiFi/Location recovery and Replay welcome. Desktop sidebar/medium-window rail, visible scrollbar and Cmd/Ctrl+1–5 navigation or Cmd/Ctrl+R scan reuse existing pages; narrow windows retain bottom navigation. Comparisons/export and focused charts support Escape return.
 - Original Wave logo with editable SVG master and reproducible platform exports.
 - Android adaptive, monochrome/themed, light/night and legacy-density launcher icons; iOS Any/light, Dark and Tinted asset-catalog appearances. Launcher/system appearance controls icon presentation independently of in-app theme. See [branding assets](assets/branding/README.md).
 
@@ -118,12 +118,12 @@ For desktop exploration: `fvm flutter run -d macos` or `fvm flutter run -d chrom
 | --- | --- | --- |
 | Android | Live scan bridge implemented; required permission and WiFi/Location services must be enabled | Yes |
 | iOS | Not implemented | Yes, demo data |
-| macOS | Not implemented | Yes, demo data |
+| macOS | CoreWLAN/CoreLocation bridge implemented; GUI hardware verification remains limited in current automated environment | Yes, live by default; explicit demo option |
 | Web | Not implemented | Yes, demo data |
 
 No location coordinates are collected. Distance is a free-space estimate and can be inaccurate indoors; chart envelopes are illustrative rather than RF spectrum measurements. Local channel recommendations do not configure routers.
 
-Device discovery, speed tests, AI/cloud diagnostics, home-screen widgets and router administration are not included. Ranks 1–6 are delivered. Next authorized slice is native macOS scanning. Windows/Linux/iOS live scanning remains deferred. See delivered work and next scope in the [roadmap](docs/ROADMAP.md); original feature recommendations remain in the [product review](docs/PRODUCT_REVIEW.md).
+Device discovery, speed tests, AI/cloud diagnostics, home-screen widgets and router administration are not included. Ranks 1–6 are delivered. Native macOS scanning is implemented with documented verification limits. Windows/Linux/iOS live scanning remains deferred. See delivered work and next scope in the [roadmap](docs/ROADMAP.md); original feature recommendations remain in the [product review](docs/PRODUCT_REVIEW.md).
 
 ## Architecture: MVVM + Riverpod 3.4.3
 
@@ -138,7 +138,7 @@ Device discovery, speed tests, AI/cloud diagnostics, home-screen widgets and rou
 - `lib/viewmodels/wifi_guidance_view_model.dart`: ephemeral same-AP baseline/recheck workflow.
 - `lib/views/wifi_guidance_sheet.dart`: scrollable guide using shared scan recovery controls.
 - `lib/viewmodels/analyser_view_model.dart`: Riverpod `NotifierProvider`, lifecycle, scan orchestration, preferences and history.
-- `lib/repositories/wifi_repository.dart`: typed Android MethodChannel/EventChannel boundary.
+- `lib/repositories/wifi_repository.dart`: typed Android MethodChannel/EventChannel and macOS completed-scan boundaries.
 - `lib/repositories/settings_repository.dart`: persistence interface and local preferences implementation.
 - `lib/widgets/signal_charts.dart`: canvas-based channel and history plots.
 - `lib/main.dart` / `lib/app.dart`: bootstrap `ProviderScope` and reactive app theme.
@@ -147,7 +147,7 @@ Device discovery, speed tests, AI/cloud diagnostics, home-screen widgets and rou
 - `lib/repositories/demo_wifi_source.dart`: deterministic simulated scans, separate from hardware and domain models.
 - `android/app/src/main/kotlin/com/samirpandey/wifi_analyser/MainActivity.kt`: native `WifiManager` integration.
 
-History accepts only fresh scan timestamps, never relabels cached data as new samples, and holds up to 60 samples per BSSID. Android may throttle manual requests. 35 seconds is a request interval, not a guaranteed hardware refresh rate.
+Android history accepts only new radio timestamps. macOS history accepts new completed-scan IDs, with unknown per-AP radio age/cache freshness disclosed. Neither cache-only snapshots nor duplicate accepted IDs add samples. History holds up to 60 samples per BSSID. Android may throttle manual requests; macOS enforces minimum 35-second actual-start spacing. No interval guarantees hardware freshness.
 
 Graphs use reported center frequency for wide channels when available. Envelopes are illustrative, not RF spectral measurements. Channel recommendations are an independent heuristic, not the original app's exact star algorithm. Candidates do not establish regulatory/router availability. 80+80 MHz channels are represented approximately as 160 MHz, without separate lobes.
 

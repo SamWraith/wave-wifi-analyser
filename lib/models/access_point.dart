@@ -28,7 +28,7 @@ class AccessPoint {
       ? centerFrequency!
       : frequency;
   final bool connected;
-  String get name => ssid.isEmpty ? 'Hidden network' : ssid;
+  String get name => ssid.isEmpty ? 'Hidden or unavailable name' : ssid;
   WifiBand get band => frequency >= 5925
       ? WifiBand.ghz6
       : frequency >= 4900

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/wifi_guidance.dart';
 import '../models/analyser_state.dart';
+import '../models/wifi_data_source.dart';
 import 'analyser_view_model.dart';
 
 final guidanceClockProvider = Provider<DateTime Function()>(
@@ -15,20 +16,30 @@ final wifiGuidanceProvider =
 /// Ephemeral guided check. Baseline belongs to one BSSID and one live workspace.
 class WifiGuidanceViewModel extends Notifier<WifiGuidanceState> {
   int? _requiredTimestamp;
+  int? _requiredCompletion;
 
   @override
   WifiGuidanceState build() {
     ref.listen(
       analyserProvider.select(
-        (s) => (s.demo, s.accessPoints, s.history, s.lastUpdated, s.cached),
+        (s) => (
+          s.source,
+          s.accessPoints,
+          s.history,
+          s.lastUpdated,
+          s.cached,
+          s.acceptedScanId,
+        ),
       ),
       (_, next) {
-        if (next.$1 && (state.baseline != null || state.waiting)) {
+        if ((next.$1 == WifiDataSource.demo ||
+                (state.baseline != null &&
+                    next.$1 != state.baseline!.source)) &&
+            (state.baseline != null || state.waiting)) {
           _requiredTimestamp = null;
           state = WifiGuidanceState(
             problem: state.problem,
-            message:
-                'Workspace changed to demo. Start a new live check to compare.',
+            message: 'Data source changed. Start a new live check to compare.',
           );
         } else if (state.waiting) {
           _acceptRecheck(ref.read(analyserProvider));
@@ -69,6 +80,7 @@ class WifiGuidanceViewModel extends Notifier<WifiGuidanceState> {
         .where((a) => bssid == null ? a.connected : a.bssid == bssid)
         .firstOrNull;
     final baselineTimestamp = state.baseline?.ap.timestamp ?? 0;
+    _requiredCompletion = scan.acceptedScanId;
     _requiredTimestamp = (ap?.timestamp ?? 0) > baselineTimestamp
         ? ap!.timestamp
         : baselineTimestamp;
@@ -76,7 +88,9 @@ class WifiGuidanceViewModel extends Notifier<WifiGuidanceState> {
       problem: state.problem,
       baseline: state.baseline,
       waiting: true,
-      message: 'Waiting for a new observation. Android may throttle requests; cached results cannot complete this check.',
+      message: scan.source == WifiDataSource.macos
+          ? 'Waiting for a new completed macOS scan. Per-AP time and cache freshness remain unknown.'
+          : 'Waiting for a new observation. Scan requests are bounded; cached results cannot complete this check.',
     );
     await ref.read(analyserProvider.notifier).scan();
   }
@@ -92,7 +106,14 @@ class WifiGuidanceViewModel extends Notifier<WifiGuidanceState> {
       );
       return;
     }
-    if (next.ap.timestamp <= (_requiredTimestamp ?? 0)) return;
+    if (scan.source == WifiDataSource.macos) {
+      if (_requiredCompletion != null &&
+          scan.acceptedScanId <= _requiredCompletion!) {
+        return;
+      }
+    } else if (next.ap.timestamp <= (_requiredTimestamp ?? 0)) {
+      return;
+    }
     _requiredTimestamp = null;
     state = WifiGuidanceState(
       problem: state.problem,

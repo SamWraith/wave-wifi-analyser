@@ -1,4 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../viewmodels/analyser_view_model.dart';
 
 import '../widgets/wave_motion.dart';
 import '../widgets/wave_haptics.dart';
@@ -10,13 +15,13 @@ import 'settings_page.dart';
 import 'spectrum_page.dart';
 import 'chart_selection.dart';
 
-class AnalyserHome extends StatefulWidget {
+class AnalyserHome extends ConsumerStatefulWidget {
   const AnalyserHome({super.key});
   @override
-  State<AnalyserHome> createState() => _AnalyserHomeState();
+  ConsumerState<AnalyserHome> createState() => _AnalyserHomeState();
 }
 
-class _AnalyserHomeState extends State<AnalyserHome> {
+class _AnalyserHomeState extends ConsumerState<AnalyserHome> {
   int selected = 0;
   final _chartSelection = ChartSelection();
   final _scrollController = ScrollController();
@@ -26,6 +31,13 @@ class _AnalyserHomeState extends State<AnalyserHome> {
     WaveHaptics.selection();
     if (_scrollController.hasClients) _scrollController.jumpTo(0);
     setState(() => selected = value);
+  }
+
+  void _scan() {
+    final state = ref.read(analyserProvider);
+    if (state.busy || state.paused) return;
+    WaveHaptics.impact();
+    ref.read(analyserProvider.notifier).scan();
   }
 
   @override
@@ -38,79 +50,129 @@ class _AnalyserHomeState extends State<AnalyserHome> {
   @override
   Widget build(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width >= 950;
-    return Scaffold(
-      body: SafeArea(
-        child: Row(
-          children: [
-            if (wide) AnalyserSidebar(selected: selected, onSelected: _select),
-            Expanded(
-              child: Column(
+    final desktop = switch (defaultTargetPlatform) {
+      TargetPlatform.macOS ||
+      TargetPlatform.windows ||
+      TargetPlatform.linux => true,
+      _ => false,
+    };
+    final rail = desktop && !wide && MediaQuery.sizeOf(context).width >= 700;
+    return CallbackShortcuts(
+      bindings: {
+        for (final modifier in [
+          LogicalKeyboardKey.meta,
+          LogicalKeyboardKey.control,
+        ])
+          for (var i = 0; i < pages.length; i++)
+            SingleActivator(
+              [
+                LogicalKeyboardKey.digit1,
+                LogicalKeyboardKey.digit2,
+                LogicalKeyboardKey.digit3,
+                LogicalKeyboardKey.digit4,
+                LogicalKeyboardKey.digit5,
+              ][i],
+              meta: modifier == LogicalKeyboardKey.meta,
+              control: modifier == LogicalKeyboardKey.control,
+            ): () =>
+                _select(i),
+        const SingleActivator(LogicalKeyboardKey.keyR, meta: true): _scan,
+        const SingleActivator(LogicalKeyboardKey.keyR, control: true): _scan,
+      },
+      child: Focus(
+        autofocus: true,
+        child: FocusTraversalGroup(
+          child: Scaffold(
+            body: SafeArea(
+              child: Row(
                 children: [
+                  if (wide)
+                    AnalyserSidebar(selected: selected, onSelected: _select),
+                  if (rail)
+                    AnalyserRail(selected: selected, onSelected: _select),
                   Expanded(
-                    child: SingleChildScrollView(
-                      controller: _scrollController,
-                      padding: EdgeInsets.all(wide ? 32 : 20),
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 1240),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              AnalyserHeader(selected: selected, wide: wide),
-                              const SizedBox(height: 22),
-                              const ScanStatusBar(),
-                              const SizedBox(height: 26),
-                              if (selected != 4) ...[
-                                const BandSelector(),
-                                const SizedBox(height: 24),
-                              ],
-                              WaveReveal(
-                                key: ValueKey(selected),
-                                child: switch (selected) {
-                                  0 => OverviewPage(
-                                    onViewNetworks: () => _select(2),
-                                    onOpenSpectrum: () => _select(1),
-                                    selection: _chartSelection,
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: Scrollbar(
+                            controller: _scrollController,
+                            thumbVisibility: desktop,
+                            child: SingleChildScrollView(
+                              controller: _scrollController,
+                              padding: EdgeInsets.all(wide ? 32 : 20),
+                              child: Center(
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 1240,
                                   ),
-                                  1 => SpectrumPage(selection: _chartSelection),
-                                  2 => const NetworksPage(),
-                                  3 => const ChannelsPage(),
-                                  _ => const SettingsPage(),
-                                },
-                              ),
-                              const SizedBox(height: 24),
-                              Text(
-                                'WAVE  /  WIFI, MADE VISIBLE',
-                                style: TextStyle(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
-                                  fontSize: 10,
-                                  letterSpacing: 2,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      AnalyserHeader(
+                                        selected: selected,
+                                        wide: wide,
+                                      ),
+                                      const SizedBox(height: 22),
+                                      const ScanStatusBar(),
+                                      const SizedBox(height: 26),
+                                      if (selected != 4) ...[
+                                        const BandSelector(),
+                                        const SizedBox(height: 24),
+                                      ],
+                                      WaveReveal(
+                                        key: ValueKey(selected),
+                                        child: switch (selected) {
+                                          0 => OverviewPage(
+                                            onViewNetworks: () => _select(2),
+                                            onOpenSpectrum: () => _select(1),
+                                            selection: _chartSelection,
+                                          ),
+                                          1 => SpectrumPage(
+                                            selection: _chartSelection,
+                                          ),
+                                          2 => const NetworksPage(),
+                                          3 => const ChannelsPage(),
+                                          _ => const SettingsPage(),
+                                        },
+                                      ),
+                                      const SizedBox(height: 24),
+                                      Text(
+                                        'WAVE  /  WIFI, MADE VISIBLE',
+                                        style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                          fontSize: 10,
+                                          letterSpacing: 2,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
+                        if (!wide && !rail)
+                          NavigationBar(
+                            selectedIndex: selected,
+                            onDestinationSelected: _select,
+                            destinations: List.generate(
+                              pages.length,
+                              (i) => NavigationDestination(
+                                icon: Icon(pageIcons[i]),
+                                label: pages[i],
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                  if (!wide)
-                    NavigationBar(
-                      selectedIndex: selected,
-                      onDestinationSelected: _select,
-                      destinations: List.generate(
-                        pages.length,
-                        (i) => NavigationDestination(
-                          icon: Icon(pageIcons[i]),
-                          label: pages[i],
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );

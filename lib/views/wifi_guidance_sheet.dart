@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/wifi_guidance.dart';
+import '../models/wifi_data_source.dart';
 import '../viewmodels/analyser_view_model.dart';
 import '../viewmodels/wifi_guidance_view_model.dart';
 import '../widgets/wave_components.dart';
@@ -27,8 +28,8 @@ class WifiGuidanceSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final guide = ref.watch(wifiGuidanceProvider);
-    final (busy, paused) = ref.watch(
-      analyserProvider.select((s) => (s.busy, s.paused)),
+    final (busy, paused, source) = ref.watch(
+      analyserProvider.select((s) => (s.busy, s.paused, s.source)),
     );
     final vm = ref.read(wifiGuidanceProvider.notifier);
     final baseline = guide.baseline;
@@ -117,7 +118,9 @@ class WifiGuidanceSheet extends ConsumerWidget {
                 icon: const Icon(Icons.refresh),
                 label: Text(
                   baseline == null
-                      ? 'Get fresh scan'
+                      ? source == WifiDataSource.macos
+                            ? 'Get completed scan'
+                            : 'Get fresh scan'
                       : guide.waiting
                       ? 'Retry recheck'
                       : 'Recheck after change',
@@ -161,7 +164,11 @@ class GuidanceEvidenceCard extends StatelessWidget {
           Text(
             'Relative overlap estimate: ${evidence.overlap.toStringAsFixed(2)}',
           ),
-          Text('Observed at $time • single live observation'),
+          Text(
+            evidence.source == WifiDataSource.macos
+                ? 'Scan completed at $time • per-AP time and cache freshness unknown'
+                : 'Observed at $time • single live observation',
+          ),
         ],
       ),
     );

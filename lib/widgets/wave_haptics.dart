@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 
 /// Feedback belongs to explicit user intent, never background scan updates.
 abstract final class WaveHaptics {
+  static const _native = MethodChannel('com.samirpandey.wifi_analyser/wifi');
+  static bool get _macos =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
   static bool get _supported =>
       !kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.android ||
@@ -10,10 +13,14 @@ abstract final class WaveHaptics {
 
   static void selection() {
     if (_supported) _send(HapticFeedback.selectionClick());
+    if (_macos) {
+      _send(_native.invokeMethod<void>('haptic', {'kind': 'selection'}));
+    }
   }
 
   static void impact() {
     if (_supported) _send(HapticFeedback.lightImpact());
+    if (_macos) _send(_native.invokeMethod<void>('haptic', {'kind': 'impact'}));
   }
 
   static Future<void> _send(Future<void> feedback) async {

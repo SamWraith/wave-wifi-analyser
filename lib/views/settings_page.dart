@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../viewmodels/analyser_view_model.dart';
+import '../models/wifi_data_source.dart';
 import '../widgets/wave_components.dart';
 import '../widgets/theme_reveal.dart';
 import '../widgets/wave_haptics.dart';
@@ -10,14 +11,18 @@ import 'onboarding_page.dart';
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
   @override
-  Widget build(BuildContext context) => const Column(
+  Widget build(BuildContext context) => Column(
     children: [
-      PreferencesErrorCard(),
-      AppearanceCard(),
-      SizedBox(height: 18),
-      ScanningSettingsCard(),
-      SizedBox(height: 18),
-      AboutCard(),
+      const PreferencesErrorCard(),
+      ResponsivePair(
+        breakpoint:
+            880 * (MediaQuery.textScalerOf(context).scale(16) / 16).clamp(1, 2),
+        spacing: 18,
+        first: const Column(
+          children: [AppearanceCard(), SizedBox(height: 18), AboutCard()],
+        ),
+        second: const ScanningSettingsCard(),
+      ),
     ],
   );
 }
@@ -100,19 +105,22 @@ class ScanningSettingsCard extends ConsumerWidget {
   const ScanningSettingsCard({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final (demo, paused, minimum) = ref.watch(
+    final (source, paused, minimum) = ref.watch(
       analyserProvider.select(
-        (state) => (state.demo, state.paused, state.minimumRssi),
+        (state) => (state.source, state.paused, state.minimumRssi),
       ),
     );
     final c = ref.read(analyserProvider.notifier);
+    final demo = source == WifiDataSource.demo;
     return WavePanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SectionHeading(
             title: 'Scanning',
-            subtitle: 'Android scans respect operating system limits.',
+            subtitle: demo
+                ? 'Explicit simulated data for exploring Wave.'
+                : '${source.label} scans respect operating system limits.',
           ),
           const SizedBox(height: 12),
           SwitchListTile(
@@ -168,11 +176,18 @@ class ScanningSettingsCard extends ConsumerWidget {
             'Filters display only. Channel scoring still includes all scanned access points.',
             style: Theme.of(context).textTheme.bodySmall,
           ),
+          if (source == WifiDataSource.macos) ...[
+            const SizedBox(height: 14),
+            Text(
+              source.observationLimitations,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
           const SizedBox(height: 20),
           OutlinedButton.icon(
             onPressed: c.openSettings,
             icon: const Icon(Icons.settings_outlined, size: 18),
-            label: const Text('Open Android WiFi settings'),
+            label: const Text('Open WiFi settings'),
           ),
         ],
       ),
@@ -193,7 +208,7 @@ class AboutCard extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          'Android supports live nearby-network scans. iOS, macOS and web currently support demo mode. Precise location permission and Location services are required by Android WiFi scanning APIs. No location coordinates are collected.',
+          'Android and macOS support live nearby-network scans. Other platforms support explicit demo mode. Android requires precise location access and Location services. macOS requires Location access to expose network identifiers. No location coordinates are collected.',
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 16),
@@ -209,7 +224,7 @@ class AboutCard extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          'Next: device discovery, speed tests, aliases and widgets. These tools are not included in this first build.',
+          'Saved room comparisons, local aliases, channel planning and private previewed exports keep your WiFi evidence on your device.',
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ],

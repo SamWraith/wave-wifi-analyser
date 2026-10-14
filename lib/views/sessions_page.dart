@@ -4,18 +4,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/ap_preference.dart';
 import '../models/access_point.dart';
 import '../models/comparison_session.dart';
+import '../models/wifi_data_source.dart';
 import '../viewmodels/analyser_view_model.dart';
 import '../viewmodels/ap_preferences_view_model.dart';
 import '../viewmodels/comparison_sessions_view_model.dart';
 import '../widgets/wave_components.dart';
 import '../widgets/wave_haptics.dart';
 import '../widgets/wave_motion.dart';
+import '../widgets/route_escape.dart';
 import 'comparison_export_page.dart';
 
 void showComparisonSessions(BuildContext context) {
   WaveHaptics.selection();
-  Navigator.of(context)
-      .push<void>(MaterialPageRoute(builder: (_) => const SessionsPage()));
+  Navigator.of(context).push<void>(
+    MaterialPageRoute(builder: (_) => const RouteEscape(child: SessionsPage())),
+  );
 }
 
 class SessionsPage extends ConsumerStatefulWidget {
@@ -59,8 +62,8 @@ class _SessionsPageState extends ConsumerState<SessionsPage>
   Widget build(BuildContext context) {
     final sessions = ref.watch(comparisonSessionsProvider);
     final points = ref.watch(analyserProvider.select((s) => s.accessPoints));
-    final (paused, demo) = ref.watch(
-      analyserProvider.select((s) => (s.paused, s.demo)),
+    final (paused, demo, source) = ref.watch(
+      analyserProvider.select((s) => (s.paused, s.demo, s.source)),
     );
     final scanFeedback = ref.watch(
       analyserProvider.select(
@@ -116,7 +119,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage>
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
             children: [
               const Text(
-                'Record one access point in different rooms. Compare fresh signal observations saved on this device.',
+                'Record one access point in different rooms. Compare accepted signal observations saved on this device.',
               ),
               const SizedBox(height: 16),
               if (sessions.error != null)
@@ -257,6 +260,13 @@ class _SessionsPageState extends ConsumerState<SessionsPage>
                           const Text(
                             'Resume foreground scanning before starting.',
                           ),
+                        if (source == WifiDataSource.macos)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 8),
+                            child: Text(
+                              'macOS records completed scans. Per-AP age is unavailable; scan cache may contribute. Kept separate from Android and demo.',
+                            ),
+                          ),
                         if (demo)
                           const Padding(
                             padding: EdgeInsets.only(top: 8),
@@ -282,6 +292,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage>
                                         chosen,
                                         _label.text.trim(),
                                         demo: demo,
+                                        source: source,
                                       )) {
                                     WaveHaptics.impact();
                                     FocusScope.of(context).unfocus();
@@ -309,19 +320,27 @@ class _SessionsPageState extends ConsumerState<SessionsPage>
                           (!scanFeedback.$2 ||
                               !scanFeedback.$3 ||
                               !scanFeedback.$4))
-                        const Text(
-                          'Scanning needs WiFi, location services and scan permission. Existing samples are kept; only fresh observations add samples.',
+                        Text(
+                          source == WifiDataSource.macos
+                              ? 'Scanning needs WiFi, Location access and an available interface. Existing samples are kept; new scan completions add samples with unknown per-AP age.'
+                              : 'Scanning needs WiFi, location services and scan permission. Existing samples are kept; only fresh observations add samples.',
                         ),
                       Text(
                         scanFeedback.$5
                             ? 'Scan request in progress.'
                             : scanFeedback.$6
-                            ? 'Latest results are cached. No fresh samples added.'
+                            ? source == WifiDataSource.macos
+                                  ? 'No new scan completion accepted. No samples added.'
+                                  : 'Latest results are cached. No fresh samples added.'
                             : 'Waiting for the next foreground scan reply.',
                       ),
                       Text(
                         scanFeedback.$7 == null
-                            ? 'No fresh observation received yet.'
+                            ? source == WifiDataSource.macos
+                                  ? 'No completed scan received yet.'
+                                  : 'No fresh observation received yet.'
+                            : source == WifiDataSource.macos
+                            ? 'Last scan completion ${_time(scanFeedback.$7!)} · per-AP age unavailable'
                             : 'Last fresh observation ${_time(scanFeedback.$7!)}',
                       ),
                       TextButton.icon(
@@ -351,7 +370,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage>
                 final compatible =
                     selected.isEmpty ||
                     (selected.first.bssid == session.bssid &&
-                        selected.first.demo == session.demo);
+                        selected.first.source == session.source);
                 return SavedSessionTile(
                   session: session,
                   alias: preferences[preferenceKey(session.bssid)]?.alias,
@@ -455,6 +474,8 @@ class RecordingPanel extends StatelessWidget {
         SectionHeading(
           title: session.demo
               ? 'Simulated session running'
+              : session.source == WifiDataSource.macos
+              ? 'Recording completed macOS scans'
               : 'Recording fresh observations',
           subtitle: '${_sessionName(session)} · ${session.bssid}',
         ),
@@ -469,11 +490,13 @@ class RecordingPanel extends StatelessWidget {
         ),
         Text(
           session.samples.isEmpty
-              ? 'Waiting for a fresh observation. Existing scan results are not added.'
+              ? session.source == WifiDataSource.macos
+                    ? 'Waiting for a new scan completion. Per-AP time and cache freshness remain unknown.'
+                    : 'Waiting for a fresh observation. Existing scan results are not added.'
               : 'Last sample ${_time(session.samples.last.at)} · ${session.samples.last.rssi} dBm',
         ),
         Text(
-          '${session.cachedBatches} updates without fresh data · ${session.missingBatches} updates without this AP',
+          '${session.cachedBatches} updates without accepted samples · ${session.missingBatches} updates without this AP',
         ),
         const SizedBox(height: 14),
         Wrap(
@@ -532,7 +555,7 @@ class SavedSessionTile extends StatelessWidget {
                 container: true,
                 child: Checkbox(
                   semanticLabel:
-                      'Select ${_sessionName(session)}, ${alias == null ? session.ssid : '$alias (${session.ssid})'}, ${session.bssid}, ${session.demo ? 'simulated' : 'measured'} for comparison',
+                      'Select ${_sessionName(session)}, ${alias == null ? session.ssid : '$alias (${session.ssid})'}, ${session.bssid}, ${session.source.label} for comparison',
                   value: selected,
                   onChanged: onSelect == null
                       ? null
@@ -561,7 +584,7 @@ class SavedSessionTile extends StatelessWidget {
                   '${alias == null ? (session.ssid.isEmpty ? 'Hidden network' : session.ssid) : '$alias (${session.ssid.isEmpty ? 'Hidden network' : session.ssid})'} · ${session.bssid}',
                 ),
                 Text(
-                  '${session.demo ? 'SIMULATED · ' : ''}${_sampleCount(session.samples.length)} · ${_time(session.start)} – ${session.end == null ? 'running' : _time(session.end!)}',
+                  '${session.source.label} · ${_sampleCount(session.samples.length)} · ${_time(session.start)} – ${session.end == null ? 'running' : _time(session.end!)}',
                 ),
                 Text(
                   '${session.reason} · ${session.groups.length} radio context${session.groups.length == 1 ? '' : 's'}',
@@ -588,7 +611,7 @@ class SessionComparison extends StatelessWidget {
         sessions.any(
           (s) =>
               preferenceKey(s.bssid) != preferenceKey(sessions.first.bssid) ||
-              s.demo != sessions.first.demo,
+              s.source != sessions.first.source,
         )) {
       return const WavePanel(
         child: Text(
@@ -612,7 +635,7 @@ class SessionComparison extends StatelessWidget {
         children: [
           SectionHeading(
             title: 'Compare rooms',
-            subtitle: '${first.demo ? 'SIMULATED · ' : ''}${first.bssid}',
+            subtitle: '${first.source.label} · ${first.bssid}',
           ),
           const SizedBox(height: 12),
           if (!matching)
@@ -659,7 +682,7 @@ class SessionComparison extends StatelessWidget {
                       'Wait before first sample: ${session.samples.first.at.difference(session.start).inSeconds} seconds · silence before stop: ${session.end!.difference(session.samples.last.at).inSeconds} seconds',
                     ),
                   Text(
-                    '${session.missingBatches} missing AP updates · ${session.cachedBatches} updates without fresh data',
+                    '${session.missingBatches} missing AP updates · ${session.cachedBatches} updates without accepted samples',
                   ),
                 ],
               ),

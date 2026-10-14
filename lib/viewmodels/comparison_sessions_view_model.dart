@@ -5,9 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/access_point.dart';
 import '../models/ap_preference.dart';
 import '../models/comparison_session.dart';
+import '../models/wifi_data_source.dart';
 import '../repositories/comparison_sessions_repository.dart';
 
-/// Observation times stay anchored to the start wall clock even if Android
+/// Observation times stay anchored to the start wall clock even if system
 /// corrects its clock during recording. Elapsed time never runs backwards.
 abstract interface class SessionClock {
   DateTime now();
@@ -78,7 +79,12 @@ class ComparisonSessionsViewModel extends Notifier<ComparisonSessionsState> {
     }
   }
 
-  bool start(AccessPoint ap, String label, {required bool demo}) {
+  bool start(
+    AccessPoint ap,
+    String label, {
+    required bool demo,
+    WifiDataSource? source,
+  }) {
     if (!_loaded || state.active != null) return false;
     if (state.sessions.length >= maxComparisonSessions) {
       state = ComparisonSessionsState(
@@ -108,7 +114,7 @@ class ComparisonSessionsViewModel extends Notifier<ComparisonSessionsState> {
         ssid: ap.ssid,
         label: name,
         start: now,
-        demo: demo,
+        source: source ?? WifiDataSource.fromDemo(demo),
       ),
     );
     return true;
@@ -120,9 +126,13 @@ class ComparisonSessionsViewModel extends Notifier<ComparisonSessionsState> {
     List<AccessPoint> points,
     Map<String, AccessPoint> fresh, {
     required bool demo,
+    WifiDataSource? source,
   }) {
     final active = state.active;
-    if (active == null || active.demo != demo) return;
+    if (active == null ||
+        active.source != (source ?? WifiDataSource.fromDemo(demo))) {
+      return;
+    }
     final present = points.any((ap) => preferenceKey(ap.bssid) == active.bssid);
     final target = fresh[active.bssid];
     final next = active.update(

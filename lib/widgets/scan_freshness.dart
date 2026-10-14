@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../models/scan_freshness.dart';
+import '../models/wifi_data_source.dart';
 
 /// Presentation clock only: no measurement writes or background timer.
 class ScanFreshness extends StatefulWidget {
@@ -11,8 +12,10 @@ class ScanFreshness extends StatefulWidget {
     required this.updated,
     required this.demo,
     this.cached = true,
+    this.source = WifiDataSource.android,
     this.clock = DateTime.now,
   });
+  final WifiDataSource source;
   final DateTime? updated;
   final bool demo, cached;
   final DateTime Function() clock;
@@ -73,7 +76,12 @@ class _ScanFreshnessState extends State<ScanFreshness>
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(
-        scanAgeLabel(widget.updated, _now, demo: widget.demo),
+        scanAgeLabel(
+          widget.updated,
+          _now,
+          demo: widget.demo,
+          source: widget.source,
+        ),
         style: Theme.of(context).textTheme.bodySmall,
       ),
       Text(
@@ -83,6 +91,8 @@ class _ScanFreshnessState extends State<ScanFreshness>
             ? 'Cached results • signal may have changed'
             : isScanStale(widget.updated, _now)
             ? 'Older observations • recheck before comparing'
+            : widget.source == WifiDataSource.macos
+            ? 'Scan completion • per-AP age unavailable; cache may contribute'
             : 'Recent observations • Android controls scan availability',
         style: Theme.of(context).textTheme.bodySmall,
       ),

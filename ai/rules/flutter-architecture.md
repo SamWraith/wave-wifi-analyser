@@ -59,7 +59,7 @@ Keep loading, saving and scanning error feedback distinct. Optimistic preference
 
 Guard asynchronous replies with mounted/lifetime and request-generation checks. Cancellation includes timers, stream subscriptions, native receivers and observers. Paused/background/demo state must reject irrelevant live events and errors. Keep history/timestamp maps bounded together. Do not treat cached native results as fresh observations.
 
-Keep repositories injectable through providers. Demo generation belongs in an explicit data source and must never silently substitute for a failed Android scan.
+Keep repositories injectable through providers. Demo generation belongs in an explicit data source and must never silently substitute for a failed Android or macOS scan.
 
 ## Verification proportional to changes
 

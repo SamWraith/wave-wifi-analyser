@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:wifi_analyser/models/comparison_export.dart';
 import 'package:wifi_analyser/models/comparison_session.dart';
+import 'package:wifi_analyser/models/wifi_data_source.dart';
 import 'package:wifi_analyser/repositories/comparison_share_repository.dart';
 
 ComparisonSession evidence({
@@ -17,6 +18,7 @@ ComparisonSession evidence({
   String ssid = 'Private WiFi',
   String bssid = 'aa:bb:cc:dd:ee:ff',
   bool demo = false,
+  WifiDataSource? source,
   List<SessionSample>? samples,
   bool saved = true,
 }) => ComparisonSession(
@@ -27,6 +29,7 @@ ComparisonSession evidence({
   start: DateTime.utc(2026, 10, 13),
   end: saved ? DateTime.utc(2026, 10, 13, 0, 2) : null,
   demo: demo,
+  source: source,
   reason: 'Private WiFi',
   cachedBatches: 2,
   missingBatches: 3,
@@ -149,6 +152,7 @@ void main() {
       [s, s],
       [s, evidence(id: 'other', bssid: 'bb')],
       [s, evidence(id: 'other', demo: true)],
+      [s, evidence(id: 'mac', source: WifiDataSource.macos)],
       [evidence(saved: false)],
       List.generate(25, (i) => evidence(id: '$i')),
       [evidence(samples: List.filled(121, s.samples.first))],
@@ -163,6 +167,35 @@ void main() {
       contains('Session 2'),
     );
   });
+  test(
+    'macOS export identifies completion times and unknown radio freshness',
+    () {
+      final export = serializeComparison([
+        evidence(source: WifiDataSource.macos),
+      ]);
+      expect(
+        export.summary,
+        contains('macOS scan observations — radio freshness unknown'),
+      );
+      expect(
+        export.summary,
+        contains('accepted scan completion, not radio measurement time'),
+      );
+      expect(
+        export.csv,
+        contains('repeated results may contain cached radio observations'),
+      );
+      expect(export.summary, isNot(contains('MEASURED Android')));
+      expect(export.csv, contains(',-61,5180,80,5210,'));
+      expect(export.csv, isNot(contains('Private WiFi')));
+      expect(
+        serializeComparison([
+          evidence(source: WifiDataSource.macos, samples: []),
+        ]).summary,
+        contains('No accepted scan observations. No signal estimate.'),
+      );
+    },
+  );
   test('maximum bounded evidence serializes every accepted row', () {
     final samples = List.generate(
       120,

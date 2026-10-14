@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/access_point.dart';
+import '../models/wifi_data_source.dart';
 import '../viewmodels/analyser_view_model.dart';
 import '../widgets/wave_components.dart';
 import '../widgets/wave_motion.dart';
@@ -45,22 +46,82 @@ class AnalyserSidebar extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 32, 20, 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const _SidebarBrand(),
-              const SizedBox(height: 44),
-              _SidebarDestinations(selected: selected, onSelected: onSelected),
-              const Spacer(),
-              const _PrivacyCard(),
-              const SizedBox(height: 18),
-              const _WorkspaceIndicator(),
-            ],
+          child: LayoutBuilder(
+            builder: (context, bounds) => SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: bounds.maxHeight),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const _SidebarBrand(),
+                        const SizedBox(height: 44),
+                        _SidebarDestinations(
+                          selected: selected,
+                          onSelected: onSelected,
+                        ),
+                      ],
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.only(top: 28),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _PrivacyCard(),
+                          SizedBox(height: 18),
+                          _WorkspaceIndicator(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
     );
   }
+}
+
+/// Compact desktop navigation keeps charts useful in medium-width windows.
+class AnalyserRail extends StatelessWidget {
+  const AnalyserRail({
+    super.key,
+    required this.selected,
+    required this.onSelected,
+  });
+  final int selected;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, bounds) => SingleChildScrollView(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: bounds.maxHeight),
+        child: IntrinsicHeight(
+          child: NavigationRail(
+            selectedIndex: selected,
+            onDestinationSelected: onSelected,
+            labelType: NavigationRailLabelType.selected,
+            destinations: [
+              for (var i = 0; i < pages.length; i++)
+                NavigationRailDestination(
+                  icon: Tooltip(
+                    message: '${pages[i]} · ⌘${i + 1} / Ctrl+${i + 1}',
+                    child: Icon(pageIcons[i]),
+                  ),
+                  label: Text(pages[i]),
+                ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 class _SidebarBrand extends StatelessWidget {
@@ -83,12 +144,18 @@ class _SidebarBrand extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          const Text(
-            'wave',
-            style: TextStyle(
-              fontSize: 30,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -1.5,
+          const Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'wave',
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -1.5,
+                ),
+              ),
             ),
           ),
         ],
@@ -178,18 +245,20 @@ class _WorkspaceIndicator extends ConsumerWidget {
   const _WorkspaceIndicator();
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final demo = ref.watch(analyserProvider.select((state) => state.demo));
+    final source = ref.watch(analyserProvider.select((state) => state.source));
     return Row(
       children: [
         Icon(
           Icons.circle,
           size: 7,
-          color: demo ? const Color(0xFFEBA85F) : const Color(0xFF2CC9A8),
+          color: source == WifiDataSource.demo
+              ? const Color(0xFFEBA85F)
+              : const Color(0xFF2CC9A8),
         ),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
-            demo ? 'Demo workspace' : 'Android workspace',
+            '${source.label} workspace',
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ),
@@ -289,7 +358,7 @@ class ScanStatusBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final (
-      demo,
+      source,
       paused,
       busy,
       status,
@@ -298,10 +367,12 @@ class ScanStatusBar extends ConsumerWidget {
       permission,
       location,
       wifi,
+      interfaceAvailable,
+      redactedCount,
     ) = ref.watch(
       analyserProvider.select(
         (s) => (
-          s.demo,
+          s.source,
           s.paused,
           s.busy,
           s.status,
@@ -310,10 +381,14 @@ class ScanStatusBar extends ConsumerWidget {
           s.permission,
           s.locationEnabled,
           s.wifiEnabled,
+          s.interfaceAvailable,
+          s.redactedCount,
         ),
       ),
     );
     final c = ref.read(analyserProvider.notifier);
+    final demo = source == WifiDataSource.demo;
+    final macos = source == WifiDataSource.macos;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -339,7 +414,9 @@ class ScanStatusBar extends ConsumerWidget {
                       text: paused
                           ? 'Scanning paused. Last results retained.'
                           : busy
-                          ? 'Request pending. Waiting for Android results.'
+                          ? macos
+                                ? 'Request pending. Waiting for macOS scan completion.'
+                                : 'Request pending. Waiting for Android results.'
                           : status,
                       alternatives: const [
                         'Scanning… Cached results shown until new scan arrives.',
@@ -347,10 +424,17 @@ class ScanStatusBar extends ConsumerWidget {
                         'Enable Location services in Android settings to scan WiFi.',
                         'WiFi scans temporarily unavailable. Showing cached results.',
                         'Scanning paused. Last results retained.',
+                        'Request pending. Waiting for macOS scan completion.',
+                        'Allow location access in macOS settings to identify nearby networks.',
                       ],
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    ScanFreshness(updated: updated, demo: demo, cached: cached),
+                    ScanFreshness(
+                      updated: updated,
+                      demo: demo,
+                      cached: cached,
+                      source: source,
+                    ),
                   ],
                 ),
               ),
@@ -377,7 +461,10 @@ class ScanStatusBar extends ConsumerWidget {
               ),
             ],
           ),
-          if (!demo && !paused && !busy && (!permission || !location || !wifi))
+          if (!demo &&
+              !paused &&
+              !busy &&
+              (!permission || !location || !wifi || redactedCount > 0))
             Wrap(
               spacing: 8,
               children: [
@@ -387,18 +474,32 @@ class ScanStatusBar extends ConsumerWidget {
                       WaveHaptics.selection();
                       c.scan();
                     },
-                    child: const Text('Allow precise location'),
+                    child: Text(
+                      macos ? 'Allow location' : 'Allow precise location',
+                    ),
                   ),
                   TextButton(
                     onPressed: () =>
                         c.openSettings(target: WifiSettingsTarget.permission),
-                    child: const Text('App permissions'),
+                    child: Text(
+                      macos ? 'Location privacy settings' : 'App permissions',
+                    ),
                   ),
                 ] else if (!location)
                   TextButton(
                     onPressed: () =>
                         c.openSettings(target: WifiSettingsTarget.location),
                     child: const Text('Enable Location'),
+                  )
+                else if (macos && !interfaceAvailable)
+                  const Text(
+                    'WiFi interface unavailable. Connect supported WiFi hardware, then scan again.',
+                  )
+                else if (redactedCount > 0)
+                  TextButton(
+                    onPressed: () =>
+                        c.openSettings(target: WifiSettingsTarget.permission),
+                    child: const Text('Review Location access'),
                   )
                 else if (!wifi)
                   TextButton(

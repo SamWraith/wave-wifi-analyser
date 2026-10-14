@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'access_point.dart';
 import 'analyser_state.dart';
 import 'scan_freshness.dart';
+import 'wifi_data_source.dart';
 
 enum WifiProblem { weakSignal, crowdedChannel }
 
@@ -13,7 +14,9 @@ class WifiEvidence {
     required this.at,
     required this.overlap,
     required this.candidate,
+    this.source = WifiDataSource.android,
   });
+  final WifiDataSource source;
   final AccessPoint ap;
   final DateTime at;
   final double overlap;
@@ -37,13 +40,13 @@ class WifiGuidanceState {
 
 String? guidanceBlocker(AnalyserState scan, DateTime now) {
   if (scan.demo) {
-    return 'Demo data can illustrate the charts, but cannot diagnose your WiFi. Use live Android scans for this check.';
+    return 'Demo data can illustrate the charts, but cannot diagnose your WiFi. Use live Android or macOS scans for this check.';
   }
   if (scan.paused) {
     return 'Scanning is paused. Resume scanning before starting or rechecking.';
   }
   if (!scan.permission || !scan.locationEnabled || !scan.wifiEnabled) {
-    return 'Live scanning needs precise location permission, Location services and WiFi. Use scan recovery above.';
+    return 'Live scanning needs location permission, Location services and WiFi. Use scan recovery above.';
   }
   if (scan.accessPoints.isEmpty) {
     return 'No access points observed. Connect to WiFi and scan again.';
@@ -66,6 +69,7 @@ WifiEvidence wifiEvidence(AnalyserState scan) {
   final ap = scan.accessPoints.firstWhere((ap) => ap.connected);
   return WifiEvidence(
     ap: ap,
+    source: scan.source,
     at: scan.lastUpdated!,
     overlap: estimateChannelOverlap(
       scan.accessPoints,

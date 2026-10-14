@@ -1,9 +1,10 @@
 import 'ap_preference.dart';
 import 'access_point.dart';
 import 'comparison_session.dart';
+import 'wifi_data_source.dart';
 
 const exportLimitations =
-    'Foreground observations only; gaps are not filled. Missing AP and cached '
+    'Foreground observations only; gaps are not filled. Missing AP and rejected '
     'updates add no samples. RSSI and median are signal evidence, not noise, '
     'interference, throughput or guaranteed improvement. Radio contexts remain '
     'separate. Timestamps are UTC, anchored to recording start. CSV text cells '
@@ -30,7 +31,7 @@ ComparisonExport serializeComparison(
         (s) =>
             s.end == null ||
             s.samples.length > maxSessionSamples ||
-            s.demo != first.demo ||
+            s.source != first.source ||
             preferenceKey(s.bssid) != preferenceKey(first.bssid),
       ) ||
       sessions.map((s) => s.id).toSet().length != sessions.length) {
@@ -38,11 +39,11 @@ ComparisonExport serializeComparison(
   }
   final summary = StringBuffer(
     'Wave WiFi comparison\n'
-    'Source: ${first.demo ? 'SIMULATED DEMO — not measured' : 'MEASURED Android observations'}\n'
+    'Source: ${first.source.evidenceLabel}\n'
     'SSID/BSSID: ${includeIdentifiers ? 'included' : 'excluded'}; '
     'room labels: ${includeLabels ? 'included' : 'excluded'}; aliases: excluded.\n'
     'This is not an anonymity guarantee. Labels, timing and radio context may identify a place.\n'
-    '$exportLimitations\n',
+    '$exportLimitations\n${first.source.observationLimitations}\n',
   );
   final rows = <List<Object?>>[
     [
@@ -67,7 +68,7 @@ ComparisonExport serializeComparison(
   for (var index = 0; index < sessions.length; index++) {
     final s = sessions[index];
     final name = 'Session ${index + 1}';
-    final source = s.demo ? 'SIMULATED DEMO' : 'MEASURED';
+    final source = s.source.evidenceLabel;
     summary.writeln('\n$name${includeLabels ? ' · ${s.label}' : ''}');
     if (includeIdentifiers) {
       summary.writeln('SSID: ${s.ssid}\nBSSID: ${s.bssid}');
@@ -78,7 +79,11 @@ ComparisonExport serializeComparison(
       '${s.cachedBatches} cached updates.',
     );
     if (s.samples.isEmpty) {
-      summary.writeln('No fresh samples. No signal estimate.');
+      summary.writeln(
+        s.source == WifiDataSource.macos
+            ? 'No accepted scan observations. No signal estimate.'
+            : 'No fresh samples. No signal estimate.',
+      );
     } else {
       var previous = s.start;
       var longest = Duration.zero;
@@ -131,7 +136,7 @@ ComparisonExport serializeComparison(
         sample?.width,
         sample?.centerFrequency,
         sample == null ? '' : _radio(sample),
-        exportLimitations,
+        '$exportLimitations ${s.source.observationLimitations}',
       ]);
     }
   }

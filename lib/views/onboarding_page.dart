@@ -55,7 +55,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, bounds) {
-            final wide = bounds.maxWidth >= 850;
+            final wide =
+                bounds.maxWidth >= 850 &&
+                MediaQuery.textScalerOf(context).scale(16) <= 24;
             return SingleChildScrollView(
               controller: _scroll,
               padding: EdgeInsets.symmetric(

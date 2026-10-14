@@ -35,7 +35,7 @@ const onboardingSteps = [
     artboard: 'Wave Access',
     eyebrow: '03 / YOU’RE IN CONTROL',
     title: 'Ready when\nyou are.',
-    body: 'Android needs precise location permission and Location services for nearby WiFi scans. Wave collects no location coordinates. Other platforms offer a labelled demo.',
+    body: 'Android needs precise location permission; macOS needs Location access to read WiFi identifiers. Both need Location services. Wave collects no location coordinates. Windows, Linux, iOS and web offer a labelled demo.',
     action: 'See scan access',
     icon: Icons.verified_user_rounded,
   ),

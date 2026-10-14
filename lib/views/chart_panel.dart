@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../viewmodels/analyser_view_model.dart';
+import '../models/wifi_data_source.dart';
 import '../widgets/wave_components.dart';
 import '../widgets/wave_motion.dart';
 import 'analyser_providers.dart';
@@ -43,6 +44,7 @@ class _ChartPanelState extends ConsumerState<ChartPanel> {
     listenable: selection,
     builder: (context, _) {
       final timeGraph = selection.timeGraph;
+      final source = ref.watch(analyserProvider.select((s) => s.source));
       final points = ref.watch(visiblePointsProvider);
       final band = ref.watch(analyserProvider.select((state) => state.band));
       final history = ref.watch(
@@ -77,7 +79,9 @@ class _ChartPanelState extends ConsumerState<ChartPanel> {
             SectionHeading(
               title: timeGraph ? 'Signal over time' : 'Channel landscape',
               subtitle: timeGraph
-                  ? 'Fresh scan samples only • up to 60 per access point'
+                  ? source == WifiDataSource.macos
+                        ? 'Completed scans • per-AP age unknown • up to 60 per AP'
+                        : 'Fresh scan samples only • up to 60 per access point'
                   : 'Signal strength across ${band.label}',
               trailing: IconButton(
                 tooltip: timeGraph
@@ -150,7 +154,9 @@ class _ChartPanelState extends ConsumerState<ChartPanel> {
               ),
               if (timeGraph && history.isEmpty)
                 Text(
-                  'History begins with the next fresh scan.',
+                  source == WifiDataSource.macos
+                      ? 'History begins with the next completed scan; radio freshness is unknown.'
+                      : 'History begins with the next fresh scan.',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
             ],

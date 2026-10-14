@@ -73,7 +73,7 @@ class ConnectionCard extends StatelessWidget {
           const SizedBox(height: 5),
           Text(
             ap == null
-                ? 'Scan on Android to read nearby access points.'
+                ? 'Run a scan. Connection identity may be unavailable or private.'
                 : '${ap.band.label}  ·  ${ap.security}',
             style: const TextStyle(color: Colors.white70, fontSize: 13),
           ),

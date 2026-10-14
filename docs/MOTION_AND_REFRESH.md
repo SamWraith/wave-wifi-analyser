@@ -15,7 +15,7 @@ These are requests, not guarantees. Display hardware, system settings, power sav
 
 Home scan status reserves measured space for ordinary status messages, preventing subsequent content from jumping as messages change. Onboarding reserves the largest known title/body/eyebrow/action copy at actual width and text scale, and retains the Back control slot across steps. Longer exceptional messages can still expand without clipping.
 
-Haptics run only for user actions on Android/iOS. Unsupported hardware/plugin failures do not block actions. No haptics fire for background scans or slider preview ticks.
+Haptics run only for user actions on Android/iOS, with best-effort AppKit feedback on macOS. AppKit chooses compatible hardware and respects system/accessibility preferences; macOS tactile output is not physically qualified. Unsupported hardware/plugin failures do not block actions. No haptics fire for background scans or slider preview ticks.
 
 ## Circular theme reveal
 

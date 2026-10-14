@@ -48,6 +48,8 @@ class OverviewPage extends ConsumerWidget {
       ),
       const SizedBox(height: 22),
       ResponsivePair(
+        breakpoint:
+            760 * (MediaQuery.textScalerOf(context).scale(16) / 16).clamp(1, 2),
         first: const NetworkInsights(),
         second: NearbyNetworks(onViewAll: onViewNetworks),
       ),
@@ -95,7 +97,8 @@ class OverviewSummary extends ConsumerWidget {
     );
     final ratings = ref.watch(channelRatingsProvider);
     return ResponsivePair(
-      breakpoint: 680,
+      breakpoint:
+          680 * (MediaQuery.textScalerOf(context).scale(16) / 16).clamp(1, 2),
       firstFlex: 3,
       secondFlex: 2,
       spacing: 18,
@@ -181,7 +184,7 @@ class NetworkInsights extends ConsumerWidget {
                 ? 'No connected AP identified'
                 : '${ap.quality} signal',
             text: ap == null
-                ? 'Scan on Android while connected to WiFi.'
+                ? 'Scan while connected to WiFi. Your operating system may withhold connection identity.'
                 : ap.rssi < -70
                 ? 'Move closer to your access point and compare signal history.'
                 : 'Signal looks healthy at your current location.',

@@ -9,6 +9,7 @@ import '../widgets/wave_components.dart';
 import '../widgets/comparison_export_preview.dart';
 import '../widgets/wave_haptics.dart';
 import '../widgets/wave_motion.dart';
+import '../widgets/route_escape.dart';
 
 class ComparisonExportPage extends StatelessWidget {
   ComparisonExportPage({super.key, required List<ComparisonSession> sessions})
@@ -19,7 +20,7 @@ class ComparisonExportPage extends StatelessWidget {
     overrides: [
       comparisonExportProvider.overrideWith(ComparisonExportViewModel.new),
     ],
-    child: _ComparisonExportContent(sessions: sessions),
+    child: RouteEscape(child: _ComparisonExportContent(sessions: sessions)),
   );
 }
 

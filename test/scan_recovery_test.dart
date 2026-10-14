@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wifi_analyser/models/analyser_state.dart';
+import 'package:wifi_analyser/models/wifi_data_source.dart';
 import 'package:wifi_analyser/repositories/wifi_repository.dart';
 import 'package:wifi_analyser/viewmodels/analyser_view_model.dart';
 import 'package:wifi_analyser/views/analyser_navigation.dart';
@@ -68,6 +69,56 @@ void main() {
       await tester.pump();
       expect(find.text('Allow precise location'), findsNothing);
       expect(find.text('No fresh result received yet'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+  testWidgets(
+    'macOS recovery distinguishes unavailable hardware and redacted identifiers',
+    (tester) async {
+      final model = RecoveryModel();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [analyserProvider.overrideWith(() => model)],
+          child: const MaterialApp(home: Scaffold(body: ScanStatusBar())),
+        ),
+      );
+      model.update(
+        AnalyserState(demo: false, liveSource: WifiDataSource.macos),
+      );
+      await tester.pump();
+      await tester.tap(find.text('Allow location'));
+      expect(model.scans, 1);
+      await tester.tap(find.text('Location privacy settings'));
+      expect(model.opened, WifiSettingsTarget.permission);
+      model.update(
+        AnalyserState(
+          demo: false,
+          liveSource: WifiDataSource.macos,
+          permission: true,
+          locationEnabled: true,
+          interfaceAvailable: false,
+        ),
+      );
+      await tester.pump();
+      expect(find.text('Enable WiFi'), findsNothing);
+      expect(
+        find.textContaining('WiFi interface unavailable.'),
+        findsOneWidget,
+      );
+      model.update(
+        AnalyserState(
+          demo: false,
+          liveSource: WifiDataSource.macos,
+          permission: true,
+          locationEnabled: true,
+          wifiEnabled: true,
+          redactedCount: 2,
+        ),
+      );
+      await tester.pump();
+      await tester.tap(find.text('Review Location access'));
+      expect(model.opened, WifiSettingsTarget.permission);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     },
