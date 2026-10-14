@@ -3,7 +3,7 @@
 This file records user-requested work and its delivery status. Planned work has
 no promised date. Existing feature inventory lives in README.md.
 Ranks 1–6 from [PRODUCT_REVIEW.md](PRODUCT_REVIEW.md) are delivered.
-Native macOS scanning implemented 2026-10-14; GUI hardware verification remains limited in current automated environment. Windows/Linux/iOS live scanning remains
+Native macOS scanning implemented 2026-10-14; foreground live scans hardware-confirmed. Recording/export and recovery checks remain open. Windows/Linux/iOS live scanning remains
 deferred.
 
 ## Saved room comparison sessions
@@ -85,7 +85,7 @@ is unavailable; successful scans may include cached observations. Missing BSSID 
 unsupported radio geometry is excluded, never fabricated. Android/demo/macOS
 sessions stay separate; v1 records survive v2 source/time storage.
 
-Verification and remaining GUI hardware limit: [macOS scanning](MACOS_SCANNING.md).
+Verification evidence and remaining hardware checks: [macOS scanning](MACOS_SCANNING.md).
 Windows/Linux/iOS live scanning remains deferred. No new roadmap slice authorized.
 
 ## Detailed chart exploration

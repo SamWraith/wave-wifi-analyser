@@ -118,7 +118,7 @@ Run desktop with `fvm flutter run -d macos`; macOS defaults to live scans. Andro
 | --- | --- | --- |
 | Android | Live scan bridge implemented; required permission and WiFi/Location services must be enabled | Yes |
 | iOS | Not implemented | Yes, demo data |
-| macOS | CoreWLAN/CoreLocation bridge implemented; GUI hardware verification remains limited in current automated environment | Yes, live by default; explicit demo option |
+| macOS | Live CoreWLAN scanning hardware-confirmed; recording/export and recovery checks remain open | Yes, live by default; explicit demo option |
 | Web | Not implemented | Yes, demo data |
 
 No location coordinates are collected. Distance is a free-space estimate and can be inaccurate indoors; chart envelopes are illustrative rather than RF spectrum measurements. Local channel recommendations do not configure routers.

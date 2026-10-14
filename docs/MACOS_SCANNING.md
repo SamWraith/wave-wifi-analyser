@@ -61,19 +61,28 @@ requests scanning. Focus/Material controls, pointer charts and scrolling remain;
 Escape returns from focused charts, room comparisons and export. Finite Wave motion,
 theme reveal and deliberate feedback retain reduced-motion behavior.
 
-## Verification (2026-10-14)
+## Verification (2026-10-14–15)
 
-- Normal release `.app` built and launched through computer-use, not a CLI scan probe.
-  Overview clearly identified macOS, zero observations and Location recovery. Explicit
-  request/pending, unavailable-interface and foreground-rejection paths were visible.
-- Automated GUI context did **not** establish successful Location authorization or a
-  live scan. It launched/operated the window in background; native foreground scans
-  rejected that context, and snapshots reported unavailable CoreWLAN interfaces.
-  Host read-only CoreWLAN/system inventory showed powered WiFi, which does not prove
-  GUI app authorization. Public interface fallback did not produce verified scan data.
-  A standard network-client entitlement trial produced no verified improvement and
-  was reverted. No sandbox exception or privacy bypass retained. User deferred foreground
-  hardware verification for now; no RF/haptic/frame-rate claim.
+- Normal release `.app` built and launched through Finder into foreground. Live
+  CoreWLAN observations appeared in the macOS workspace: 17, then 14 APs on the
+  selected 5 GHz view; the AP selector also contained 2.4 GHz observations.
+  Connected AP identification, channel 48, reported 80 MHz width and changing RSSI
+  (-47 to -53 dBm across observations) were visible. These are OS-reported values,
+  not calibrated RF accuracy measurements. Network identifiers and raw captures
+  remain outside Git.
+- Completion-age/cache qualifiers and unavailable individual radio age were visible.
+  Pointer chart inspection showed the illustrative envelope qualifier. Room
+  comparisons opened and the connected 5 GHz BSSID could be selected by keyboard.
+  No recording/export completion is claimed from that partial flow.
+- Earlier computer-use launches left the app in background, where foreground-only
+  scans rejected requests. Opening the built app through Finder resolved that
+  context and established successful live scanning. Already-granted Location access
+  was used; first grant, denial and permission recovery were not qualified.
+  A prior network-client entitlement trial was reverted; no sandbox exception or
+  privacy bypass is retained.
+- On resuming October 15, both Wave and Finder captures returned blank and keyboard
+  navigation did not reach Wave. Further recording/export, pause/resume and resize
+  checks are blocked pending restoration of an interactive foreground desktop.
 - Three native XCTest cases passed: client-vended interface fallback, identity
   exclusions and frequency/width unknowns. Real Apple/Flutter SDK compilation passed.
 - Dart regressions cover completion de-duplication without fake timestamps, cache-only
@@ -87,8 +96,9 @@ Final `ai/scripts/check.sh` passed: formatting/static analysis clean, 177 unit/w
 tests. Android emulator native bridge/guidance integration passed (virtual hardware,
 not RF accuracy). Independent native/domain/persistence/desktop review findings
 were fixed and re-reviewed; no remaining concrete findings. Normal Android release APK and macOS release `.app` builds passed sequentially.
-Final source-specific recording copy passed 15 focused checks plus clean analysis; actual GUI resizing, live AP
-recording/export and tactile behavior remain deferred for foreground hardware confirmation.
+Final source-specific recording copy passed 15 focused checks plus clean analysis.
+Live scanning is hardware-confirmed; GUI resizing, recording/export, pause/resume,
+permission recovery and tactile behavior remain unverified. No frame-rate claim.
 
 ## Primary API references
 
