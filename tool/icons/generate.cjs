@@ -135,8 +135,12 @@ async function generate() {
   await generateIos(paths);
   await generateAndroid(paths);
   await generateMacos(paths);
+  for (const appearance of ['light', 'dark']) {
+    await png(artwork(paths, palettes[appearance], { rounded: true }),
+      path.join(branding, `wave-badge-${appearance}.png`), 256, false);
+  }
   await generatePreview(paths);
-  console.log('Generated Wave SVG masters, iOS appearances, Android adaptive/themed/legacy icons, macOS icon sizes and store artwork.');
+  console.log('Generated Wave SVG masters, iOS appearances, Android adaptive/themed/legacy icons, macOS icon sizes, in-app badges and store artwork.');
 }
 
 generate().catch((error) => { console.error(error); process.exitCode = 1; });

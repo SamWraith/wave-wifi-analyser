@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/onboarding_step.dart';
 import '../widgets/onboarding_illustration.dart';
+import '../widgets/wave_brand_icon.dart';
 import '../widgets/wave_motion.dart';
 import '../widgets/wave_haptics.dart';
 import '../widgets/stable_text_slot.dart';
@@ -142,10 +143,7 @@ class _WelcomeHeader extends StatelessWidget {
       Expanded(
         child: Row(
           children: [
-            Icon(
-              Icons.wifi_rounded,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+            const WaveBrandIcon(size: 32),
             const SizedBox(width: 10),
             const Flexible(
               child: FittedBox(

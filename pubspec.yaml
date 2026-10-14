@@ -66,6 +66,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/rive/
+    - assets/branding/wave-badge-light.png
+    - assets/branding/wave-badge-dark.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

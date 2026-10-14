@@ -49,6 +49,12 @@ presentation, where available, is system-derived. It does not claim bespoke
 Icon Composer layers or App Store review approval. A future layered icon can
 reuse the SVG paths without changing the app's identity.
 
+## macOS and in-app branding
+
+macOS exports seven icon sizes from 16px to 1024px, with a rounded tile and
+transparent outer margin. Sidebar and onboarding headers use generated 256px
+light/dark badges from the same mark; app theme selects the badge appearance.
+
 ## Platform references
 
 - [Android adaptive icon requirements](https://developer.android.com/develop/ui/compose/system/icon_design_adaptive)

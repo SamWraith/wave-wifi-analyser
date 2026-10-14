@@ -5,6 +5,7 @@ import '../models/access_point.dart';
 import '../models/wifi_data_source.dart';
 import '../viewmodels/analyser_view_model.dart';
 import '../widgets/wave_components.dart';
+import '../widgets/wave_brand_icon.dart';
 import '../widgets/wave_motion.dart';
 import '../widgets/wave_haptics.dart';
 import '../widgets/theme_reveal.dart';
@@ -132,17 +133,7 @@ class _SidebarBrand extends StatelessWidget {
     children: [
       Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(
-              Icons.wifi_rounded,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-          ),
+          const WaveBrandIcon(),
           const SizedBox(width: 12),
           const Flexible(
             child: FittedBox(
