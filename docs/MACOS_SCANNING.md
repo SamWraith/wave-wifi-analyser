@@ -10,7 +10,8 @@ router configuration, accounts or telemetry added.
 powered default hardware or a stable powered fallback. Explicit **Allow location**
 requests CoreLocation authorization; privacy/Location and WiFi recovery open System
 Settings with a readable fallback if the deep link fails. Both build entitlements
-retain App Sandbox and grant Location access. No location coordinates are requested
+retain App Sandbox and grant Location access plus the standard network-client
+capability required to reach the local CoreWLAN service on the tested Mac. No location coordinates are requested
 or read. AppKit haptic feedback is best effort, discrete and subject to hardware,
 accessibility and system preferences; perceived tactile output was not qualified.
 
@@ -120,6 +121,29 @@ Final source-specific recording copy passed 15 focused checks plus clean analysi
 Live scanning, recording, pause/resume, same-source comparison, private export/chooser
 cancellation and saved-session restoration are hardware-confirmed. Remaining physical
 checks are listed above. No calibrated RF accuracy or frame-rate claim.
+
+## Network-client capability correction (2026-10-15)
+
+A later release retry failed before scanning: the OS detected powered `en0`, but
+Wave's sandbox returned no client-vended interfaces. Kernel/launchd logs confirmed
+`deny(1) mach-lookup com.apple.airportd`. Foreground activation and a fresh process
+did not resolve the failure.
+
+Two isolated signed sandbox probes reproduced the difference: sandbox + Location
+alone returned no interfaces; adding standard `com.apple.security.network.client`
+returned powered `en0`. Both Debug/Profile and Release now retain that capability,
+App Sandbox and Location access. No temporary sandbox exceptions, private WiFi
+entitlements or new outgoing network calls were added. Earlier reverted capability
+experiments above are historical evidence, not the current signing configuration.
+
+The corrected release built successfully; its signed entitlements were inspected.
+A read-only debugger check inside that release confirmed the shared CoreWLAN client
+now vends `en0`. Four native tests passed, including a check of the host's actual
+signed sandbox/Location/network-client capabilities. Formatting/static analysis and
+31 macOS scan/session/export Dart regressions passed. The rebuilt release currently
+requires renewed user Location approval; this correction's live scan, history and
+recording qualification remains pending that approval. Earlier hardware evidence
+above does not replace this latest-build qualification.
 
 ## Primary API references
 
