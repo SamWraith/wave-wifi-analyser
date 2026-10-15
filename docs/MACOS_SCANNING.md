@@ -140,10 +140,39 @@ The corrected release built successfully; its signed entitlements were inspected
 A read-only debugger check inside that release confirmed the shared CoreWLAN client
 now vends `en0`. Four native tests passed, including a check of the host's actual
 signed sandbox/Location/network-client capabilities. Formatting/static analysis and
-31 macOS scan/session/export Dart regressions passed. The rebuilt release currently
-requires renewed user Location approval; this correction's live scan, history and
-recording qualification remains pending that approval. Earlier hardware evidence
-above does not replace this latest-build qualification.
+31 macOS scan/session/export Dart regressions passed.
+
+After user-approved Location access, the normal corrected release completed live
+scans: 24 APs on the selected 2.4 GHz view and 12–19 APs across observed 5 GHz
+completions. Connected-AP details reported channel 48, primary 5240 MHz, 80 MHz and
+WPA3; RSSI varied from -52 to -60 dBm during this stationary check. History pointer
+inspection selected an accepted -57 dBm sample and retained the unknown per-AP/cache
+age qualifier. Network details and channel-planning candidates used these live
+observations; Demo mode remained off.
+
+Two new labelled test sessions began at zero samples for the same connected 5 GHz
+BSSID. Session C accepted one -58 dBm observation; Pause saved it with `Scanning
+paused`. Results remained retained while paused for over two minutes, and Resume
+started no recording. Session D then accepted one -60 dBm observation and explicit
+Stop and save retained it. Each session counted one update without accepted samples,
+without increasing its sample count. Comparison showed one matching radio context,
+medians -58/-60 dBm and -2 dB delta. The Mac stayed stationary; this is no claim of
+room improvement, calibrated RF accuracy or internet speed.
+
+Private summary/CSV previews defaulted identifier and label opt-ins off. CSV showed
+one sample, exact accepted UTC time, -58 dBm, 5240 MHz, 80 MHz and empty unknown
+center field, with macOS freshness limits. Native chooser opened with two local files
+and was cancelled without selecting any recipient. Feedback confirmed cancellation;
+no external delivery was performed.
+
+A clean quit was confirmed before relaunching the same normal release. Both new
+sessions restored with one sample each and their distinct pause/manual-stop reasons;
+the earlier two local hardware-check sessions also remained intact. New captures
+and network identifiers stay outside Git. Core corrected-build live scanning,
+history inspection, pause/resume, recording, same-source comparison, private export
+review/chooser cancellation and persistence are now hardware-confirmed. 6 GHz,
+roaming, permission revocation/recovery, background recording termination, calibrated
+RF accuracy and perceived haptics remain outside this qualification.
 
 ## Primary API references
 
