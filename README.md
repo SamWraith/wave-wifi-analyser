@@ -97,7 +97,7 @@ Run desktop with `fvm flutter run -d macos`; macOS defaults to live scans. Andro
 
 ### Appearance, motion and feedback
 
-- Modern responsive phone/desktop layouts with Overview, Spectrum, Networks, Channels and Settings destinations.
+- Modern responsive phone/desktop layouts with Overview, Spectrum, Networks, Channels and Settings destinations. Data tabs default to the connected AP’s 2.4/5/6 GHz band when connection identity is available; an explicit band choice stays selected for the app session.
 - System, light and dark themes with saved theme preference. Violet primary actions, restrained teal/blue informational accents, a violet-to-blue connection gradient and neutral surfaces keep color focused.
 - Large-text status controls reflow without worst-case empty space. Narrow network rows stack readable metadata; bottom navigation uses accessible icon destinations when enlarged labels cannot fit. Chart axes scale with text and share geometry with cursor inspection.
 - Circular theme reveal growing from the tapped header toggle or Settings theme control, retaining navigation, search and focus state.

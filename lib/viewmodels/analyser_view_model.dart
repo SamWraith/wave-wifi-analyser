@@ -32,7 +32,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
   StreamSubscription<WifiSnapshot>? _subscription;
   final Map<String, int> _lastTimestamp = {};
   int _evictedTimestampFloor = 0, _lastCompletionId = 0;
-  bool _active = true;
+  bool _active = true, _bandManuallySelected = false;
   int _epoch = 0, _themeRevision = 0, _minimumRevision = 0;
   final _demo = DemoWifiSource();
   Future<void> _preferenceWrites = Future.value();
@@ -181,6 +181,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
           source: state.source,
         );
     state = state.copyWith(
+      band: _bandFor(snapshot.accessPoints),
       acceptedScanId: macosCompleted ? snapshot.completionId : null,
       cached: !(observed || macosCompleted),
       permission: snapshot.permission,
@@ -262,6 +263,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     }, demo: true);
     state = state.copyWith(
       cached: false,
+      band: _bandFor(points),
       accessPoints: points,
       history: history,
       lastUpdated: now,
@@ -350,7 +352,14 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     return next;
   }
 
+  // Connection metadata can arrive after startup or change on reconnect.
+  // Keep following it until the user explicitly chooses a band to inspect.
+  WifiBand _bandFor(List<AccessPoint> points) => _bandManuallySelected
+      ? state.band
+      : points.where((ap) => ap.connected).firstOrNull?.band ?? state.band;
+
   void setBand(WifiBand value) {
+    _bandManuallySelected = true;
     state = state.copyWith(band: value);
   }
 
