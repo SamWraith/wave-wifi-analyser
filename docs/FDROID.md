@@ -4,6 +4,11 @@ Wave is **not yet listed on F-Droid**. Listing requires F-Droid's inclusion revi
 and a successful build using its infrastructure. A GitHub release APK alone is
 not an official F-Droid package.
 
+Packaging request submitted on 17 October 2026:
+[F-Droid RFP #4587 — Wave WiFi Analyser](https://gitlab.com/fdroid/rfp/-/work_items/4587).
+The request discloses the remaining native dependency and unsigned build review;
+submission is not approval or a published download.
+
 ## Project identity
 
 - App: Wave WiFi Analyser

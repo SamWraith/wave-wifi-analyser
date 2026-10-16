@@ -1,5 +1,11 @@
 # Wave WiFi Analyser
 
+Submitted request (17 October 2026):
+https://gitlab.com/fdroid/rfp/-/work_items/4587
+
+The text below is the preparation draft; the linked request uses F-Droid's form
+headings and records the remaining review requirements explicitly.
+
 Request inclusion of Wave, a free WiFi analyser with live Android scans, channel
 overlap charts, signal history, local favourites/aliases and saved room comparisons.
 All features are free; an optional donation link opens an external website.
