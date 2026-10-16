@@ -8,6 +8,8 @@ flutter_path=$(command -v "$flutter_bin")
 sdk_bin=$(cd "$(dirname "$flutter_path")" && pwd -P)
 export PATH="$sdk_bin:$PATH"
 pin=$(python3 -c 'import json; print(json.load(open(".fvmrc"))["flutter"])')
+# Bootstrap a fresh SDK before parsing its machine-readable version.
+"$flutter_bin" --version
 version=$("$flutter_bin" --version --machine | python3 -c 'import json,sys; print(json.load(sys.stdin)["frameworkVersion"])')
 [[ $version == "$pin" ]] || { echo "Expected Flutter $pin; found $version." >&2; exit 1; }
 "$flutter_bin" config --enable-linux-desktop

@@ -15,7 +15,11 @@ try {
         if ($LASTEXITCODE -ne 0) { throw "Flutter command failed: $args" }
     }
     $pin = (Get-Content .fvmrc -Raw | ConvertFrom-Json).flutter
-    $version = (& $Flutter --version --machine | ConvertFrom-Json).frameworkVersion
+    # Bootstrap a fresh SDK before parsing its machine-readable version.
+    Invoke-Flutter --version
+    $machineVersion = & $Flutter --version --machine
+    if ($LASTEXITCODE -ne 0) { throw "Flutter version command failed: $machineVersion" }
+    $version = ($machineVersion | ConvertFrom-Json).frameworkVersion
     if ($LASTEXITCODE -ne 0 -or $version -ne $pin) {
         throw "Expected Flutter $pin from .fvmrc; found $version."
     }
