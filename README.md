@@ -12,7 +12,8 @@ No account is required. Optional support never unlocks or restricts a feature.
 
 > [!CAUTION]
 > **Windows and Linux are experimental and have not been tested on real desktop WiFi hardware.**
-> Windows compilation and runtime are still unverified. Linux x64 has been built
+> Windows x64 release compilation and automated tests passed in hosted CI; real
+> desktop runtime and hardware remain unverified. Linux x64 has been built
 > on Ubuntu 24.04 and passed automated/headless checks, but real-world WiFi scans,
 > permissions and everyday desktop operation remain untested. Do not treat these
 > ports as production-verified. See [Windows evidence](docs/WINDOWS.md) and
@@ -46,10 +47,12 @@ Windows/Linux hardware testing, iOS live scanning or App Store/Play Store availa
 | --- | --- | --- | --- |
 | **Android** | Native live scans with `WifiManager` | Physical Android checks recorded, including 2.4/5 GHz; remaining cases documented | System file sharing |
 | **macOS** | Native live scans with CoreWLAN | Real Mac scanning, comparisons, export cancellation and persistence checks recorded | System file sharing |
-| **Windows** | Native WLAN bridge implemented; live mode by default | **Not tested on real Windows devices. Native compilation/runtime unverified.** Experimental | Windows sharing implemented; unverified |
+| **Windows** | Native WLAN bridge implemented; live mode by default | **Not tested on real Windows WiFi hardware.** Hosted x64 release build and automated tests passed; desktop runtime unverified. Experimental | Windows sharing implemented; unverified |
 | **Linux** | NetworkManager + nl80211 live bridge; real kernel dBm | **Not tested on real Linux WiFi hardware.** Ubuntu 24.04 x64 build and headless tests passed. Experimental | Save reviewed summary + CSV to a chosen folder |
-| **iOS** | **Demo only**; no live nearby-WiFi bridge | Shared mobile UI; live scanning not implemented | Shared export flow; verify on target device |
-| **Web** | **Demo only**; no browser WiFi scanning | Web release build checked | Browser-dependent file sharing |
+
+**iOS and web are unsupported demo/development targets**, not app releases. Their
+shared UI can run simulated data; neither has live nearby-WiFi scanning. No iOS or
+web binary is distributed through GitHub Releases.
 
 Live scanning needs supported hardware and platform authorization. Android requires
 precise location permission and Location services; macOS requires Location access

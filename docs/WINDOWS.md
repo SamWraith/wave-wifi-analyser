@@ -61,8 +61,7 @@ is configured by this workflow. A clean target may need Microsoft's supported
 release compilation and a downloadable workflow ZIP. It needs no Shorebird token
 or billing setup and creates no GitHub Release. After the change is reviewed and
 pushed to an authorized branch, run **Windows validation** from Actions. Workflow
-availability/dispatch follows GitHub's default-branch workflow rules. This task does
-not push changes or dispatch remote jobs.
+availability/dispatch follows GitHub's default-branch workflow rules.
 
 The implementation host is macOS. Local Flutter tests validate shared behavior and
 mocked platform boundaries; they do not compile MSVC code or prove Windows RF,
@@ -70,6 +69,22 @@ permission prompts, share UI, Rive rendering or browser launch. A successful Win
 workflow proves compilation and deterministic tests, not access to WiFi hardware.
 A real Windows computer with a WiFi adapter is still required for the checklist
 below. Hosted runners need not expose WiFi radios.
+
+## Release validation — 2026-10-17
+
+[Windows validation run](https://github.com/SamWraith/wave-wifi-analyser/actions/runs/38956457236)
+built the complete **1.0.1+2 Windows x64 release** on hosted Windows Server 2025,
+Visual Studio 2026 / MSVC 19.51, using pinned Flutter 3.47.5. Formatting and analysis
+passed, all **231 Flutter tests** passed and native CTest passed **1/1**. The complete
+ZIP includes Flutter, Rive and plugin DLLs plus app assets. The runner now requests
+C++20 so C++/WinRT uses standard coroutine headers on recent MSVC. Fresh SDK version
+checks bootstrap Flutter before parsing machine-readable output.
+
+This supersedes the initial compilation limitation below. **Windows remains untested
+on real WiFi hardware.** Native-channel desktop integration, actual permission dialogs,
+RF scans and everyday plugin/UI operation remain unverified. Public preview packages
+are unsigned and have no installer/MSIX identity. See [GitHub releases](https://github.com/SamWraith/wave-wifi-analyser/releases)
+and [delivery procedure](RELEASING.md).
 
 ## Local validation — 2026-10-16
 

@@ -99,6 +99,15 @@ Hosted CI has no physical WiFi hardware; successful compilation/tests do not pro
 RF behavior. ARM64 packaging is supported by the script when built on an ARM64
 Linux host, but that architecture requires separate validation.
 
+## Public preview validation — 2026-10-17
+
+[Hosted Ubuntu 24.04 x64 job](https://github.com/SamWraith/wave-wifi-analyser/actions/runs/38955632851/job/117157670778)
+built version **1.0.1+2**, passed formatting/analysis, native CTest **2/2** and all
+**231 Flutter tests**, then packaged the complete release bundle. The Windows job in
+that combined run failed separately; Linux completed successfully. Linux source was
+unchanged by the subsequent Windows-only C++20 build fix. Physical Linux WiFi scans,
+Polkit and normal desktop distribution remain untested. See [GitHub releases](https://github.com/SamWraith/wave-wifi-analyser/releases).
+
 ## Validation evidence — 2026-10-16
 
 - Full **Linux x64 release** built with pinned Flutter 3.47.5 on Ubuntu 24.04
