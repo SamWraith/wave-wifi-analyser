@@ -25,7 +25,20 @@ Future<void> loadFont(String family, List<String> paths) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  const androidMobile = bool.fromEnvironment('WAVE_SCREENSHOT_ANDROID');
+  const outputDirectory = String.fromEnvironment(
+    'WAVE_SCREENSHOT_OUTPUT',
+    defaultValue: 'docs/screenshots/raw',
+  );
   setUpAll(() async {
+    if (androidMobile) {
+      // Demo captures never connect to an Android radio or native scan stream.
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('com.samirpandey.wifi_analyser/scan_results'),
+            (_) async => null,
+          );
+    }
     final sdk = Directory('.fvm/flutter_sdk').resolveSymbolicLinksSync();
     final fonts = '$sdk/bin/cache/artifacts/material_fonts';
     // Production theme requests Arial; use the system face where available.
@@ -51,9 +64,12 @@ void main() {
     (name: 'desktop-overview-dark', desktop: true, dark: true, page: 0),
     (name: 'desktop-spectrum-light', desktop: true, dark: false, page: 1),
   ]) {
+    if (androidMobile && capture.desktop) continue;
     testWidgets('capture ${capture.name}', (tester) async {
       debugDefaultTargetPlatformOverride = capture.desktop
           ? TargetPlatform.macOS
+          : androidMobile
+          ? TargetPlatform.android
           : TargetPlatform.iOS;
       addTearDown(() => debugDefaultTargetPlatformOverride = null);
       final size = capture.desktop
@@ -129,7 +145,8 @@ void main() {
           pixelRatio: capture.desktop ? 1.5 : 3,
         );
         final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-        await File('docs/screenshots/raw/${capture.name}.png')
+        await Directory(outputDirectory).create(recursive: true);
+        await File('$outputDirectory/${capture.name}.png')
             .writeAsBytes(bytes!.buffer.asUint8List());
         image.dispose();
       });

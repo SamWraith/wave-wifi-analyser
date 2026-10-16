@@ -1,0 +1,23 @@
+Wave · WiFi Analyser
+Copyright (C) 2026 Samir Pandey and contributors
+Original project: https://github.com/SamWraith/wave-wifi-analyser
+
+SPDX-License-Identifier: GPL-3.0-or-later
+
+Wave's original application code, documentation and artwork in this repository
+are free software: you can redistribute and/or modify them under the terms of
+the GNU General Public License as published by the Free Software Foundation,
+either version 3 of the License, or (at your option) any later version.
+
+Wave is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE. See the GNU General Public License in LICENSE for more details.
+
+Third-party software, fonts and other materials retain their respective copyright
+notices and licenses. This notice does not replace those licenses or grant rights
+to third-party trademarks.
+
+When distributing Wave or a modified version, preserve applicable copyright and
+license notices, identify modifications and provide corresponding source as
+required by the GPL. The original-project URL above identifies this project's
+origin; it does not imply endorsement of forks by its authors.

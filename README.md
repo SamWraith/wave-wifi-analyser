@@ -178,6 +178,19 @@ signing and production distribution requirements remain documented separately.
 Windows Shorebird production distribution is held for the documented engine-version
 constraint; the existing 3.47.5 pin remains unchanged.
 
+## License and forks
+
+Wave's original code, documentation and artwork are licensed under
+**GNU GPL v3 or later** ([LICENSE](LICENSE), [copyright and origin](NOTICE)).
+You may use, modify and redistribute Wave, including commercially. Distributed
+modified versions must preserve applicable copyright/license notices, identify
+changes and provide corresponding source under the GPL. Private modifications
+do not have to be published. Third-party dependencies retain their own licenses.
+
+Original project: [SamWraith/wave-wifi-analyser](https://github.com/SamWraith/wave-wifi-analyser).
+Fork authors should keep this origin clear and distinguish their changes; the
+license text defines the legal requirements.
+
 ## Project structure
 
 Wave uses **Flutter + MVVM + Riverpod**, with injectable native/storage boundaries.

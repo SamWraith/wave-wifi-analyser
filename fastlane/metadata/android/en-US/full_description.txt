@@ -1,0 +1,15 @@
+Wave helps you understand nearby WiFi networks and compare signal observations around your home or workspace.
+
+• Inspect your connection, signal strength, frequency, band and channel.
+• Explore 2.4, 5 and 6 GHz spectrum views and accepted signal history.
+• Search nearby networks; keep favourites and private local aliases.
+• Compare channels with explainable overlap rankings.
+• Record room comparisons for one access point and keep sessions locally.
+• Review summary and CSV exports before sharing. Network identifiers and room labels are excluded by default, with separate opt-ins. Aliases are never exported.
+• Choose light, dark or system themes, use keyboard navigation and explore clearly labelled demo data.
+
+Live Android scans require supported WiFi hardware, precise Location permission and enabled Location services. Android/driver throttling applies. A visible 6 GHz view does not prove your adapter supports that band. Cached or duplicate observations do not add signal history. Channel ratings are overlap heuristics, not noise, traffic or speed measurements; distance estimates can be inaccurate indoors.
+
+WiFi observations, aliases, settings and saved sessions stay on your device until you explicitly share an export. Wave does not collect geographic coordinates. This ordinary Flutter build has no Shorebird update engine. Updates come through your app distributor.
+
+All features are free. The optional Buy me a coffee action opens an external website and never unlocks features. No account is required for scanning or saved comparisons.

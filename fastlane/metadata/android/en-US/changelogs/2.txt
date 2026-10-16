@@ -1,0 +1,1 @@
+First public preview: live Android WiFi scans, spectrum and signal history, searchable networks, channel-overlap rankings, local room comparisons and reviewed private exports. Includes light/dark themes, keyboard navigation and labelled demo mode.
