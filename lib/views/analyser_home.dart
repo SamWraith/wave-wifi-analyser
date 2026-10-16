@@ -7,6 +7,7 @@ import '../viewmodels/analyser_view_model.dart';
 
 import '../widgets/wave_motion.dart';
 import '../widgets/wave_haptics.dart';
+import '../widgets/support_button.dart';
 import 'analyser_navigation.dart';
 import 'channels_page.dart';
 import 'networks_page.dart';
@@ -155,6 +156,7 @@ class _AnalyserHomeState extends ConsumerState<AnalyserHome> {
                             ),
                           ),
                         ),
+                        const SupportBar(),
                         if (!wide && !rail)
                           NavigationBar(
                             height: iconOnlyNavigation ? 64 : null,

@@ -35,7 +35,7 @@ class NetworkTile extends ConsumerWidget {
               runSpacing: 4,
               children: [
                 Text(
-                  'CH ${ap.channel} · ${ap.security} · ${ap.width} MHz',
+                  'CH ${ap.channel} · ${ap.security} · ${ap.widthLabel}',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 Text(
@@ -197,7 +197,7 @@ class AccessPointDetailsSheet extends ConsumerWidget {
               'Signal': '${ap.rssi} dBm • ${ap.quality}',
               'Frequency': '${ap.frequency} MHz',
               'Channel': '${ap.channel} (${ap.band.label})',
-              'Width': '${ap.width} MHz',
+              'Width': ap.widthLabel,
               'Security': ap.security,
               'Distance estimate': '~${ap.distance.toStringAsFixed(1)} m',
             }.entries.map(

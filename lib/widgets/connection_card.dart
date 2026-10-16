@@ -18,7 +18,7 @@ class ConnectionCard extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF7058D5), Color(0xFF51459F), Color(0xFF315B87)],
+          colors: [Color(0xFF7965DB), Color(0xFF4D469D)],
         ),
       ),
       child: Column(
@@ -91,7 +91,7 @@ class ConnectionCard extends StatelessWidget {
                 label: 'channel',
               ),
               HeroStat(
-                value: ap != null ? '${ap.width}' : '—',
+                value: ap != null && ap.width > 0 ? '${ap.width}' : '—',
                 label: 'MHz • width',
               ),
             ],

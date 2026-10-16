@@ -14,7 +14,7 @@ class SpectrumPage extends StatelessWidget {
       const SizedBox(height: 18),
       WavePanel(
         child: Text(
-          'Chart envelopes illustrate reported center frequency and channel width. Signal strength is measured at this device; overlap does not measure internet speed.',
+          'Chart envelopes illustrate reported center frequency and channel width. Unknown widths use a 20 MHz illustration. Signal strength is measured at this device; overlap does not measure internet speed.',
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ),

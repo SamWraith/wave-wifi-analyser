@@ -19,7 +19,9 @@ abstract interface class WifiRepository {
 }
 
 final wifiRepositoryProvider = Provider<WifiRepository>(
-  (ref) => !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS
+  (ref) => !kIsWeb && defaultTargetPlatform == TargetPlatform.windows
+      ? WindowsWifiRepository()
+      : !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS
       ? MacosWifiRepository()
       : AndroidWifiRepository(),
 );
@@ -83,7 +85,9 @@ WifiSnapshot decodeSnapshot(Object? value) {
 
 /// Explicit platform identity stays injectable without expanding fake contracts.
 final liveWifiSourceProvider = Provider<WifiDataSource>(
-  (ref) => ref.read(wifiRepositoryProvider) is MacosWifiRepository
+  (ref) => ref.read(wifiRepositoryProvider) is WindowsWifiRepository
+      ? WifiDataSource.windows
+      : ref.read(wifiRepositoryProvider) is MacosWifiRepository
       ? WifiDataSource.macos
       : WifiDataSource.android,
 );
@@ -102,7 +106,7 @@ class MacosWifiRepository extends AndroidWifiRepository {
   Future<WifiSnapshot> scan() => _readMacos('scan');
   Future<WifiSnapshot> _readMacos(String method) async {
     final payload = await _native.invokeMethod<Object?>(method);
-    _validateMacosPayload(payload);
+    _validateDesktopPayload(payload, source: WifiDataSource.macos);
     final snapshot = decodeSnapshot(payload);
     if (snapshot.source != WifiDataSource.macos ||
         (snapshot.scanCompleted && snapshot.completionId <= 0)) {
@@ -115,9 +119,13 @@ class MacosWifiRepository extends AndroidWifiRepository {
   }
 }
 
-void _validateMacosPayload(Object? payload) {
+void _validateDesktopPayload(
+  Object? payload, {
+  required WifiDataSource source,
+}) {
+  final windows = source == WifiDataSource.windows;
   final bssidPattern = RegExp(r'^(?:[0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$');
-  bool valid = payload is Map && payload['source'] == 'macos';
+  bool valid = payload is Map && payload['source'] == source.name;
   if (valid) {
     final map = payload;
     valid =
@@ -147,7 +155,7 @@ void _validateMacosPayload(Object? payload) {
             ap['frequency'] is! int ||
             (ap['frequency'] as int) <= 0 ||
             ap['width'] is! int ||
-            ![20, 40, 80, 160].contains(ap['width']) ||
+            !(windows ? [0] : [20, 40, 80, 160]).contains(ap['width']) ||
             ap['timestamp'] is! int ||
             ap['timestamp'] != 0 ||
             ap['centerFrequency'] != null) {
@@ -160,7 +168,38 @@ void _validateMacosPayload(Object? payload) {
   if (!valid) {
     throw PlatformException(
       code: 'invalid_snapshot',
-      message: 'macOS returned malformed WiFi state',
+      message: '${source.label} returned malformed WiFi state',
     );
+  }
+}
+
+/// Windows owns its async scan completion; no Android broadcast subscription.
+class WindowsWifiRepository extends AndroidWifiRepository {
+  static const _native = MethodChannel('com.samirpandey.wifi_analyser/wifi');
+  @override
+  bool get supported =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
+  @override
+  Stream<WifiSnapshot> get scanResults => const Stream.empty();
+  Future<void> cancelScan() => _native.invokeMethod<void>('cancelScan');
+  @override
+  Future<WifiSnapshot> snapshot() => _readWindows('snapshot');
+  @override
+  Future<WifiSnapshot> scan() => _readWindows('scan');
+
+  Future<WifiSnapshot> _readWindows(String method) async {
+    final payload = await _native.invokeMethod<Object?>(method);
+    // Same strict identifiers and RSSI contract; Windows has no reported width.
+    _validateDesktopPayload(payload, source: WifiDataSource.windows);
+    final snapshot = decodeSnapshot(payload);
+    if ((snapshot.scanCompleted && snapshot.completionId <= 0) ||
+        snapshot.scanRequested ||
+        snapshot.fresh) {
+      throw PlatformException(
+        code: 'invalid_snapshot',
+        message: 'Windows returned invalid scan completion metadata',
+      );
+    }
+    return snapshot;
   }
 }

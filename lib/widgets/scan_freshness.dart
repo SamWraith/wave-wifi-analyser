@@ -91,7 +91,7 @@ class _ScanFreshnessState extends State<ScanFreshness>
             ? 'Cached results • signal may have changed'
             : isScanStale(widget.updated, _now)
             ? 'Older observations • recheck before comparing'
-            : widget.source == WifiDataSource.macos
+            : widget.source.usesCompletionTime
             ? 'Scan completion • per-AP age unavailable; cache may contribute'
             : 'Recent observations • Android controls scan availability',
         style: Theme.of(context).textTheme.bodySmall,

@@ -13,7 +13,13 @@ fvm flutter pub get
 fvm flutter run -d <android-device-id>
 ```
 
-Run desktop with `fvm flutter run -d macos`; macOS defaults to live scans. Android also defaults to live data. Web, Windows, Linux and iOS default to labelled demo data. Android requires **precise location**; macOS requests Location access for WiFi identifiers. Enable WiFi and Location services. No location coordinates are collected. Normal macOS app-bundle verification and current hardware limits: [macOS scanning](docs/MACOS_SCANNING.md).
+Run desktop with `fvm flutter run -d macos`; macOS defaults to live scans. Android also defaults to live data. Windows also defaults to live scans; see [Windows setup and validation](docs/WINDOWS.md). Web, Linux and iOS default to labelled demo data. Android requires **precise location**; macOS requests Location access for WiFi identifiers. Enable WiFi and Location services. No location coordinates are collected. Normal macOS app-bundle verification and current hardware limits: [macOS scanning](docs/MACOS_SCANNING.md).
+
+## App update releases
+
+Shorebird release setup and validation: [Shorebird updates](docs/SHOREBIRD.md).
+Ordinary FVM builds remain supported. Shorebird-built releases check for app updates
+over the internet; WiFi scan data and saved comparisons remain on the device.
 
 ## Implemented features — 1.0.0
 
@@ -189,3 +195,17 @@ Installable artifact: `dist/wave-wifi-release.apk` (normal app entry point, pres
 See [Rive onboarding](docs/RIVE_ONBOARDING.md) for editable artwork, runtime ownership, and native library setup. Keep Flutter/Dart on PATH for Rive's Android build hook. Independent architecture review found no actionable onboarding issues. Remaining physical RF edge cases are listed in [freshness/guidance verification](docs/FRESHNESS_AND_GUIDANCE.md).
 
 APK output: `build/app/outputs/flutter-apk/app-release.apk`. Release mode currently uses development signing; production signing is not configured.
+
+## Windows desktop
+
+Windows uses the shared Wave interface with native WLAN scanning and connected-network
+metadata. Build on Windows with the pinned Flutter 3.47.5 SDK and Visual Studio C++
+toolchain. `tool/windows/validate.ps1` checks, tests, builds and packages the complete
+release bundle; the manual **Windows validation** Actions workflow supplies a Windows
+compiler route. Neither route publishes a public release.
+
+See [Windows setup, privacy, packaging and hardware checklist](docs/WINDOWS.md).
+Windows compilation and real WiFi hardware verification remain separate from tests
+run on the macOS implementation host. Shorebird Windows baseline distribution is
+held pending the documented engine-version constraint; existing app ID and SDK pin
+are preserved.

@@ -6,6 +6,7 @@ import '../models/wifi_data_source.dart';
 import '../widgets/wave_components.dart';
 import '../widgets/theme_reveal.dart';
 import '../widgets/wave_haptics.dart';
+import '../widgets/support_card.dart';
 import 'onboarding_page.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -19,7 +20,13 @@ class SettingsPage extends StatelessWidget {
             880 * (MediaQuery.textScalerOf(context).scale(16) / 16).clamp(1, 2),
         spacing: 18,
         first: const Column(
-          children: [AppearanceCard(), SizedBox(height: 18), AboutCard()],
+          children: [
+            AppearanceCard(),
+            SizedBox(height: 18),
+            AboutCard(),
+            SizedBox(height: 18),
+            SupportCard(),
+          ],
         ),
         second: const ScanningSettingsCard(),
       ),
@@ -177,7 +184,7 @@ class ScanningSettingsCard extends ConsumerWidget {
             'Filters display only. Channel scoring still includes all scanned access points.',
             style: Theme.of(context).textTheme.bodySmall,
           ),
-          if (source == WifiDataSource.macos) ...[
+          if (source.usesCompletionTime) ...[
             const SizedBox(height: 14),
             Text(
               source.observationLimitations,
@@ -209,7 +216,7 @@ class AboutCard extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          'Android and macOS support live nearby-network scans. Other platforms support explicit demo mode. Android requires precise location access and Location services. macOS requires Location access to expose network identifiers. No location coordinates are collected.',
+          'Android, macOS and Windows support live nearby-network scans. Other platforms support explicit demo mode. Android requires precise location access and Location services. macOS requires Location access to expose network identifiers. Windows requires Location access on recent Windows versions. No location coordinates are collected.',
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 16),
@@ -226,6 +233,11 @@ class AboutCard extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           'Saved room comparisons, local aliases, channel planning and private previewed exports keep your WiFi evidence on your device.',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Update-enabled releases contact Shorebird for app updates using version and installation information. Your WiFi scans and saved comparisons stay on your device.',
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ],

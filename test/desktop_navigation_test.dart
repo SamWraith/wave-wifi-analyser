@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -40,47 +41,60 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('medium desktop rail navigates with Command keys after resize', (
-    tester,
-  ) async {
-    await launch(tester, const Size(800, 700));
-    expect(find.byType(AnalyserRail), findsOneWidget);
-    expect(find.byType(NavigationBar), findsNothing);
-    expect(tester.getTopLeft(find.byType(AnalyserRail)).dy, 28);
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.digit5);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
-    expect(find.text('Appearance'), findsOneWidget);
-    tester.view.physicalSize = const Size(600, 700);
-    await tester.pumpAndSettle();
-    expect(find.byType(NavigationBar), findsOneWidget);
-    expect(
-      tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
-      4,
-    );
-    await tester.tap(find.text('Networks').last);
-    await tester.pumpAndSettle();
-    expect(find.byType(TextField), findsOneWidget);
-    expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox.shrink());
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  testWidgets(
+    'medium desktop rail navigates with platform keys after resize',
+    (tester) async {
+      await launch(tester, const Size(800, 700));
+      expect(find.byType(AnalyserRail), findsOneWidget);
+      expect(find.byType(NavigationBar), findsNothing);
+      expect(tester.getTopLeft(find.byType(AnalyserRail)).dy, 28);
+      final modifier = defaultTargetPlatform == TargetPlatform.windows
+          ? LogicalKeyboardKey.controlLeft
+          : LogicalKeyboardKey.metaLeft;
+      await tester.sendKeyDownEvent(modifier);
+      await tester.sendKeyEvent(LogicalKeyboardKey.digit5);
+      await tester.sendKeyUpEvent(modifier);
+      await tester.pumpAndSettle();
+      expect(find.text('Appearance'), findsOneWidget);
+      tester.view.physicalSize = const Size(600, 700);
+      await tester.pumpAndSettle();
+      expect(find.byType(NavigationBar), findsOneWidget);
+      expect(
+        tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
+        4,
+      );
+      await tester.tap(find.text('Networks').last);
+      await tester.pumpAndSettle();
+      expect(find.byType(TextField), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+    variant: const TargetPlatformVariant({
+      TargetPlatform.macOS,
+      TargetPlatform.windows,
+    }),
+  );
 
-  testWidgets('short wide desktop keeps navigation reachable at large text', (
-    tester,
-  ) async {
-    await launch(tester, const Size(1200, 480), scale: 1.8);
-    expect(find.byType(AnalyserSidebar), findsOneWidget);
-    final settings = find.descendant(
-      of: find.byType(AnalyserSidebar),
-      matching: find.text('Settings'),
-    );
-    await tester.ensureVisible(settings);
-    await tester.pumpAndSettle();
-    await tester.tap(settings);
-    await tester.pumpAndSettle();
-    expect(find.text('Appearance'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox.shrink());
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  testWidgets(
+    'short wide desktop keeps navigation reachable at large text',
+    (tester) async {
+      await launch(tester, const Size(1200, 480), scale: 1.8);
+      expect(find.byType(AnalyserSidebar), findsOneWidget);
+      final settings = find.descendant(
+        of: find.byType(AnalyserSidebar),
+        matching: find.text('Settings'),
+      );
+      await tester.ensureVisible(settings);
+      await tester.pumpAndSettle();
+      await tester.tap(settings);
+      await tester.pumpAndSettle();
+      expect(find.text('Appearance'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+    variant: const TargetPlatformVariant({
+      TargetPlatform.macOS,
+      TargetPlatform.windows,
+    }),
+  );
 }

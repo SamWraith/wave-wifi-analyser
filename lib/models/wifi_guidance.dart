@@ -40,7 +40,7 @@ class WifiGuidanceState {
 
 String? guidanceBlocker(AnalyserState scan, DateTime now) {
   if (scan.demo) {
-    return 'Demo data can illustrate the charts, but cannot diagnose your WiFi. Use live Android or macOS scans for this check.';
+    return 'Demo data can illustrate the charts, but cannot diagnose your WiFi. Use live Android, macOS or Windows scans for this check.';
   }
   if (scan.paused) {
     return 'Scanning is paused. Resume scanning before starting or rechecking.';

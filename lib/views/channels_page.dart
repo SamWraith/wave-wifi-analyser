@@ -96,7 +96,7 @@ class ChannelsPage extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Relative overlap heuristic using bandwidth and received power. Bars compare candidates within this plan only; lower is not guaranteed improvement. This is not measured interference, noise, traffic or throughput. Reported AP widths/centers are preserved; one center cannot describe both lobes of 80+80 MHz.',
+            'Relative overlap heuristic using bandwidth and received power. Bars compare candidates within this plan only; lower is not guaranteed improvement. This is not measured interference, noise, traffic or throughput. Unknown AP widths use a 20 MHz assumption. Reported AP widths/centers are preserved; one center cannot describe both lobes of 80+80 MHz.',
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],

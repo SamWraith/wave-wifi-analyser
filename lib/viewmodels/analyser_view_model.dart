@@ -132,7 +132,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     } on MissingPluginException {
       if (ref.mounted && epoch == _epoch) {
         state = state.copyWith(
-          status: 'Live scanning requires Android or macOS. Try demo mode.',
+          status: 'Live scanning requires Android, macOS or Windows. Try demo mode.',
         );
       }
     }
@@ -148,16 +148,16 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     // Keep one floor for the whole batch: eviction during this scan must not
     // suppress other first-time APs from the same hardware scan.
     final timestampFloor = _evictedTimestampFloor;
-    final macosCompleted =
-        snapshot.source == WifiDataSource.macos &&
+    final desktopCompleted =
+        snapshot.source.usesCompletionTime &&
         snapshot.scanCompleted &&
         snapshot.completionId > _lastCompletionId;
     if (snapshot.source != state.liveSource) return;
     final batchIds = <String>{};
     for (final ap in snapshot.accessPoints) {
       final key = preferenceKey(ap.bssid);
-      if (key.isEmpty || (macosCompleted && !batchIds.add(key))) continue;
-      if (macosCompleted ||
+      if (key.isEmpty || (desktopCompleted && !batchIds.add(key))) continue;
+      if (desktopCompleted ||
           (snapshot.source == WifiDataSource.android &&
               snapshot.fresh &&
               ap.timestamp > (_lastTimestamp[key] ?? timestampFloor))) {
@@ -169,7 +169,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
         fresh[preferenceKey(ap.bssid)] = ap;
       }
     }
-    if (macosCompleted) {
+    if (desktopCompleted) {
       _lastCompletionId = snapshot.completionId;
     }
     ref
@@ -182,8 +182,8 @@ class AnalyserViewModel extends Notifier<AnalyserState>
         );
     state = state.copyWith(
       band: _bandFor(snapshot.accessPoints),
-      acceptedScanId: macosCompleted ? snapshot.completionId : null,
-      cached: !(observed || macosCompleted),
+      acceptedScanId: desktopCompleted ? snapshot.completionId : null,
+      cached: !(observed || desktopCompleted),
       permission: snapshot.permission,
       locationEnabled: snapshot.locationEnabled,
       wifiEnabled: snapshot.wifiEnabled,
@@ -193,7 +193,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
       status: snapshot.status,
       accessPoints: snapshot.accessPoints,
       history: history,
-      lastUpdated: observed || macosCompleted ? now : null,
+      lastUpdated: observed || desktopCompleted ? now : null,
     );
   }
 
@@ -243,7 +243,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
       if (ref.mounted && epoch == _epoch) {
         state = state.copyWith(
           busy: false,
-          status: 'Live scanning requires Android or macOS. Try demo mode.',
+          status: 'Live scanning requires Android, macOS or Windows. Try demo mode.',
         );
       }
     }
@@ -413,7 +413,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     } on MissingPluginException {
       if (ref.mounted) {
         state = state.copyWith(
-          status: 'WiFi settings are available on Android and macOS.',
+          status: 'WiFi settings are available on Android, macOS and Windows.',
         );
       }
     } on PlatformException catch (e) {
@@ -426,6 +426,8 @@ class AnalyserViewModel extends Notifier<AnalyserState>
   void _cancelNativeScan() {
     final wifi = _wifi;
     if (wifi is MacosWifiRepository) {
+      wifi.cancelScan().catchError((Object _) {});
+    } else if (wifi is WindowsWifiRepository) {
       wifi.cancelScan().catchError((Object _) {});
     }
   }

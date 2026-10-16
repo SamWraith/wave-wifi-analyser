@@ -90,7 +90,7 @@ class _ContributorRow extends ConsumerWidget {
         child: Text(
           '${alias == null ? ap.name : '$alias • ${ap.name}'}\n'
           '${ap.bssid} • CH ${ap.channel} • ${ap.rssi} dBm\n'
-          'Reported ${ap.width} MHz • primary ${ap.frequency} MHz • '
+          'Reported ${ap.widthLabel} • primary ${ap.frequency} MHz • '
           '${ap.centerFrequency == null || ap.centerFrequency! <= 0 ? 'center unavailable; using primary' : 'center ${ap.centerFrequency} MHz'}\n'
           '${(contributor.score / total * 100).round()}% of this candidate’s overlap',
           style: Theme.of(context).textTheme.bodySmall,

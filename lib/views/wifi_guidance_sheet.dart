@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/wifi_guidance.dart';
-import '../models/wifi_data_source.dart';
 import '../viewmodels/analyser_view_model.dart';
 import '../viewmodels/wifi_guidance_view_model.dart';
 import '../widgets/wave_components.dart';
@@ -118,7 +117,7 @@ class WifiGuidanceSheet extends ConsumerWidget {
                 icon: const Icon(Icons.refresh),
                 label: Text(
                   baseline == null
-                      ? source == WifiDataSource.macos
+                      ? source.usesCompletionTime
                             ? 'Get completed scan'
                             : 'Get fresh scan'
                       : guide.waiting
@@ -160,12 +159,12 @@ class GuidanceEvidenceCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text('${ap.name} • ${ap.bssid}'),
           Text('${ap.rssi} dBm • ${ap.quality} signal'),
-          Text('${ap.band.label} • channel ${ap.channel} • ${ap.width} MHz'),
+          Text('${ap.band.label} • channel ${ap.channel} • ${ap.widthLabel}'),
           Text(
             'Relative overlap estimate: ${evidence.overlap.toStringAsFixed(2)}',
           ),
           Text(
-            evidence.source == WifiDataSource.macos
+            evidence.source.usesCompletionTime
                 ? 'Scan completed at $time • per-AP time and cache freshness unknown'
                 : 'Observed at $time • single live observation',
           ),

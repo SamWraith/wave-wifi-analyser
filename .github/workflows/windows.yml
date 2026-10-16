@@ -1,0 +1,36 @@
+name: Windows validation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install repository-pinned Flutter
+        run: |
+          $version = (Get-Content .fvmrc -Raw | ConvertFrom-Json).flutter
+          if ($version -ne '3.47.5') { throw 'Review Windows workflow when changing Flutter pin.' }
+          $sdk = Join-Path $env:RUNNER_TEMP 'flutter-sdk'
+          git clone --depth 1 --branch $version https://github.com/flutter/flutter.git $sdk
+          if ($LASTEXITCODE -ne 0) { throw 'Flutter SDK checkout failed.' }
+          (Join-Path $sdk 'bin') | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Inspect Windows toolchain
+        run: flutter doctor -v
+      - name: Analyze, test and build complete release bundle
+        run: ./tool/windows/validate.ps1
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave-wifi-analyser-windows-x64
+          path: dist/wave-wifi-analyser-windows-x64.zip
+          if-no-files-found: error
+          retention-days: 14

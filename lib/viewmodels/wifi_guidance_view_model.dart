@@ -88,8 +88,8 @@ class WifiGuidanceViewModel extends Notifier<WifiGuidanceState> {
       problem: state.problem,
       baseline: state.baseline,
       waiting: true,
-      message: scan.source == WifiDataSource.macos
-          ? 'Waiting for a new completed macOS scan. Per-AP time and cache freshness remain unknown.'
+      message: scan.source.usesCompletionTime
+          ? 'Waiting for a new completed ${scan.source.label} scan. Per-AP time and cache freshness remain unknown.'
           : 'Waiting for a new observation. Scan requests are bounded; cached results cannot complete this check.',
     );
     await ref.read(analyserProvider.notifier).scan();
@@ -106,7 +106,7 @@ class WifiGuidanceViewModel extends Notifier<WifiGuidanceState> {
       );
       return;
     }
-    if (scan.source == WifiDataSource.macos) {
+    if (scan.source.usesCompletionTime) {
       if (_requiredCompletion != null &&
           scan.acceptedScanId <= _requiredCompletion!) {
         return;

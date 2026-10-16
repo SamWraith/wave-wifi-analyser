@@ -73,54 +73,85 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
-  testWidgets(
-    'macOS recovery distinguishes unavailable hardware and redacted identifiers',
-    (tester) async {
-      final model = RecoveryModel();
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [analyserProvider.overrideWith(() => model)],
-          child: const MaterialApp(home: Scaffold(body: ScanStatusBar())),
-        ),
-      );
-      model.update(
-        AnalyserState(demo: false, liveSource: WifiDataSource.macos),
-      );
-      await tester.pump();
-      await tester.tap(find.text('Allow location'));
-      expect(model.scans, 1);
-      await tester.tap(find.text('Location privacy settings'));
-      expect(model.opened, WifiSettingsTarget.permission);
-      model.update(
-        AnalyserState(
-          demo: false,
-          liveSource: WifiDataSource.macos,
-          permission: true,
-          locationEnabled: true,
-          interfaceAvailable: false,
-        ),
-      );
-      await tester.pump();
-      expect(find.text('Enable WiFi'), findsNothing);
-      expect(
-        find.textContaining('WiFi interface unavailable.'),
-        findsOneWidget,
-      );
-      model.update(
-        AnalyserState(
-          demo: false,
-          liveSource: WifiDataSource.macos,
-          permission: true,
-          locationEnabled: true,
-          wifiEnabled: true,
-          redactedCount: 2,
-        ),
-      );
-      await tester.pump();
-      await tester.tap(find.text('Review Location access'));
-      expect(model.opened, WifiSettingsTarget.permission);
-      expect(tester.takeException(), isNull);
-      await tester.pumpWidget(const SizedBox.shrink());
-    },
-  );
+  for (final source in [WifiDataSource.macos, WifiDataSource.windows]) {
+    testWidgets(
+      '${source.label} recovery distinguishes unavailable hardware and redacted identifiers',
+      (tester) async {
+        final model = RecoveryModel();
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [analyserProvider.overrideWith(() => model)],
+            child: const MaterialApp(home: Scaffold(body: ScanStatusBar())),
+          ),
+        );
+        model.update(
+          AnalyserState(demo: false, liveSource: source, wifiEnabled: true),
+        );
+        await tester.pump();
+        await tester.tap(find.text('Allow location'));
+        expect(model.scans, 1);
+        await tester.tap(find.text('Location privacy settings'));
+        expect(model.opened, WifiSettingsTarget.permission);
+        model.update(
+          AnalyserState(
+            demo: false,
+            liveSource: source,
+            permission: true,
+            locationEnabled: true,
+            interfaceAvailable: false,
+          ),
+        );
+        await tester.pump();
+        expect(find.text('Enable WiFi'), findsNothing);
+        expect(
+          find.textContaining('WiFi interface unavailable.'),
+          findsOneWidget,
+        );
+        model.update(
+          AnalyserState(
+            demo: false,
+            liveSource: source,
+            permission: true,
+            locationEnabled: true,
+            wifiEnabled: true,
+            redactedCount: 2,
+          ),
+        );
+        await tester.pump();
+        await tester.tap(find.text('Review Location access'));
+        expect(model.opened, WifiSettingsTarget.permission);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+  }
+  testWidgets('Windows radio-off recovery works before first location grant', (
+    tester,
+  ) async {
+    final model = RecoveryModel();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [analyserProvider.overrideWith(() => model)],
+        child: const MaterialApp(home: Scaffold(body: ScanStatusBar())),
+      ),
+    );
+    model.update(
+      AnalyserState(demo: false, liveSource: WifiDataSource.windows),
+    );
+    await tester.pump();
+    expect(find.text('Allow location'), findsNothing);
+    await tester.tap(find.text('Enable WiFi'));
+    expect(model.opened, WifiSettingsTarget.wifi);
+    model.update(
+      AnalyserState(
+        demo: false,
+        liveSource: WifiDataSource.windows,
+        interfaceAvailable: false,
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Enable WiFi'), findsNothing);
+    expect(find.textContaining('WiFi interface unavailable'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }

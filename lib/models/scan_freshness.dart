@@ -13,7 +13,7 @@ String scanAgeLabel(
   WifiDataSource source = WifiDataSource.android,
 }) {
   if (updated == null) {
-    return source == WifiDataSource.macos && !demo
+    return source.usesCompletionTime && !demo
         ? 'No completed scan received yet'
         : 'No fresh result received yet';
   }
@@ -25,7 +25,7 @@ String scanAgeLabel(
       : '${seconds ~/ 3600}h ago';
   return '${demo
       ? 'Last simulated update'
-      : source == WifiDataSource.macos
+      : source.usesCompletionTime
       ? 'Last completed scan'
       : 'Last fresh result'} $age';
 }

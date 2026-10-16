@@ -25,7 +25,7 @@ class SessionSample {
       width: width,
       centerFrequency: centerFrequency,
     );
-    return '${ap.band.label} • CH ${ap.channel} ($frequency MHz) • $width MHz • reported center ${centerFrequency == null ? 'unknown' : '$centerFrequency MHz'}';
+    return '${ap.band.label} • CH ${ap.channel} ($frequency MHz) • ${ap.widthLabel} • reported center ${centerFrequency == null ? 'unknown' : '$centerFrequency MHz'}';
   }
 
   Map<String, Object?> toJson() => {

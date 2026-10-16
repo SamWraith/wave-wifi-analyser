@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/ap_preference.dart';
 import '../models/access_point.dart';
 import '../models/comparison_session.dart';
-import '../models/wifi_data_source.dart';
 import '../viewmodels/analyser_view_model.dart';
 import '../viewmodels/ap_preferences_view_model.dart';
 import '../viewmodels/comparison_sessions_view_model.dart';
@@ -217,7 +216,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage>
                                     ),
                                     Text(ap.bssid),
                                     Text(
-                                      '${ap.band.label} · CH ${ap.channel} · ${ap.width} MHz',
+                                      '${ap.band.label} · CH ${ap.channel} · ${ap.widthLabel}',
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodySmall,
@@ -260,11 +259,11 @@ class _SessionsPageState extends ConsumerState<SessionsPage>
                           const Text(
                             'Resume foreground scanning before starting.',
                           ),
-                        if (source == WifiDataSource.macos)
-                          const Padding(
-                            padding: EdgeInsets.only(top: 8),
+                        if (source.usesCompletionTime)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
                             child: Text(
-                              'macOS records completed scans. Per-AP age is unavailable; scan cache may contribute. Kept separate from Android and demo.',
+                              '${source.label} records completed scans. Per-AP age is unavailable; scan cache may contribute. Sources stay separate.',
                             ),
                           ),
                         if (demo)
@@ -321,7 +320,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage>
                               !scanFeedback.$3 ||
                               !scanFeedback.$4))
                         Text(
-                          source == WifiDataSource.macos
+                          source.usesCompletionTime
                               ? 'Scanning needs WiFi, Location access and an available interface. Existing samples are kept; new scan completions add samples with unknown per-AP age.'
                               : 'Scanning needs WiFi, location services and scan permission. Existing samples are kept; only fresh observations add samples.',
                         ),
@@ -329,17 +328,17 @@ class _SessionsPageState extends ConsumerState<SessionsPage>
                         scanFeedback.$5
                             ? 'Scan request in progress.'
                             : scanFeedback.$6
-                            ? source == WifiDataSource.macos
+                            ? source.usesCompletionTime
                                   ? 'No new scan completion accepted. No samples added.'
                                   : 'Latest results are cached. No fresh samples added.'
                             : 'Waiting for the next foreground scan reply.',
                       ),
                       Text(
                         scanFeedback.$7 == null
-                            ? source == WifiDataSource.macos
+                            ? source.usesCompletionTime
                                   ? 'No completed scan received yet.'
                                   : 'No fresh observation received yet.'
-                            : source == WifiDataSource.macos
+                            : source.usesCompletionTime
                             ? 'Last scan completion ${_time(scanFeedback.$7!)} · per-AP age unavailable'
                             : 'Last fresh observation ${_time(scanFeedback.$7!)}',
                       ),
@@ -479,8 +478,8 @@ class RecordingPanel extends StatelessWidget {
         SectionHeading(
           title: session.demo
               ? 'Simulated session running'
-              : session.source == WifiDataSource.macos
-              ? 'Recording completed macOS scans'
+              : session.source.usesCompletionTime
+              ? 'Recording completed ${session.source.label} scans'
               : 'Recording fresh observations',
           subtitle: '${_sessionName(session)} · ${session.bssid}',
         ),
@@ -495,7 +494,7 @@ class RecordingPanel extends StatelessWidget {
         ),
         Text(
           session.samples.isEmpty
-              ? session.source == WifiDataSource.macos
+              ? session.source.usesCompletionTime
                     ? 'Waiting for a new scan completion. Per-AP time and cache freshness remain unknown.'
                     : 'Waiting for a fresh observation. Existing scan results are not added.'
               : 'Last sample ${_time(session.samples.last.at)} · ${session.samples.last.rssi} dBm',

@@ -23,6 +23,10 @@ class AccessPoint {
   });
   final String ssid, bssid, security;
   final int rssi, frequency, width, timestamp;
+
+  /// Zero means unavailable; never presented as a reported 20 MHz width.
+  String get widthLabel => width > 0 ? '$width MHz' : 'Unknown width';
+  int get overlapWidth => width > 0 ? width : 20;
   final int? centerFrequency;
   int get spectralCenter => centerFrequency != null && centerFrequency! > 0
       ? centerFrequency!
@@ -130,7 +134,7 @@ double estimateChannelOverlap(
 double overlapContribution(AccessPoint ap, int center, int width) {
   final overlap = math.max(
     0.0,
-    1 - (center - ap.spectralCenter).abs() / (ap.width / 2 + width / 2),
+    1 - (center - ap.spectralCenter).abs() / (ap.overlapWidth / 2 + width / 2),
   );
   return overlap * math.pow(10, (ap.rssi + 60) / 10);
 }

@@ -1,7 +1,6 @@
 import 'ap_preference.dart';
 import 'access_point.dart';
 import 'comparison_session.dart';
-import 'wifi_data_source.dart';
 
 const exportLimitations =
     'Foreground observations only; gaps are not filled. Missing AP and rejected '
@@ -80,7 +79,7 @@ ComparisonExport serializeComparison(
     );
     if (s.samples.isEmpty) {
       summary.writeln(
-        s.source == WifiDataSource.macos
+        s.source.usesCompletionTime
             ? 'No accepted scan observations. No signal estimate.'
             : 'No fresh samples. No signal estimate.',
       );
@@ -133,7 +132,7 @@ ComparisonExport serializeComparison(
         sample == null ? '' : _utc(sample.at),
         sample?.rssi,
         sample?.frequency,
-        sample?.width,
+        sample == null || sample.width == 0 ? null : sample.width,
         sample?.centerFrequency,
         sample == null ? '' : _radio(sample),
         '$exportLimitations ${s.source.observationLimitations}',
@@ -168,6 +167,6 @@ String _radio(SessionSample sample) {
     frequency: sample.frequency,
   );
   return '${ap.band.label} · CH ${ap.channel} · primary ${sample.frequency} MHz · '
-      'reported width ${sample.width} MHz · reported center '
+      'reported width ${sample.width == 0 ? 'unknown' : '${sample.width} MHz'} · reported center '
       '${sample.centerFrequency == null ? 'unknown' : '${sample.centerFrequency} MHz'}';
 }

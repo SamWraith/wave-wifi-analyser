@@ -123,7 +123,11 @@ class LocalComparisonSessionsRepository
             at: DateTime.fromMicrosecondsSinceEpoch(at),
             rssi: integer(s['rssi'], -127, 0),
             frequency: integer(s['frequency'], 2000, 8000),
-            width: integer(s['width'], 1, 320),
+            width: integer(
+              s['width'],
+              source == WifiDataSource.windows ? 0 : 1,
+              320,
+            ),
             centerFrequency: s['center'] == null
                 ? null
                 : integer(s['center'], 0, 8000),

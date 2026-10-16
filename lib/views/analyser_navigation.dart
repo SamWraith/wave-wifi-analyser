@@ -379,7 +379,7 @@ class ScanStatusBar extends ConsumerWidget {
     );
     final c = ref.read(analyserProvider.notifier);
     final demo = source == WifiDataSource.demo;
-    final macos = source == WifiDataSource.macos;
+    final desktop = source.usesCompletionTime;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -401,8 +401,8 @@ class ScanStatusBar extends ConsumerWidget {
               final message = paused
                   ? 'Scanning paused. Last results retained.'
                   : busy
-                  ? macos
-                        ? 'Request pending. Waiting for macOS scan completion.'
+                  ? desktop
+                        ? 'Request pending. Waiting for ${source.label} scan completion.'
                         : 'Request pending. Waiting for Android results.'
                   : status;
               final summary = Column(
@@ -480,25 +480,38 @@ class ScanStatusBar extends ConsumerWidget {
           if (!demo &&
               !paused &&
               !busy &&
-              (!permission || !location || !wifi || redactedCount > 0))
+              (!interfaceAvailable ||
+                  !permission ||
+                  !location ||
+                  !wifi ||
+                  redactedCount > 0))
             Wrap(
               spacing: 8,
               children: [
-                if (!permission) ...[
+                if (desktop && !interfaceAvailable)
+                  const Text(
+                    'WiFi interface unavailable. Connect supported WiFi hardware, then scan again.',
+                  )
+                else if (source == WifiDataSource.windows && !wifi)
+                  TextButton(
+                    onPressed: c.openSettings,
+                    child: const Text('Enable WiFi'),
+                  )
+                else if (!permission) ...[
                   TextButton(
                     onPressed: () {
                       WaveHaptics.selection();
                       c.scan();
                     },
                     child: Text(
-                      macos ? 'Allow location' : 'Allow precise location',
+                      desktop ? 'Allow location' : 'Allow precise location',
                     ),
                   ),
                   TextButton(
                     onPressed: () =>
                         c.openSettings(target: WifiSettingsTarget.permission),
                     child: Text(
-                      macos ? 'Location privacy settings' : 'App permissions',
+                      desktop ? 'Location privacy settings' : 'App permissions',
                     ),
                   ),
                 ] else if (!location)
@@ -506,10 +519,6 @@ class ScanStatusBar extends ConsumerWidget {
                     onPressed: () =>
                         c.openSettings(target: WifiSettingsTarget.location),
                     child: const Text('Enable Location'),
-                  )
-                else if (macos && !interfaceAvailable)
-                  const Text(
-                    'WiFi interface unavailable. Connect supported WiFi hardware, then scan again.',
                   )
                 else if (redactedCount > 0)
                   TextButton(

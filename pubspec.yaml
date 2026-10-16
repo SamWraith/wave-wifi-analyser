@@ -39,6 +39,7 @@ dependencies:
   rive: ^0.14.11
   share_plus: ^13.3.1
   path_provider: ^2.1.6
+  url_launcher: ^6.3.3
 
 dev_dependencies:
   fake_async: ^1.3.3
@@ -68,6 +69,7 @@ flutter:
     - assets/rive/
     - assets/branding/wave-badge-light.png
     - assets/branding/wave-badge-dark.png
+    - shorebird.yaml
 
   # To add assets to your application, add an assets section, like this:
   # assets:
