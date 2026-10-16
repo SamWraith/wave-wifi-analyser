@@ -20,6 +20,13 @@ No account is required. Optional support never unlocks or restricts a feature.
 
 ![Wave desktop overview in dark mode, with connection details and channel landscape](docs/screenshots/desktop-overview.png)
 
+## Download
+
+Get Android, macOS, Windows and Linux packages from [GitHub Releases](https://github.com/SamWraith/wave-wifi-analyser/releases).
+Read each release's installation notes and SHA-256 checksums. Windows/Linux are
+experimental; macOS previews are ad-hoc signed and not notarized. iOS and web are
+UI/demo development targets, not supported downloadable app releases.
+
 ## A clearer view, on every screen
 
 <p align="center">
