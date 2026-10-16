@@ -52,7 +52,10 @@ rebuilding, including a future Shorebird baseline. Its SHA-256 identifies the
 archive built locally; production publisher signing and installer/MSIX packaging
 are separate distribution work. No certificate, store identity or public release
 is configured by this workflow. A clean target may need Microsoft's supported
-[Visual C++ runtime](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist).
+[Visual C++ v14 runtime](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist).
+The public preview was built with toolset 14.51; use the latest x64 redistributable,
+version 14.51 or newer, rather than an older 2015–2022-era installer. Microsoft
+requires a runtime at least as new as the toolset used for the build.
 
 ## Windows build route and evidence
 
