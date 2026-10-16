@@ -1,5 +1,5 @@
 name: wifi_analyser
-description: "Modern WiFi analyser with live Android scanning, channel graphs, MVVM, Riverpod, and light/dark themes."
+description: "WiFi analyser with live Android, macOS, Windows and Linux scans, channel graphs, MVVM, Riverpod, and light/dark themes."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -40,6 +40,7 @@ dependencies:
   share_plus: ^13.3.1
   path_provider: ^2.1.6
   url_launcher: ^6.3.3
+  file_selector: ^1.1.0
 
 dev_dependencies:
   fake_async: ^1.3.3

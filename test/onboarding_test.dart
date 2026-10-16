@@ -52,7 +52,7 @@ class _WifiProbe implements WifiRepository {
   }
 
   @override
-  Future<WifiSnapshot> scan() => snapshot();
+  Future<WifiSnapshot> scan({bool interactive = false}) => snapshot();
   @override
   Future<bool> requestPermission() async {
     calls++;

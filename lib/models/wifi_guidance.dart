@@ -40,13 +40,15 @@ class WifiGuidanceState {
 
 String? guidanceBlocker(AnalyserState scan, DateTime now) {
   if (scan.demo) {
-    return 'Demo data can illustrate the charts, but cannot diagnose your WiFi. Use live Android, macOS or Windows scans for this check.';
+    return 'Demo data can illustrate the charts, but cannot diagnose your WiFi. Use live Android, macOS, Windows or Linux scans for this check.';
   }
   if (scan.paused) {
     return 'Scanning is paused. Resume scanning before starting or rechecking.';
   }
   if (!scan.permission || !scan.locationEnabled || !scan.wifiEnabled) {
-    return 'Live scanning needs location permission, Location services and WiFi. Use scan recovery above.';
+    return scan.source == WifiDataSource.linux
+        ? 'Live Linux scanning needs WiFi and NetworkManager scan authorization. Use scan recovery above.'
+        : 'Live scanning needs location permission, Location services and WiFi. Use scan recovery above.';
   }
   if (scan.accessPoints.isEmpty) {
     return 'No access points observed. Connect to WiFi and scan again.';

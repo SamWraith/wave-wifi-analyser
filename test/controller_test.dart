@@ -18,6 +18,7 @@ class FakeWifiRepository implements WifiRepository {
   Object? scanError;
   bool permission = true;
   int scanCalls = 0;
+  final scanInteractive = <bool>[];
   @override
   bool get supported => true;
   @override
@@ -25,8 +26,9 @@ class FakeWifiRepository implements WifiRepository {
   @override
   Future<WifiSnapshot> snapshot() async => snapshotValue ?? sample(false, 100);
   @override
-  Future<WifiSnapshot> scan() async {
+  Future<WifiSnapshot> scan({bool interactive = false}) async {
     scanCalls++;
+    scanInteractive.add(interactive);
     if (scanError != null) throw scanError!;
     return scanReply == null ? sample(false, 100) : await scanReply!.future;
   }

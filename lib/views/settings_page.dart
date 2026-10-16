@@ -216,7 +216,7 @@ class AboutCard extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          'Android, macOS and Windows support live nearby-network scans. Other platforms support explicit demo mode. Android requires precise location access and Location services. macOS requires Location access to expose network identifiers. Windows requires Location access on recent Windows versions. No location coordinates are collected.',
+          'Android, macOS, Windows and Linux support live nearby-network scans. Other platforms support explicit demo mode. Android requires precise location access and Location services. macOS requires Location access to expose network identifiers. Windows requires Location access on recent Windows versions. Linux requires NetworkManager scan authorization and kernel dBm support. No location coordinates are collected.',
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 16),

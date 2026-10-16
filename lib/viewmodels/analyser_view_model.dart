@@ -132,7 +132,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     } on MissingPluginException {
       if (ref.mounted && epoch == _epoch) {
         state = state.copyWith(
-          status: 'Live scanning requires Android, macOS or Windows. Try demo mode.',
+          status: 'Live scanning requires Android, macOS, Windows or Linux. Try demo mode.',
         );
       }
     }
@@ -227,7 +227,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     try {
       if (!await _ensurePermission(requestPermission, epoch)) return;
       if (!_isCurrent(epoch)) return;
-      final snapshot = await _wifi.scan();
+      final snapshot = await _wifi.scan(interactive: requestPermission);
       if (!ref.mounted || epoch != _epoch) return;
       _apply(snapshot);
       if (!snapshot.scanRequested) {
@@ -237,13 +237,21 @@ class AnalyserViewModel extends Notifier<AnalyserState>
       }
     } on PlatformException catch (e) {
       if (ref.mounted && epoch == _epoch) {
-        state = state.copyWith(busy: false, status: e.message ?? 'Scan failed');
+        state = state.copyWith(
+          busy: false,
+          permission:
+              state.liveSource == WifiDataSource.linux &&
+                  e.code == 'permission_denied'
+              ? false
+              : null,
+          status: e.message ?? 'Scan failed',
+        );
       }
     } on MissingPluginException {
       if (ref.mounted && epoch == _epoch) {
         state = state.copyWith(
           busy: false,
-          status: 'Live scanning requires Android, macOS or Windows. Try demo mode.',
+          status: 'Live scanning requires Android, macOS, Windows or Linux. Try demo mode.',
         );
       }
     }
@@ -413,7 +421,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
     } on MissingPluginException {
       if (ref.mounted) {
         state = state.copyWith(
-          status: 'WiFi settings are available on Android, macOS and Windows.',
+          status: 'WiFi settings are available on Android, macOS, Windows and Linux.',
         );
       }
     } on PlatformException catch (e) {
@@ -425,9 +433,7 @@ class AnalyserViewModel extends Notifier<AnalyserState>
 
   void _cancelNativeScan() {
     final wifi = _wifi;
-    if (wifi is MacosWifiRepository) {
-      wifi.cancelScan().catchError((Object _) {});
-    } else if (wifi is WindowsWifiRepository) {
+    if (wifi is DesktopWifiRepository) {
       wifi.cancelScan().catchError((Object _) {});
     }
   }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/comparison_export.dart';
 import '../models/comparison_session.dart';
+import '../repositories/comparison_share_repository.dart';
 import '../viewmodels/comparison_export_view_model.dart';
 import '../viewmodels/comparison_sessions_view_model.dart';
 import '../widgets/wave_components.dart';
@@ -60,6 +61,7 @@ class _ComparisonExportPageState
       ),
     );
     final sharing = ref.watch(comparisonExportProvider);
+    final savesFiles = ref.watch(comparisonExportSavesFilesProvider);
     final export = _export;
     return Scaffold(
       appBar: AppBar(title: const Text('Review comparison export')),
@@ -84,8 +86,10 @@ class _ComparisonExportPageState
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (!valid)
-                              const Text(
-                                'Saved selection changed or was deleted. Return to saved sessions and select again; this preview cannot be shared.',
+                              Text(
+                                savesFiles
+                                    ? 'Saved selection changed or was deleted. Return to saved sessions and select again; this preview cannot be saved.'
+                                    : 'Saved selection changed or was deleted. Return to saved sessions and select again; this preview cannot be shared.',
                               ),
                             if (sharing.message != null)
                               Semantics(
@@ -132,14 +136,24 @@ class _ComparisonExportPageState
                                             ),
                                       );
                                 },
-                          icon: const Icon(Icons.ios_share_rounded),
+                          icon: Icon(
+                            savesFiles
+                                ? Icons.save_alt_rounded
+                                : Icons.ios_share_rounded,
+                          ),
                           label: Text(
                             sharing.busy
-                                ? 'Opening share chooser…'
+                                ? savesFiles
+                                      ? 'Choose export folder…'
+                                      : 'Opening share chooser…'
                                 : sharing.unsupported
                                 ? 'File sharing unavailable'
                                 : sharing.message == null
-                                ? 'Share reviewed files'
+                                ? savesFiles
+                                      ? 'Save reviewed files'
+                                      : 'Share reviewed files'
+                                : savesFiles
+                                ? 'Save again'
                                 : 'Share again',
                           ),
                         ),
@@ -175,8 +189,10 @@ class _ComparisonExportPageState
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'Review both files before sharing. No account or upload by Wave. Sharing writes two local temporary files, overwritten on the next share; system and receiving apps may keep copies. Sharing opens your system chooser; the app you choose controls delivery. Aliases are always excluded.',
+                      Text(
+                        savesFiles
+                            ? 'Review both files before saving. Choose a folder; Wave creates a new wave-comparison- subfolder containing both reviewed files. No account or upload by Wave. Aliases are always excluded.'
+                            : 'Review both files before sharing. No account or upload by Wave. Sharing writes two local temporary files, overwritten on the next share; system and receiving apps may keep copies. Sharing opens your system chooser; the app you choose controls delivery. Aliases are always excluded.',
                       ),
                       const Text(
                         'Identifiers and room labels are hidden by default. Timing and radio context can still reveal information; this is not an anonymity guarantee.',

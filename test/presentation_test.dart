@@ -129,7 +129,7 @@ class _EmptyWifiRepository implements WifiRepository {
     accessPoints: const [],
   );
   @override
-  Future<WifiSnapshot> scan() => snapshot();
+  Future<WifiSnapshot> scan({bool interactive = false}) => snapshot();
   @override
   Future<bool> requestPermission() async => false;
   @override

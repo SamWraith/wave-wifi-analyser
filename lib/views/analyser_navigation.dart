@@ -492,7 +492,9 @@ class ScanStatusBar extends ConsumerWidget {
                   const Text(
                     'WiFi interface unavailable. Connect supported WiFi hardware, then scan again.',
                   )
-                else if (source == WifiDataSource.windows && !wifi)
+                else if ((source == WifiDataSource.windows ||
+                        source == WifiDataSource.linux) &&
+                    !wifi)
                   TextButton(
                     onPressed: c.openSettings,
                     child: const Text('Enable WiFi'),
@@ -504,14 +506,22 @@ class ScanStatusBar extends ConsumerWidget {
                       c.scan();
                     },
                     child: Text(
-                      desktop ? 'Allow location' : 'Allow precise location',
+                      source == WifiDataSource.linux
+                          ? 'Authorize WiFi scan'
+                          : desktop
+                          ? 'Allow location'
+                          : 'Allow precise location',
                     ),
                   ),
                   TextButton(
                     onPressed: () =>
                         c.openSettings(target: WifiSettingsTarget.permission),
                     child: Text(
-                      desktop ? 'Location privacy settings' : 'App permissions',
+                      source == WifiDataSource.linux
+                          ? 'Network settings'
+                          : desktop
+                          ? 'Location privacy settings'
+                          : 'App permissions',
                     ),
                   ),
                 ] else if (!location)
@@ -519,6 +529,10 @@ class ScanStatusBar extends ConsumerWidget {
                     onPressed: () =>
                         c.openSettings(target: WifiSettingsTarget.location),
                     child: const Text('Enable Location'),
+                  )
+                else if (redactedCount > 0 && source == WifiDataSource.linux)
+                  const Text(
+                    'Identifiers unavailable from Linux driver; affected results excluded.',
                   )
                 else if (redactedCount > 0)
                   TextButton(

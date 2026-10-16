@@ -1,12 +1,19 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../models/comparison_export.dart';
 import 'comparison_export_files.dart';
 
-enum ComparisonShareResult { handedOff, cancelled, unavailable, unsupported }
+enum ComparisonShareResult {
+  handedOff,
+  cancelled,
+  unavailable,
+  unsupported,
+  saved,
+}
 
 abstract interface class ComparisonShareRepository {
   Future<ComparisonShareResult> share(
@@ -16,8 +23,15 @@ abstract interface class ComparisonShareRepository {
   });
 }
 
+/// Linux lacks native file sharing; its explicit action saves reviewed files.
+final comparisonExportSavesFilesProvider = Provider<bool>(
+  (ref) => !kIsWeb && defaultTargetPlatform == TargetPlatform.linux,
+);
+
 final comparisonShareRepositoryProvider = Provider<ComparisonShareRepository>(
-  (ref) => PlatformComparisonShareRepository(),
+  (ref) => ref.read(comparisonExportSavesFilesProvider)
+      ? LinuxComparisonExportRepository()
+      : PlatformComparisonShareRepository(),
 );
 
 class PlatformComparisonShareRepository implements ComparisonShareRepository {
@@ -66,6 +80,35 @@ class PlatformComparisonShareRepository implements ComparisonShareRepository {
       };
     } finally {
       _sharing = false;
+    }
+  }
+}
+
+class LinuxComparisonExportRepository implements ComparisonShareRepository {
+  LinuxComparisonExportRepository({
+    Future<bool> Function(ComparisonExport, {bool Function()? isCurrent})?
+    saveFiles,
+  }) : _saveFiles = saveFiles ?? saveComparisonFiles;
+  final Future<bool> Function(ComparisonExport, {bool Function()? isCurrent})
+  _saveFiles;
+  bool _saving = false;
+
+  @override
+  Future<ComparisonShareResult> share(
+    ComparisonExport export,
+    Rect origin, {
+    bool Function()? isCurrent,
+  }) async {
+    if (_saving) {
+      throw StateError('An export folder chooser is already pending.');
+    }
+    _saving = true;
+    try {
+      return await _saveFiles(export, isCurrent: isCurrent)
+          ? ComparisonShareResult.saved
+          : ComparisonShareResult.cancelled;
+    } finally {
+      _saving = false;
     }
   }
 }

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Wave - WiFi Analyser
+Comment=Understand nearby WiFi networks and channel overlap
+Exec=wifi_analyser
+Icon=com.samirpandey.wifi_analyser
+Terminal=false
+Categories=Network;Utility;
+StartupWMClass=com.samirpandey.wifi_analyser

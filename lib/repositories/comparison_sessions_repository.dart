@@ -125,7 +125,9 @@ class LocalComparisonSessionsRepository
             frequency: integer(s['frequency'], 2000, 8000),
             width: integer(
               s['width'],
-              source == WifiDataSource.windows ? 0 : 1,
+              source == WifiDataSource.windows || source == WifiDataSource.linux
+                  ? 0
+                  : 1,
               320,
             ),
             centerFrequency: s['center'] == null

@@ -48,7 +48,7 @@ void main() {
       expect(find.byType(AnalyserRail), findsOneWidget);
       expect(find.byType(NavigationBar), findsNothing);
       expect(tester.getTopLeft(find.byType(AnalyserRail)).dy, 28);
-      final modifier = defaultTargetPlatform == TargetPlatform.windows
+      final modifier = defaultTargetPlatform != TargetPlatform.macOS
           ? LogicalKeyboardKey.controlLeft
           : LogicalKeyboardKey.metaLeft;
       await tester.sendKeyDownEvent(modifier);
@@ -72,6 +72,7 @@ void main() {
     variant: const TargetPlatformVariant({
       TargetPlatform.macOS,
       TargetPlatform.windows,
+      TargetPlatform.linux,
     }),
   );
 
@@ -95,6 +96,7 @@ void main() {
     variant: const TargetPlatformVariant({
       TargetPlatform.macOS,
       TargetPlatform.windows,
+      TargetPlatform.linux,
     }),
   );
 }

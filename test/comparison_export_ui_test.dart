@@ -351,6 +351,7 @@ void main() {
         ),
         comparisonShareRepositoryProvider.overrideWithValue(
           PlatformComparisonShareRepository(
+            supported: true,
             prepareFiles: (_) => prepared.future,
             shareFiles: (_) async {
               calls++;

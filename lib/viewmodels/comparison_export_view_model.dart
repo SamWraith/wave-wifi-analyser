@@ -31,6 +31,7 @@ class ComparisonExportViewModel extends Notifier<ComparisonExportState> {
     bool Function()? isCurrent,
   }) async {
     if (state.busy) return;
+    final savesFiles = ref.read(comparisonExportSavesFilesProvider);
     state = const ComparisonExportState(busy: true);
     try {
       final result = await ref
@@ -47,15 +48,20 @@ class ComparisonExportViewModel extends Notifier<ComparisonExportState> {
           ComparisonShareResult.unsupported => 'File sharing is not supported on this platform. Review or copy preview text, or return to saved sessions.',
           ComparisonShareResult.handedOff =>
             'Handed to sharing app. Delivery is not confirmed.',
+          ComparisonShareResult.saved => 'Saved reviewed summary and CSV in a new wave-comparison- folder inside your selected folder. No files uploaded.',
           ComparisonShareResult.cancelled =>
-            'Sharing cancelled. Nothing confirmed sent.',
+            savesFiles
+                ? 'Export cancelled. No files saved.'
+                : 'Sharing cancelled. Nothing confirmed sent.',
           ComparisonShareResult.unavailable => 'Share outcome unavailable on this platform. Delivery is not confirmed. You can retry.',
         },
       );
     } catch (_) {
       if (ref.mounted) {
-        state = const ComparisonExportState(
-          message: 'Could not open sharing. No delivery confirmed. Retry sharing or return to saved sessions.',
+        state = ComparisonExportState(
+          message: savesFiles
+              ? 'Could not save reviewed files. Check folder permissions and retry.'
+              : 'Could not open sharing. No delivery confirmed. Retry sharing or return to saved sessions.',
         );
       }
     }

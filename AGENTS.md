@@ -15,7 +15,7 @@ This file applies throughout this repository. User instructions take precedence.
 - `lib/widgets/`: shared UI and chart rendering; widgets receive explicit inputs where possible.
 - `lib/viewmodels/`: Riverpod state transitions, scan orchestration and lifecycle.
 - `lib/models/`: immutable state and WiFi/channel domain logic.
-- `lib/repositories/`: Android platform boundary, settings storage and explicit demo source.
+- `lib/repositories/`: Native platform boundaries, settings storage and explicit demo source.
 - `android/app/src/main/kotlin/com/samirpandey/wifi_analyser/MainActivity.kt`: native WiFi bridge.
 - `test/`: unit/widget regressions; `integration_test/`: native bridge checks.
 - Motion/high-refresh work: read `docs/MOTION_AND_REFRESH.md`; use FVM pin, keep haptics presentation-owned and validate performance on physical hardware before claiming 120 fps.
@@ -36,8 +36,8 @@ Start with `git status --short`, then use `rg` and focused file reads. Preserve 
 
 ## Operational invariants
 
-- Android and macOS perform live scans; unsupported targets use clearly labelled demo data.
-- Foreground automatic requests are 35 seconds apart; Android controls actual scan availability. macOS serializes actual starts at least 35 seconds apart; its completion IDs do not claim per-AP freshness. Demo updates every 3 seconds. Pause/background/disposal must stop timers and ignore late replies.
-- Android cached/duplicate native timestamps and macOS cache-only/duplicate completion IDs must never add history. macOS per-AP age/cache freshness remains unknown. Keep history and timestamp retention bounded together: 60 samples per AP, 256 AP histories.
+- Android, macOS, Windows and Linux perform live scans; unsupported targets use clearly labelled demo data. Linux requires NetworkManager plus nl80211 dBm support; unsupported drivers never substitute signal percentages.
+- Foreground automatic requests are 35 seconds apart; Android controls actual scan availability. Desktop bridges serialize native scan requests at least 35 seconds apart; their completion IDs do not claim per-AP freshness. Linux automatic scans require granted authorization; only explicit requests permit Polkit interaction. Demo updates every 3 seconds. Pause/background/disposal must stop timers and ignore late replies.
+- Android cached/duplicate native timestamps and desktop cache-only/duplicate completion IDs must never add history. Desktop per-AP radio freshness remains unknown. Windows/Linux width zero means unknown; charts disclose a 20 MHz assumption rather than inventing measured width. Keep history and timestamp retention bounded together: 60 samples per AP, 256 AP histories.
 - Channel ratings are an independent overlap heuristic. Preserve frequency exceptions, reported width/center frequency and honest distance/graph limitations.
 - Persisted preferences must survive early edits during loading and recoverable write failures. Keep storage errors separate from scan status.

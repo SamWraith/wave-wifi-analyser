@@ -73,7 +73,11 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
-  for (final source in [WifiDataSource.macos, WifiDataSource.windows]) {
+  for (final source in [
+    WifiDataSource.macos,
+    WifiDataSource.windows,
+    WifiDataSource.linux,
+  ]) {
     testWidgets(
       '${source.label} recovery distinguishes unavailable hardware and redacted identifiers',
       (tester) async {
@@ -88,9 +92,21 @@ void main() {
           AnalyserState(demo: false, liveSource: source, wifiEnabled: true),
         );
         await tester.pump();
-        await tester.tap(find.text('Allow location'));
+        await tester.tap(
+          find.text(
+            source == WifiDataSource.linux
+                ? 'Authorize WiFi scan'
+                : 'Allow location',
+          ),
+        );
         expect(model.scans, 1);
-        await tester.tap(find.text('Location privacy settings'));
+        await tester.tap(
+          find.text(
+            source == WifiDataSource.linux
+                ? 'Network settings'
+                : 'Location privacy settings',
+          ),
+        );
         expect(model.opened, WifiSettingsTarget.permission);
         model.update(
           AnalyserState(
@@ -118,8 +134,16 @@ void main() {
           ),
         );
         await tester.pump();
-        await tester.tap(find.text('Review Location access'));
-        expect(model.opened, WifiSettingsTarget.permission);
+        if (source == WifiDataSource.linux) {
+          expect(
+            find.textContaining('Identifiers unavailable from Linux driver'),
+            findsOneWidget,
+          );
+          expect(find.text('Review Location access'), findsNothing);
+        } else {
+          await tester.tap(find.text('Review Location access'));
+          expect(model.opened, WifiSettingsTarget.permission);
+        }
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox.shrink());
       },

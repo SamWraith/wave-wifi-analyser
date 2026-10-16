@@ -1,7 +1,7 @@
 import 'dart:io';
 
+import 'package:file_selector/file_selector.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../models/comparison_export.dart';
 
@@ -21,4 +21,33 @@ Future<List<XFile>> prepareComparisonFiles(ComparisonExport export) async {
     XFile(summary.path, mimeType: 'text/plain'),
     XFile(csv.path, mimeType: 'text/csv'),
   ];
+}
+
+/// A new owned subdirectory avoids overwriting existing files in the chosen
+/// folder. Cancellation/deleted selections remove only this operation's files.
+Future<bool> saveComparisonFiles(
+  ComparisonExport export, {
+  bool Function()? isCurrent,
+  Future<String?> Function()? chooseDirectory,
+}) async {
+  if (isCurrent != null && !isCurrent()) return false;
+  final selected =
+      await (chooseDirectory ??
+          () => getDirectoryPath(confirmButtonText: 'Save reviewed files'))();
+  if (selected == null || (isCurrent != null && !isCurrent())) return false;
+  final directory = await Directory(selected).createTemp('wave-comparison-');
+  var saved = false;
+  try {
+    if (isCurrent != null && !isCurrent()) return false;
+    await File('${directory.path}/${ComparisonExport.summaryFilename}')
+        .writeAsString(export.summary, flush: true);
+    if (isCurrent != null && !isCurrent()) return false;
+    await File('${directory.path}/${ComparisonExport.csvFilename}')
+        .writeAsString(export.csv, flush: true);
+    if (isCurrent != null && !isCurrent()) return false;
+    saved = true;
+    return true;
+  } finally {
+    if (!saved) await directory.delete(recursive: true);
+  }
 }

@@ -1,211 +1,184 @@
-# wave - wifi analyser
+<div align="center">
+  <img src="assets/branding/wave-badge-light.png" alt="Wave app icon" width="88" />
+  <h1>Wave · WiFi Analyser</h1>
+  <p><strong>WiFi, made visible.</strong></p>
+  <p>Understand your signal. Explore channel overlap. Compare your rooms.</p>
+  <p>Phone and desktop · Light and dark themes · All features free</p>
+</div>
 
-A Flutter WiFi analyser with a modern responsive interface, system/light/dark themes, and native Android and macOS WiFi scan bridges. Created in `~/Developer/personal/wave-wifi-analyser`.
+Wave is a Flutter WiFi analyser with a shared interface across mobile and desktop.
+See nearby networks, inspect your connection and keep comparisons on your device.
+No account is required. Optional support never unlocks or restricts a feature.
 
-## Run
+> [!CAUTION]
+> **Windows and Linux are experimental and have not been tested on real desktop WiFi hardware.**
+> Windows compilation and runtime are still unverified. Linux x64 has been built
+> on Ubuntu 24.04 and passed automated/headless checks, but real-world WiFi scans,
+> permissions and everyday desktop operation remain untested. Do not treat these
+> ports as production-verified. See [Windows evidence](docs/WINDOWS.md) and
+> [Linux evidence](docs/LINUX.md) before relying on either platform.
 
-Flutter SDK pinned through FVM: `3.47.5` in `.fvmrc`.
+![Wave desktop overview in dark mode, with connection details and channel landscape](docs/screenshots/desktop-overview.png)
+
+## A clearer view, on every screen
+
+<p align="center">
+  <img src="docs/screenshots/mobile-overview.png" alt="Mobile overview: simulated connection, signal strength, band and channel in light mode" width="32%" />
+  <img src="docs/screenshots/mobile-spectrum.png" alt="Mobile Spectrum: nearby-network channel overlap in dark mode" width="32%" />
+  <img src="docs/screenshots/mobile-networks.png" alt="Mobile Networks: searchable access points and network details in light mode" width="32%" />
+</p>
+
+These store-style images frame **real renders of the shared Flutter interface**.
+All displayed networks are explicitly labelled demo data. Captures do not imply
+Windows/Linux hardware testing, iOS live scanning or App Store/Play Store availability.
+[Original captures and reproduction steps](docs/screenshots/README.md).
+
+## Supported platforms
+
+| Platform | WiFi scanning | Current verification | Export |
+| --- | --- | --- | --- |
+| **Android** | Native live scans with `WifiManager` | Physical Android checks recorded, including 2.4/5 GHz; remaining cases documented | System file sharing |
+| **macOS** | Native live scans with CoreWLAN | Real Mac scanning, comparisons, export cancellation and persistence checks recorded | System file sharing |
+| **Windows** | Native WLAN bridge implemented; live mode by default | **Not tested on real Windows devices. Native compilation/runtime unverified.** Experimental | Windows sharing implemented; unverified |
+| **Linux** | NetworkManager + nl80211 live bridge; real kernel dBm | **Not tested on real Linux WiFi hardware.** Ubuntu 24.04 x64 build and headless tests passed. Experimental | Save reviewed summary + CSV to a chosen folder |
+| **iOS** | **Demo only**; no live nearby-WiFi bridge | Shared mobile UI; live scanning not implemented | Shared export flow; verify on target device |
+| **Web** | **Demo only**; no browser WiFi scanning | Web release build checked | Browser-dependent file sharing |
+
+Live scanning needs supported hardware and platform authorization. Android requires
+precise location permission and Location services; macOS requires Location access
+for network identifiers. Recent Windows versions also gate WiFi APIs on Location
+consent. Linux requires NetworkManager, a managed adapter, nl80211 dBm support and
+an authorized desktop session. The current Linux bundle targets **Ubuntu 24.04 x64**
+and its modern glibc/libstdc++ runtime; Ubuntu 22.04 is not compatible with the
+bundled prebuilt Rive runtime.
+
+Demo mode is available explicitly on every target. A failed live scan **never
+silently switches to simulated networks**. Full setup and limitations:
+[Android verification](docs/FRESHNESS_AND_GUIDANCE.md) ·
+[macOS](docs/MACOS_SCANNING.md) · [Windows](docs/WINDOWS.md) · [Linux](docs/LINUX.md).
+
+## What you can do
+
+| Workspace | Features |
+| --- | --- |
+| **Overview** | Connected-network card, RSSI/quality, band/channel, available security/width, nearby counts and channel insights. Guided **Improve my WiFi** baseline/recheck for the same AP. |
+| **Spectrum** | Illustrative channel landscapes, accepted signal history, focus view, hide/include/solo legends and pointer/touch/keyboard inspection. Explore 2.4, 5 and 6 GHz. |
+| **Networks** | Search SSID, BSSID or local alias; sort by signal; inspect AP details; copy MAC addresses; save favourites and aliases, including identities not currently seen. |
+| **Channels** | Explainable overlap rankings, connected-AP exclusion, desired channel widths, manual channel shortlists and per-candidate contributors. |
+| **Compare rooms** | Foreground recordings for one BSSID, optional room labels, saved sessions, separate radio contexts, medians/ranges and visible observation gaps. |
+| **Private export** | Review summary and CSV before sharing/saving. Network identifiers and room labels are excluded by default, with separate opt-ins. Aliases are never exported. |
+| **Scanning controls** | Manual scan, automatic foreground requests, pause/resume, scan age, cached/stale/pending feedback and platform recovery actions. |
+| **Appearance** | Persistent system/light/dark themes, responsive phone/desktop layouts, violet-to-indigo connection card, shared Wave icons and finite motion. |
+| **Accessibility** | Large-text reflow, reduced-motion support, keyboard focus, desktop Cmd/Ctrl+1–5 navigation, Cmd/Ctrl+R scan and Escape return from supported views. |
+| **Welcome & settings** | Three original Rive scenes with replay/skip, saved welcome completion, theme/signal preferences and separate storage-error feedback. |
+
+Data tabs follow the connected AP's band until you make a manual selection.
+Android and desktop foreground requests run every **35 seconds**, subject to OS,
+driver and authorization limits. Demo updates every **3 seconds**. Pausing or
+backgrounding stops automatic work; late replies cannot add unrelated history.
+
+[Detailed feature reference](docs/FEATURES.md) · [Roadmap](docs/ROADMAP.md)
+
+![Wave desktop Spectrum in light mode with channel landscape and network legends](docs/screenshots/desktop-spectrum.png)
+
+## Honest measurements, useful context
+
+- Android history requires accepted new radio timestamps. Desktop history uses
+  distinct accepted scan completions; this does **not** prove every AP was observed
+  anew. Cached/duplicate updates add no samples. Age and source remain visible.
+- Unknown RF fields stay unknown. Windows/Linux do not report channel width or
+  center frequency through these bridges; charts and overlap scoring disclose a
+  **20 MHz assumption** for unknown widths.
+- Chart envelopes illustrate signal/channel context. Channel rankings are local
+  overlap heuristics, not measurements of noise, traffic, throughput or guaranteed
+  improvement. Distance is an approximate free-space estimate and can be inaccurate
+  indoors. A visible 6 GHz tab does not establish 6 GHz hardware verification.
+- Wave does not run speed tests, discover every device on your LAN, configure your
+  router, capture packets, build GPS heatmaps or offer cloud/AI diagnostics.
+
+## Privacy and optional support
+
+WiFi identifiers, aliases, preferences and saved comparisons stay on your device.
+Wave does not collect location coordinates. Export is an explicit action after
+preview; timing and radio context can still identify a place, even when names are
+excluded. Receiving apps may retain shared copies. Linux saves into a new export
+subfolder without overwriting existing files.
+
+Scanning and saved data do not require a Wave account or cloud service.
+**Shorebird-enabled releases** contact Shorebird for update/version and installation
+metadata; WiFi observations are not supplied to the updater. Ordinary Flutter builds
+do not contain its update engine. See [update setup and privacy](docs/SHOREBIRD.md).
+
+The persistent warm amber **Buy me a coffee** action opens
+[buymeacoffee.com/samirpandey](https://buymeacoffee.com/samirpandey).
+Support is entirely optional. **Every feature stays free.**
+
+## Run from source
+
+Flutter **3.47.5** is pinned through [FVM](https://fvm.app/) in `.fvmrc`.
+Use the host platform's native toolchain for desktop builds.
 
 ```sh
-cd ~/Developer/personal/wave-wifi-analyser
+fvm install
 fvm use
 fvm flutter pub get
-fvm flutter run -d <android-device-id>
+fvm flutter devices
+fvm flutter run -d <device-id>
 ```
 
-Run desktop with `fvm flutter run -d macos`; macOS defaults to live scans. Android also defaults to live data. Windows also defaults to live scans; see [Windows setup and validation](docs/WINDOWS.md). Web, Linux and iOS default to labelled demo data. Android requires **precise location**; macOS requests Location access for WiFi identifiers. Enable WiFi and Location services. No location coordinates are collected. Normal macOS app-bundle verification and current hardware limits: [macOS scanning](docs/MACOS_SCANNING.md).
+Common targets:
 
-## App update releases
+```sh
+fvm flutter run -d macos
+fvm flutter run -d windows   # Windows host + Visual Studio C++ required
+fvm flutter run -d linux     # Supported Linux host/toolchain required
+fvm flutter run -d chrome    # Explicitly labelled demo UI
+```
 
-Shorebird release setup and validation: [Shorebird updates](docs/SHOREBIRD.md).
-Ordinary FVM builds remain supported. Shorebird-built releases check for app updates
-over the internet; WiFi scan data and saved comparisons remain on the device.
+Android: select a device/emulator ID from `flutter devices`. iOS: build on macOS
+with Xcode and select an iPhone device/simulator; nearby WiFi remains demo only.
+Rive and native dependencies may download during setup. Do not change the SDK pin
+or substitute invented Shorebird IDs to get a build to pass.
 
-## Implemented features — 1.0.0
-
-### Overview and WiFi scanning
-
-- Connected access-point card with network name, band, channel, measured signal in dBm, signal quality, advertised security and channel width.
-- Nearby-network count, strongest nearby access points, clearest channel candidate and local signal/channel/security insights.
-- Android and macOS live scans, manual Scan, automatic scanning and pause/resume. Foreground requests run every 35 seconds; macOS also spaces actual starts by at least 35 seconds and serializes CoreWLAN work. Android controls availability. macOS replies time out after 20 seconds; blocking OS work cannot be physically cancelled, so late results are discarded.
-- Permission, Location-off, WiFi-off, throttled/cached, empty and recoverable scan-error states. Contextual shortcuts request precise location or open platform Location/privacy or WiFi settings. macOS distinguishes unavailable interfaces, redacted identifiers and unsupported radio fields; unidentified results are excluded, never given synthetic BSSIDs.
-- Visible Android last-fresh-result age, macOS completed-scan age, pending/cached/paused labels and separate simulated-update age. Older observations are marked after two minutes; presentation clocks never add history or promise a next scan.
-- Clearly labelled demo mode on every target, with simulated updates every 3 seconds. Backgrounding or pausing stops automatic updates.
-
-### Guided Improve my WiFi
-
-- Overview opens an on-device guide for weak signal or crowded channel.
-- Captures a fresh connected-AP baseline, shows RSSI/band/channel/width and relative overlap evidence, suggests one action, then requests a recheck.
-- Compares only newer observations of the same BSSID. Cached/duplicate results cannot complete a recheck; changing access points requires a new check.
-- Demo, paused, missing-connected-AP, empty and older-than-two-minute data explain why a live comparison cannot start. Scan recovery controls remain available inside the guide.
-- Uses the connected band and full scan regardless of display filters. Guidance does not diagnose interference, ISP trouble or router failure, measure speed, or configure routers.
-- Baselines exist only while the guide is open; these are single-observation checks, not saved sessions or proof of lasting improvement.
-
-### Spectrum, signal history and interactive legends
-
-- Channel landscape showing illustrative signal envelopes from reported frequency, channel width and received power.
-- **Open Spectrum** on Overview carries band, graph mode and legend selection into Spectrum.
-- **Focus chart** opens a larger chart with scan freshness, band controls and legends. Close, Back or Escape returns to the same Spectrum scroll position and selection; no forced orientation.
-- Tap or drag horizontally to follow visible envelope curves or recorded history samples in normal or focused charts. Markers stay on plotted data, with network name/BSSID and frequency/channel or observation time plus dBm. Vertical gestures scroll the page; pointer hover and focused arrow keys provide alternatives. Dismiss clears inspection.
-- Landscape readouts explicitly label illustrative envelope values; history snaps only to recorded samples and shows their actual timestamps. Hidden curves cannot be selected. Exceptional channels use their correct centers, with nearby coordinates qualified as **Near CH**. History only plots retained observations and breaks lines across missing observations or gaps longer than two foreground scan intervals.
-- Per-access-point signal history with up to 60 accepted samples per BSSID and 256 AP histories. Android cached/duplicate radio timestamps add no samples. macOS accepts each completed scan once using a completion ID; CoreWLAN supplies no per-AP timestamps/cache age, so repeated values can include cached radio observations. Completion time is explicitly qualified.
-- Switch between channel landscape and signal history; filter 2.4 GHz, 5 GHz or 6 GHz bands.
-- Tap a WiFi legend name through this cycle: **hide → include again → show only this WiFi → restore all**.
-- While one WiFi is isolated, tap another legend name to switch focus. **Show all** resets legend selections anytime.
-- Hidden networks stay in the legend. Duplicate network names remain independent through BSSID identity; colors stay tied to BSSID as scan order changes.
-- Chart axes and history time range retain all chart input data when curves are hidden, keeping remaining curves in place. Legend filtering does not alter measurements or channel scoring.
-- **Overview:** one horizontally scrollable legend row, pinned reset and expand controls, full wrapped list on expansion, and collapse back to the compact row. Selection survives expansion/collapse.
-- **Spectrum:** full wrapped legend list. Legend controls work in both chart modes, with keyboard selection and tooltips identifying the access point and next action.
-
-### Networks and access-point details
-
-- Search by original SSID, local alias or BSSID, strongest-signal-first ordering and a display-only minimum-signal filter.
-- Add/remove favorites and add/edit/remove local aliases from access-point details. Aliases appear alongside original SSIDs in Networks and chart legends; channel and BSSID context distinguishes same-SSID APs.
-- Favorites remain pinned in a dedicated Networks section across all bands, search and signal filters. A separate Saved aliases section keeps alias-only APs manageable even when absent. Missing saved APs show **Not seen** with saved identity only; no invented signal, channel, history or timestamp.
-- Preferences persist by BSSID across scans, reorder and relaunch, capped at 256 saved AP identities and 64 characters per alias. Versioned local storage preserves early edits during loading, serializes writes and exposes separate retry feedback for load/save failures. No extra permissions or services.
-- Hidden-SSID entries, connected/nearby identification and access-point detail sheets.
-- Details include BSSID, signal/quality, frequency, channel/band, width, advertised security and approximate distance.
-- Selectable detail values adapt to narrow screens and large text; Copy MAC address gives confirmation feedback.
-- Search text stays synchronized when navigating between screens.
-
-### Saved room comparisons
-
-- **Compare rooms** on Overview opens a foreground recording for one BSSID, with an optional manual room/session label. Favorites and aliases help identify APs; original SSID, full BSSID and radio context remain visible.
-- Start waits for new observations; cached/duplicate native timestamps, chart visibility and existing history never add samples. Recordings report missing-AP updates and updates without fresh data. Demo sessions stay explicitly simulated and cannot compare with measured sessions.
-- Stop saves locally; discard cancels. Pause, leaving the foreground or changing data source ends and saves with a reason. Resume never restarts recording. Relaunch restores completed sessions; forced termination may lose an unfinished recording or pending save.
-- Select two or more sessions for the same BSSID/source. Each band/channel/primary frequency/width/center-frequency context shows sample count, observation time range, median RSSI and RSSI range separately. Median delta appears only when every selected session has one identical context; stronger signal is not proof of faster WiFi.
-- Gaps remain visible: initial wait, longest interval between observations and silence before stop. No interpolated signal samples. Observation times use monotonic elapsed time anchored to recording start, so wall-clock corrections cannot break a saved session.
-- Retain up to 24 sessions with 120 accepted samples each; recording stops at the sample cap. Delete records to free space. Labels use a consistent 64 UTF-16-code-unit limit; storage is a validated version 2 envelope (version 1 Android/demo records remain readable) capped at 1 MiB. Loading gates recording while preserving entered labels; checked, serialized/coalesced writes expose recoverable storage errors separately from scanning.
-- No GPS coordinates, background service, extra permissions, cloud sync, heatmap or distance-accuracy claim. See [session verification](docs/SAVED_COMPARISON_SESSIONS.md).
-
-### Private comparison export
-
-- Select one or more saved sessions for the same BSSID/source in **Compare rooms**, then **Preview private export**. Review a readable summary and CSV before opening the system share chooser. Both files use neutral filenames; summary and CSV previews are selectable, with bounded text parts and always-reachable actions.
-- SSID/BSSID and room labels are excluded by default. Each has a separate explicit opt-in; aliases, internal record IDs and arbitrary stored stop reasons are never exported. Labels may themselves contain sensitive identifiers. Timing/radio data can reveal context; this is not an anonymity guarantee.
-- CSV preserves accepted UTC timestamps, RSSI, reported frequency/width/center, source, counts and empty-session metadata. Summary separates raw radio contexts, including unknown centers, and reports medians/ranges and exact session gaps. No fabricated samples, combined-context delta, noise/throughput estimate or improvement guarantee. Text cells guard spreadsheet formulas; numeric measurements remain unchanged.
-- Sharing occurs only after a button press. No account, server upload, automatic telemetry, router changes or new runtime permission. Two owned temporary files are overwritten on the next share; system/receiving apps may retain their own copies. Cancellation, retryable failure and unknown delivery outcomes remain explicit. Linux file sharing is unsupported; preview text remains copyable. Web file sharing requires browser support; automatic download/email fallbacks are disabled.
-- A changed/deleted snapshot cannot be shared; leaving preview during file preparation prevents a late chooser. Recording and versioned local storage remain unchanged. See [export verification](docs/COMPARISON_EXPORT.md).
-
-### Channel planning
-
-- Explainable channel plans rank primary channels by bandwidth overlap weighted by received power. Expand each candidate for its strongest three BSSID-specific contributors, aliases plus original SSIDs, reported source widths/centers and share of that candidate’s score. Same-SSID APs stay distinct.
-- Change desired width (20/40 MHz in 2.4 GHz; 20/40/80/160 MHz in 5/6 GHz) and enter a manual allowed-primary-channel shortlist. Scores use calculated bonded centers; 2.4 GHz 40 MHz shows extension above/below. Blank restores example candidates; duplicates merge; invalid edits stay open. Cancel, clear and per-band reset are explicit. Assumptions last for this app session only.
-- Fresh-result age, cached/demo/paused/error status and selected assumptions stay visible. Candidate pages hold eight rows; all candidates remain reachable and bars normalize against the whole plan. No observations means no ranking.
-- Option to exclude the connected access point when planning its channel.
-- Display filters and legend visibility do not remove scanned access points from scoring. Recommendations are a local heuristic, not measured noise, throughput or regulatory availability.
-
-### Welcome and onboarding
-
-- Three-step welcome with original Rive signal, channel and scan-access scenes.
-- Finite animation on scene entry, interactive replay actions, Back/Continue, Skip and Start exploring controls.
-- Persisted completion and welcome replay from Settings. Scanning starts after initial welcome completes.
-- Background-aware playback, reduced-motion support and stable copy/control slots across steps.
-
-### Appearance, motion and feedback
-
-- Modern responsive phone/desktop layouts with Overview, Spectrum, Networks, Channels and Settings destinations. Data tabs default to the connected AP’s 2.4/5/6 GHz band when connection identity is available; an explicit band choice stays selected for the app session.
-- System, light and dark themes with saved theme preference. Violet primary actions, restrained teal/blue informational accents, a violet-to-blue connection gradient and neutral surfaces keep color focused.
-- Large-text status controls reflow without worst-case empty space. Narrow network rows stack readable metadata; bottom navigation uses accessible icon destinations when enlarged labels cannot fit. Chart axes scale with text and share geometry with cursor inspection.
-- Circular theme reveal growing from the tapped header toggle or Settings theme control, retaining navigation, search and focus state.
-- Finite page/chart reveals, animated exact signal values, channel bars, fresh-scan pulses and detail-sheet transitions.
-- Mobile selection/impact haptics for supported actions, including chart-mode changes, plus hover/focus/press feedback and accessible standard controls. Shared detail/troubleshooting sheet motion honors reduced-motion and accessible-navigation preferences.
-- Reduced-motion/accessibility preferences honored by custom motion; stable ordinary scan-status space and onboarding copy reduce unintended layout shifts.
-- Android requests the highest advertised refresh mode at the current resolution; iOS ProMotion opt-in is enabled. Sampled theme/Rive motion reached approximately 120 Hz active cadence with touch activity on the tested phone. Constant 120 fps is not qualified; see [measured performance and limits](docs/MOTION_VERIFICATION.md).
-
-### Settings and platform branding
-
-- Saved theme and minimum-signal preferences, immediate slider preview with persistence on release, and separate recoverable preference-error feedback.
-- Explicit demo mode, automatic scanning controls, platform WiFi/Location recovery and Replay welcome. Desktop sidebar/medium-window rail, visible scrollbar and Cmd/Ctrl+1–5 navigation or Cmd/Ctrl+R scan reuse existing pages; narrow windows retain bottom navigation. Comparisons/export and focused charts support Escape return.
-- Original Wave logo with editable SVG master and reproducible platform exports.
-- Android adaptive, monochrome/themed, light/night and legacy-density launcher icons; iOS Any/light, Dark and Tinted asset-catalog appearances. Launcher/system appearance controls icon presentation independently of in-app theme. See [branding assets](assets/branding/README.md).
-
-## Platform support and current limits
-
-| Target | Nearby WiFi scanning | Interface/demo support |
-| --- | --- | --- |
-| Android | Live scan bridge implemented; required permission and WiFi/Location services must be enabled | Yes |
-| iOS | Not implemented | Yes, demo data |
-| macOS | Live scanning, recording/comparison and private export hardware-confirmed; recovery checks remain open | Yes, live by default; explicit demo option |
-| Web | Not implemented | Yes, demo data |
-
-No location coordinates are collected. Distance is a free-space estimate and can be inaccurate indoors; chart envelopes are illustrative rather than RF spectrum measurements. Local channel recommendations do not configure routers.
-
-Device discovery, speed tests, AI/cloud diagnostics, home-screen widgets and router administration are not included. Ranks 1–6 are delivered. Native macOS scanning is implemented with documented verification limits. Windows/Linux/iOS live scanning remains deferred. See delivered work and next scope in the [roadmap](docs/ROADMAP.md); original feature recommendations remain in the [product review](docs/PRODUCT_REVIEW.md).
-
-## Architecture: MVVM + Riverpod 3.4.3
-
-- `lib/models/access_point.dart`: scan model, frequency/channel conversion, distance, shared overlap heuristic.
-- `lib/models/channel_plan.dart`: validated primary-channel inputs, bonded candidate geometry and contributor evidence.
-- `lib/viewmodels/channel_planning_view_model.dart`: immutable session-local per-band assumptions and derived unfiltered plans.
-- `lib/models/analyser_state.dart`: immutable view state and typed native snapshots.
-- `lib/models/comparison_session.dart`, `lib/repositories/comparison_sessions_repository.dart`, `lib/viewmodels/comparison_sessions_view_model.dart`: immutable bounded session evidence, versioned local storage and foreground recording/persistence orchestration.
-- `lib/views/sessions_page.dart`: AP selection, recording feedback, saved-session comparison, deletion and private-export discovery.
-- `lib/models/comparison_export.dart`, `lib/repositories/comparison_share_repository.dart`, `lib/viewmodels/comparison_export_view_model.dart`, `lib/views/comparison_export_page.dart`: independent privacy serializer, injectable bounded native share boundary and route-owned review flow.
-- `lib/models/scan_freshness.dart` / `wifi_guidance.dart`: elapsed-age rules and offline evidence/guidance.
-- `lib/viewmodels/wifi_guidance_view_model.dart`: ephemeral same-AP baseline/recheck workflow.
-- `lib/views/wifi_guidance_sheet.dart`: scrollable guide using shared scan recovery controls.
-- `lib/viewmodels/analyser_view_model.dart`: Riverpod `NotifierProvider`, lifecycle, scan orchestration, preferences and history.
-- `lib/repositories/wifi_repository.dart`: typed Android MethodChannel/EventChannel and macOS completed-scan boundaries.
-- `lib/repositories/settings_repository.dart`: persistence interface and local preferences implementation.
-- `lib/widgets/signal_charts.dart`: canvas-based channel and history plots.
-- `lib/main.dart` / `lib/app.dart`: bootstrap `ProviderScope` and reactive app theme.
-- `lib/views/`: responsive shell, cohesive pages, selective consumers and derived presentation providers.
-- `lib/widgets/`: reusable panels, headings, metrics, network tiles/detail sheet, connection card and focused chart painters.
-- `lib/repositories/demo_wifi_source.dart`: deterministic simulated scans, separate from hardware and domain models.
-- `android/app/src/main/kotlin/com/samirpandey/wifi_analyser/MainActivity.kt`: native `WifiManager` integration.
-
-Android history accepts only new radio timestamps. macOS history accepts new completed-scan IDs, with unknown per-AP radio age/cache freshness disclosed. Neither cache-only snapshots nor duplicate accepted IDs add samples. History holds up to 60 samples per BSSID. Android may throttle manual requests; macOS enforces minimum 35-second actual-start spacing. No interval guarantees hardware freshness.
-
-Graphs use reported center frequency for wide channels when available. Envelopes are illustrative, not RF spectral measurements. Channel recommendations are an independent heuristic, not the original app's exact star algorithm. Candidates do not establish regulatory/router availability. 80+80 MHz channels are represented approximately as 160 MHz, without separate lobes.
-
-## AI coding guidance
-
-[AGENTS.md](AGENTS.md) routes agents to focused [architecture rules](ai/rules/flutter-architecture.md) and the project-local [review skill](ai/skills/wave-architecture-review/SKILL.md). The skill stays in `ai/`; no global skill installation is required. Run `ai/scripts/check.sh` for format, analysis and tests, or pass relevant test paths. The check script prefers `.fvm/flutter_sdk`; set `FLUTTER_BIN` to override it.
-
-Preference edits survive delayed loading; serialized saves show recoverable errors separately from scan status. Signal sliders preview immediately and persist on release. Search text stays synchronized across navigation. Shared filtering/rating providers avoid recomputation for unrelated preferences, and equivalent chart content skips repaint.
-
-See [original review](docs/ARCHITECTURE_REVIEW.md) and [completed fixes](docs/ARCHITECTURE_REVIEW_FOLLOWUP.md) for architecture evidence.
-
-See [premium interaction review](docs/PREMIUM_REVIEW.md) for reviewed polish, fixes and verification.
-
-See [motion and display refresh](docs/MOTION_AND_REFRESH.md) for native verification and physical-device 120 fps qualification, and [verification evidence](docs/MOTION_VERIFICATION.md) for completed checks and measured limits. Android requests maximum refresh at the current resolution; iOS enables ProMotion.
-
-## Verification
+## Build, package and verify
 
 ```sh
 ai/scripts/check.sh
-fvm flutter build apk --release
-fvm flutter build web
-fvm flutter test integration_test/native_wifi_test.dart -d <android-device-id>
-fvm flutter test integration_test/native_motion_test.dart -d <android-or-ios-device-id>
+fvm flutter build apk --debug
+fvm flutter build macos --debug
+fvm flutter build web --release
 ```
 
-Android UI/keyboard captures can be reproduced with `fvm flutter drive --driver=test_driver/ui_visual_test.dart --target=integration_test/ui_visual_test.dart -d <android-target>`. This runs the app with explicit demo data and in-memory preferences in light/dark themes at normal and 200% in-app text scale; it does not change system font settings or request RF permissions. Captures and keyboard-inset evidence stay local under `dist/ui-review/android/`. These checks do not establish physical RF accuracy or frame rate.
+| Target | Native setup and packaging |
+| --- | --- |
+| Windows | `./tool/windows/validate.ps1` in PowerShell 7; complete Release ZIP. [Guide](docs/WINDOWS.md) |
+| Linux | `FLUTTER_BIN="$PWD/.fvm/flutter_sdk/bin/flutter" ./tool/linux/validate.sh`; complete x64 tar bundle. [Guide](docs/LINUX.md) |
+| Android / macOS updates | Pinned Shorebird builds, stable app ID and signing requirements. [Guide](docs/SHOREBIRD.md) |
 
-Widget tests cover phone and desktop layouts in both themes, search/details/navigation, chart width, legend hide/include/isolate/reset cycles, duplicate-SSID identity, scan reordering, compact scrolling/expansion at normal and large text scales, and rendered curve visibility. Analysis tests cover frequency exceptions, connected-AP exclusion, bandwidth overlap, and signal weighting. ViewModel tests check fresh/cached/duplicate timestamps, immutable history, pause behavior, stale in-flight scan responses, and settings persistence. Native integration checks the Android bridge on an emulator and OnePlus 15 (CPH2745, Android 16). Opt-in `physical_wifi_test.dart` verified live 2.4/5 GHz observations, paused age/history behavior and a newer same-BSSID guided recheck on that phone. Permission-revocation, disabled-service, throttling, roaming and 6 GHz coverage remain open; see [device evidence](docs/FRESHNESS_AND_GUIDANCE.md).
+Manual [Windows](.github/workflows/windows.yml) and
+[Linux](.github/workflows/linux.yml) GitHub Actions workflows prepare build artifacts;
+they do not publish app-store releases. Never distribute a desktop executable alone:
+its bundled libraries and assets are required.
 
-## Research
+Current development evidence includes **231 Flutter tests**, native Linux protocol/
+normalization tests, Linux release compilation and a headless Linux desktop bridge/
+navigation smoke test. Android, macOS and web builds have passed. These automated
+checks do not replace real Windows/Linux WiFi testing. Android/macOS development
+signing and production distribution requirements remain documented separately.
+Windows Shorebird production distribution is held for the documented engine-version
+constraint; the existing 3.47.5 pin remains unchanged.
 
-See `research/REVERSE_ENGINEERING.md` for APK identity, REA Evidence IDs, verified static findings, reconstruction choices, and remaining unknowns. APKs and raw decompilation outputs stay local and are excluded from Git. REA source clone: `~/Developer/personal/rea`; pinned JADX engine: `~/Developer/personal/rea-tools`.
+## Project structure
 
-Installable artifact: `dist/wave-wifi-release.apk` (normal app entry point, preserved separately from integration-test builds).
+Wave uses **Flutter + MVVM + Riverpod**, with injectable native/storage boundaries.
 
-[Original platform branding](assets/branding/README.md) includes editable SVG, Android adaptive/themed/night icons, and iOS Any/Dark/Tinted appearances.
+- `lib/models/` — immutable WiFi state, channels, comparisons and export logic.
+- `lib/repositories/` — native channels, local storage, explicit demo and export/support boundaries.
+- `lib/viewmodels/` — scan lifecycle, preferences, guidance and recordings.
+- `lib/views/`, `lib/widgets/` — responsive pages, charts and shared interaction components.
+- `android/`, `macos/`, `windows/`, `linux/` — native scanning implementations.
+- `test/`, `integration_test/` — behavioural, rendering and native checks.
 
-See [Rive onboarding](docs/RIVE_ONBOARDING.md) for editable artwork, runtime ownership, and native library setup. Keep Flutter/Dart on PATH for Rive's Android build hook. Independent architecture review found no actionable onboarding issues. Remaining physical RF edge cases are listed in [freshness/guidance verification](docs/FRESHNESS_AND_GUIDANCE.md).
-
-APK output: `build/app/outputs/flutter-apk/app-release.apk`. Release mode currently uses development signing; production signing is not configured.
-
-## Windows desktop
-
-Windows uses the shared Wave interface with native WLAN scanning and connected-network
-metadata. Build on Windows with the pinned Flutter 3.47.5 SDK and Visual Studio C++
-toolchain. `tool/windows/validate.ps1` checks, tests, builds and packages the complete
-release bundle; the manual **Windows validation** Actions workflow supplies a Windows
-compiler route. Neither route publishes a public release.
-
-See [Windows setup, privacy, packaging and hardware checklist](docs/WINDOWS.md).
-Windows compilation and real WiFi hardware verification remain separate from tests
-run on the macOS implementation host. Shorebird Windows baseline distribution is
-held pending the documented engine-version constraint; existing app ID and SDK pin
-are preserved.
+[Agent guide](AGENTS.md) · [Architecture rules](ai/rules/flutter-architecture.md) ·
+[Branding source](assets/branding/README.md) · [Rive artwork](docs/RIVE_ONBOARDING.md) ·
+[Motion evidence](docs/MOTION_VERIFICATION.md) · [Comparison evidence](docs/SAVED_COMPARISON_SESSIONS.md)

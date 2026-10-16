@@ -286,6 +286,7 @@ void main() {
     final files = Completer<List<XFile>>();
     var current = true, called = false;
     final repo = PlatformComparisonShareRepository(
+      supported: true,
       prepareFiles: (_) => files.future,
       shareFiles: (_) async {
         called = true;
@@ -325,6 +326,7 @@ void main() {
     final export = serializeComparison([evidence()]);
     ShareParams? captured;
     final repo = PlatformComparisonShareRepository(
+      supported: true,
       prepareFiles: (e) async => [
         XFile.fromData(utf8.encode(e.summary)),
         XFile.fromData(utf8.encode(e.csv)),
@@ -361,6 +363,7 @@ void main() {
       final export = serializeComparison([evidence()]);
       for (final status in ShareResultStatus.values) {
         final repo = PlatformComparisonShareRepository(
+          supported: true,
           prepareFiles: (e) async => [
             XFile.fromData(utf8.encode(e.summary)),
             XFile.fromData(utf8.encode(e.csv)),

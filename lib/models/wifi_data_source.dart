@@ -3,13 +3,15 @@ enum WifiDataSource {
   demo,
   android,
   macos,
-  windows;
+  windows,
+  linux;
 
   String get label => switch (this) {
     demo => 'Demo',
     android => 'Android',
     macos => 'macOS',
     windows => 'Windows',
+    linux => 'Linux',
   };
 
   String get evidenceLabel => switch (this) {
@@ -17,6 +19,7 @@ enum WifiDataSource {
     android => 'MEASURED Android observations',
     macos => 'macOS scan observations — radio freshness unknown',
     windows => 'Windows scan observations — radio freshness unknown',
+    linux => 'Linux scan observations — radio freshness unknown',
   };
 
   String get observationLimitations => switch (this) {
@@ -31,10 +34,16 @@ enum WifiDataSource {
           'Driver cache may contribute. Per-AP freshness, channel width and '
           'center frequency are unavailable. Charts and channel overlap assume '
           '20 MHz for unknown widths; this is not reported RF metadata.',
+    linux =>
+      'Times mark accepted NetworkManager scan completion, not per-AP radio '
+          'measurement time. RSSI comes from kernel nl80211 dBm reports; '
+          'cached entries may contribute. Width and center frequency are unknown. '
+          'Charts and channel overlap assume 20 MHz for unknown widths.',
   };
 
   /// Desktop completion IDs identify accepted scans, not per-AP radio age.
-  bool get usesCompletionTime => this == macos || this == windows;
+  bool get usesCompletionTime =>
+      this == macos || this == windows || this == linux;
 
   static WifiDataSource fromDemo(bool demo) =>
       demo ? WifiDataSource.demo : WifiDataSource.android;

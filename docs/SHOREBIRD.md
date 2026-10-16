@@ -159,3 +159,28 @@ Package the complete resulting Release directory using
 Shorebird baseline. Future MSIX packaging must use `build_windows: false`; see
 [official Windows packaging](https://docs.shorebird.dev/flutter-concepts/releasing-flutter-apps/windows/)
 and [release commands](https://docs.shorebird.dev/code-push/release/).
+
+## Linux
+
+Shorebird's current [platform FAQ](https://docs.shorebird.dev/code-push/faq/#what-platforms-does-shorebird-support)
+and [release documentation](https://docs.shorebird.dev/code-push/release/) explicitly
+support Linux. This is target-platform support, separate from running its CLI on
+a Linux build host. The ordinary Flutter bundle and manual Linux CI build have no
+Shorebird updater. No Linux baseline or patch is registered by these scripts.
+
+Keep existing app ID `9b0845e1-531e-4bf9-ab48-a1e96e08b9b5`, `auto_update: true`,
+Flutter 3.47.5, Free plan and zero overage limit. On an appropriately configured
+Linux host, a local no-upload validation can use:
+
+```sh
+shorebird doctor
+shorebird release linux --flutter-version 3.47.5 --dry-run
+```
+
+A successful Linux dry run, private baseline registration and actual staging patch
+application after restart are separate evidence. Do not claim update delivery from
+an ordinary Flutter build or change SDK pin to make the command pass. Native bridge,
+plugin, system-library or asset changes require a reviewed full baseline. Packaging
+must retain the exact resulting complete bundle; `tool/linux/package.sh` accepts a
+`LINUX_BUNDLE` override and does not rebuild it. No workflow in this repository
+uploads Shorebird artifacts, enables billing or publishes public releases.
