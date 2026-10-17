@@ -74,6 +74,7 @@ silently switches to simulated networks**. Full setup and limitations:
 | **Overview** | Connected-network card, RSSI/quality, band/channel, available security/width, nearby counts and channel insights. Guided **Improve my WiFi** baseline/recheck for the same AP. |
 | **Spectrum** | Illustrative channel landscapes, accepted signal history, focus view, hide/include/solo legends and pointer/touch/keyboard inspection. Explore 2.4, 5 and 6 GHz. |
 | **Networks** | Search SSID, BSSID or local alias; sort by signal; inspect AP details; copy MAC addresses; save favourites and aliases, including identities not currently seen. |
+| **Router finder** | Open an AP's details → **Find this router**. Follow one BSSID with start/best RSSI and warmer/colder signal comparisons. Distance remains an approximate free-space estimate; no compass bearing or measured range. [Guide](docs/ROUTER_FINDER.md) |
 | **Channels** | Explainable overlap rankings, connected-AP exclusion, desired channel widths, manual channel shortlists and per-candidate contributors. |
 | **Compare rooms** | Foreground recordings for one BSSID, optional room labels, saved sessions, separate radio contexts, medians/ranges and visible observation gaps. |
 | **Private export** | Review summary and CSV before sharing/saving. Network identifiers and room labels are excluded by default, with separate opt-ins. Aliases are never exported. |

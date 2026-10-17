@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/ap_preference.dart';
 import '../viewmodels/ap_preferences_view_model.dart';
+import '../views/router_finder_page.dart';
 import 'access_point_preferences.dart';
 
 import '../models/access_point.dart';
@@ -209,6 +210,20 @@ class AccessPointDetailsSheet extends ConsumerWidget {
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: preferenceKey(ap.bssid).isEmpty
+                  ? null
+                  : () => Navigator.of(context).push<void>(
+                      MaterialPageRoute(
+                        builder: (_) => RouterFinderPage(target: ap),
+                      ),
+                    ),
+              icon: const Icon(Icons.wifi_find_rounded),
+              label: const Text('Find this router'),
+            ),
+            if (preferenceKey(ap.bssid).isEmpty)
+              const Text('Finder requires a visible BSSID.'),
+            const SizedBox(height: 12),
             FilledButton.icon(
               onPressed: () async {
                 await Clipboard.setData(ClipboardData(text: ap.bssid));
