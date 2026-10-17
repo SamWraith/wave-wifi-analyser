@@ -38,12 +38,16 @@ class PlatformComparisonShareRepository implements ComparisonShareRepository {
   PlatformComparisonShareRepository({
     Future<ShareResult> Function(ShareParams)? shareFiles,
     Future<List<XFile>> Function(ComparisonExport)? prepareFiles,
+    Future<void> Function(List<XFile>, {bool clearPluginCopies})? deleteFiles,
     bool? supported,
   }) : _shareFiles = shareFiles ?? SharePlus.instance.share,
        _prepareFiles = prepareFiles ?? prepareComparisonFiles,
+       _deleteFiles = deleteFiles ?? deleteComparisonFiles,
        _supported = supported ?? fileShareSupported;
   final Future<ShareResult> Function(ShareParams) _shareFiles;
   final Future<List<XFile>> Function(ComparisonExport) _prepareFiles;
+  final Future<void> Function(List<XFile>, {bool clearPluginCopies})
+  _deleteFiles;
   final bool _supported;
   bool _sharing = false;
   @override
@@ -54,12 +58,21 @@ class PlatformComparisonShareRepository implements ComparisonShareRepository {
   }) async {
     if (!_supported) return ComparisonShareResult.unsupported;
     if (_sharing) throw StateError('A share chooser is already pending.');
+    if (isCurrent != null && !isCurrent()) {
+      return ComparisonShareResult.cancelled;
+    }
     _sharing = true;
+    List<XFile>? files;
+    var mayBeInUse = false;
+    var dismissed = false;
     try {
-      final files = await _prepareFiles(export);
+      files = await _prepareFiles(export);
       if (isCurrent != null && !isCurrent()) {
         return ComparisonShareResult.cancelled;
       }
+      // Unknown outcomes and exceptions after native handoff may still have a
+      // receiver reading the files. Keep those until bounded cache cleanup.
+      mayBeInUse = true;
       final result = await _shareFiles(
         ShareParams(
           title: 'Wave WiFi comparison',
@@ -73,13 +86,21 @@ class PlatformComparisonShareRepository implements ComparisonShareRepository {
           mailToFallbackEnabled: false,
         ),
       );
+      dismissed = result.status == ShareResultStatus.dismissed;
+      if (dismissed) mayBeInUse = false;
       return switch (result.status) {
         ShareResultStatus.success => ComparisonShareResult.handedOff,
         ShareResultStatus.dismissed => ComparisonShareResult.cancelled,
         ShareResultStatus.unavailable => ComparisonShareResult.unavailable,
       };
     } finally {
-      _sharing = false;
+      try {
+        if (!mayBeInUse && files != null) {
+          await _deleteFiles(files, clearPluginCopies: dismissed);
+        }
+      } finally {
+        _sharing = false;
+      }
     }
   }
 }

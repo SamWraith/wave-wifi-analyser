@@ -15,7 +15,7 @@ submission is not approval or a published download.
 - Android application ID: `com.samirpandey.wifi_analyser`
 - Source: https://github.com/SamWraith/wave-wifi-analyser
 - App license: `GPL-3.0-or-later`, with copyright/origin in root `NOTICE`
-- Current app version: `1.0.1+2`
+- Current app version: `1.0.2+3`
 - Listing: `fastlane/metadata/android/en-US/`
 - Inclusion request draft: `docs/fdroid-inclusion-request.md`
 
@@ -49,9 +49,15 @@ native libraries. Inspect and pin native build dependencies and network fetches
 before proposing a production recipe. No Rive source build or F-Droid scanner
 pass has been completed for this app.
 
-Android Gradle currently signs release builds using ignored local key properties,
-or a debug key when no release key exists. An F-Droid recipe needs an unsigned
-release build; use a reviewed recipe patch or add an explicit unsigned build mode.
+Android production release builds fail without complete local signing properties.
+An F-Droid recipe must explicitly select the unsigned mode, which does not read
+local signing properties:
+
+```sh
+ORG_GRADLE_PROJECT_waveSigningMode=unsigned fvm flutter build apk --release
+```
+
+Verify the resulting APK has no signing certificate before F-Droid signs it.
 Never send the GitHub distribution key to F-Droid or commit it to this repository.
 
 Unless reproducible upstream-signature verification is separately arranged,

@@ -23,6 +23,7 @@ if [[ ! -x "$dart_bin" ]]; then
   echo 'Dart executable must sit alongside FLUTTER_BIN.' >&2
   exit 1
 fi
+python3 tool/security/check_source.py
 "$dart_bin" format --output=none --set-exit-if-changed lib test integration_test test_driver tool/motion_probe.dart
 "$flutter_bin" analyze
 if [[ "$#" -eq 0 ]]; then

@@ -18,17 +18,20 @@ jobs:
       run:
         shell: pwsh
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
       - name: Install pinned Flutter
         run: |
           $version = (Get-Content .fvmrc -Raw | ConvertFrom-Json).flutter
           $sdk = Join-Path $env:RUNNER_TEMP 'flutter-sdk'
           git clone --depth 1 --branch $version https://github.com/flutter/flutter.git $sdk
           if ($LASTEXITCODE -ne 0) { throw 'Flutter checkout failed.' }
+          if ((git -C $sdk rev-parse HEAD) -ne (Get-Content tool/flutter-revision -Raw).Trim()) { throw 'Flutter revision mismatch.' }
           (Join-Path $sdk 'bin') | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Validate and package Windows x64
         run: ./tool/windows/validate.ps1
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: release-windows
           path: dist/wave-wifi-analyser-windows-x64.zip
@@ -38,7 +41,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
       - name: Install native dependencies
         run: |
           sudo apt-get update
@@ -47,10 +52,11 @@ jobs:
         run: |
           version=$(python3 -c 'import json; print(json.load(open(".fvmrc"))["flutter"])')
           git clone --depth 1 --branch "$version" https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter-sdk"
+          test "$(git -C "$RUNNER_TEMP/flutter-sdk" rev-parse HEAD)" = "$(cat tool/flutter-revision)"
           echo "$RUNNER_TEMP/flutter-sdk/bin" >> "$GITHUB_PATH"
       - name: Validate and package Linux x64
         run: ./tool/linux/validate.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: release-linux
           path: dist/wave-wifi-analyser-linux-x64.tar.gz
@@ -62,8 +68,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: release-*
           path: dist
@@ -76,10 +84,17 @@ jobs:
           tag="v$version"
           notes="docs/releases/$tag.md"
           test -f "$notes"
-          if gh release view "$tag" --json isDraft > /tmp/wave-release.json 2>/dev/null; then
-            python3 -c 'import json; assert json.load(open("/tmp/wave-release.json"))["isDraft"], "Refusing to replace a published release"'
+          # Require an existing immutable version tag at this workflow's source.
+          remote_tag=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" --jq '.object.sha')
+          tag_type=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" --jq '.object.type')
+          if [[ "$tag_type" == tag ]]; then
+            remote_tag=$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$remote_tag" --jq '.object.sha')
+          fi
+          test "$remote_tag" = "$GITHUB_SHA"
+          if gh release view "$tag" --json isDraft,targetCommitish > /tmp/wave-release.json 2>/dev/null; then
+            python3 -c 'import json,os; r=json.load(open("/tmp/wave-release.json")); assert r["isDraft"], "Refusing to replace a published release"; assert r["targetCommitish"] == os.environ["GITHUB_SHA"], "Existing draft source differs; review manually"'
           else
-            gh release create "$tag" --target "$GITHUB_SHA" --draft --prerelease --title "Wave $version — desktop preview" --notes-file "$notes"
+            gh release create "$tag" --verify-tag --target "$GITHUB_SHA" --draft --prerelease --title "Wave $version — desktop preview" --notes-file "$notes"
           fi
           gh release upload "$tag" dist/wave-wifi-analyser-windows-x64.zip dist/wave-wifi-analyser-linux-x64.tar.gz --clobber
-          echo 'Draft only. Add signed Android APK, macOS package and final SHA256SUMS before publishing.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Draft only. Add verified release-signed Android APK and final SHA256SUMS before publishing. Omit macOS until Developer ID signing, notarization and native launch pass.' >> "$GITHUB_STEP_SUMMARY"

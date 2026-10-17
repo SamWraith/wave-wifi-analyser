@@ -1,0 +1,2 @@
+Signal-guided router finder follows one access point with honest freshness and direction limits.
+Privacy update: Android backup and device-transfer exclusions, safer temporary export cleanup and a Settings action to clear temporary exports. Production release signing now fails closed.

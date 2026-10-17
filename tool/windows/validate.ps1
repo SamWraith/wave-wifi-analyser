@@ -31,6 +31,8 @@ try {
     Invoke-Flutter pub get --enforce-lockfile
     & $dart format --output=none --set-exit-if-changed lib test integration_test test_driver tool/motion_probe.dart
     if ($LASTEXITCODE -ne 0) { throw 'Dart formatting check failed.' }
+    python tool/security/check_source.py
+    if ($LASTEXITCODE -ne 0) { throw 'Source security checks failed.' }
     Invoke-Flutter analyze
     & $dart run rive_native:setup --verbose --platform windows
     if ($LASTEXITCODE -ne 0) { throw 'Rive Windows native runtime setup failed.' }

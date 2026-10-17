@@ -6,9 +6,31 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-val releaseKeyFile = rootProject.file("key.properties")
+val releaseKeyFile = rootProject.file(providers.gradleProperty("waveSigningPropertiesFile").orElse("key.properties").get())
 val releaseKey = Properties().apply {
-    if (releaseKeyFile.exists()) releaseKeyFile.inputStream().use { load(it) }
+    if (providers.gradleProperty("waveSigningMode").orElse("production").get() == "production" && releaseKeyFile.exists()) {
+        releaseKeyFile.inputStream().use { load(it) }
+    }
+}
+
+// Production is the default. Explicit alternatives never read private signing data.
+val waveSigningMode = providers.gradleProperty("waveSigningMode").orElse("production").get()
+require(waveSigningMode in setOf("production", "development", "unsigned")) {
+    "waveSigningMode must be production, development or unsigned"
+}
+val validateWaveReleaseSigning = tasks.register("validateWaveReleaseSigning") {
+    doLast {
+        if (waveSigningMode == "production") {
+            require(releaseKeyFile.isFile && listOf("keyAlias", "keyPassword", "storeFile", "storePassword")
+                .all { !releaseKey.getProperty(it).isNullOrBlank() }) {
+                "Production signing requires complete android/key.properties. Use -PwaveSigningMode=development for local builds or -PwaveSigningMode=unsigned for F-Droid."
+            }
+            require(file(releaseKey.getProperty("storeFile")).isFile) { "Release keystore is missing." }
+        }
+    }
+}
+tasks.configureEach {
+    if (name == "preReleaseBuild") dependsOn(validateWaveReleaseSigning)
 }
 
 android {
@@ -37,7 +59,9 @@ android {
     }
 
     signingConfigs {
-        if (releaseKeyFile.exists()) {
+        if (waveSigningMode == "production" && releaseKeyFile.isFile &&
+            listOf("keyAlias", "keyPassword", "storeFile", "storePassword")
+                .all { !releaseKey.getProperty(it).isNullOrBlank() }) {
             create("release") {
                 keyAlias = releaseKey.getProperty("keyAlias")
                 keyPassword = releaseKey.getProperty("keyPassword")
@@ -49,11 +73,11 @@ android {
 
     buildTypes {
         release {
-            // Local development can still build without a distribution key.
-            // Public APKs must use the persistent key in ignored key.properties.
-            signingConfig = signingConfigs.getByName(
-                if (releaseKeyFile.exists()) "release" else "debug"
-            )
+            signingConfig = when (waveSigningMode) {
+                "development" -> signingConfigs.getByName("debug")
+                "unsigned" -> null
+                else -> signingConfigs.findByName("release")
+            }
         }
     }
 }

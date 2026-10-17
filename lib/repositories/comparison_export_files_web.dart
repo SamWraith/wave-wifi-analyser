@@ -15,3 +15,12 @@ Future<bool> saveComparisonFiles(
   bool Function()? isCurrent,
   Future<String?> Function()? chooseDirectory,
 }) async => false;
+
+Future<void> cleanupComparisonFiles({
+  bool clearAll = false,
+  DateTime? now,
+}) async {}
+Future<void> deleteComparisonFiles(
+  List<XFile> files, {
+  bool clearPluginCopies = false,
+}) async {}

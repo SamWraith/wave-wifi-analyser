@@ -10,7 +10,7 @@ This was an independent architectural agent review. Application source was read 
 
 ### 1. P2 — Extract cohesive widgets and narrow provider subscriptions
 
-Location: `/Users/samirpandey/Developer/personal/wifi_analyser/lib/views/analyser_home.dart:25`, particularly whole-provider watch at line 32, sidebar at 105, overview at 367, connection card at 456, chart panel at 593, network row at 781, detail sheet at 851, and settings at 1009.
+Location: `lib/views/analyser_home.dart:25`, particularly whole-provider watch at line 32, sidebar at 105, overview at 367, connection card at 456, chart panel at 593, network row at 781, detail sheet at 851, and settings at 1009.
 
 One 1,119-line State class owns five pages, all cards, navigation, graph mode, and the bottom sheet. Private helper methods offer some source reuse but do not establish independently reusable widgets or element-level rebuild boundaries. Every scan, query, minimum-RSSI edit, and preference change rebuilds the complete active page and sidebar; unrelated settings controls also rebuild with scan updates. This is an observable dependency structure, not a measured performance regression.
 
@@ -20,7 +20,7 @@ Verification: retain existing mobile/desktop/light/dark checks; add targeted wid
 
 ### 2. P2 — Handle preference save failures at the ViewModel boundary
 
-Location: `/Users/samirpandey/Developer/personal/wifi_analyser/lib/viewmodels/analyser_view_model.dart:234` and `:239`; callers `/Users/samirpandey/Developer/personal/wifi_analyser/lib/views/analyser_home.dart:260`, `:1028`, `:1083`; persistence `/Users/samirpandey/Developer/personal/wifi_analyser/lib/repositories/settings_repository.dart:34` and `:39`.
+Location: `lib/viewmodels/analyser_view_model.dart:234` and `:239`; callers `lib/views/analyser_home.dart:260`, `:1028`, `:1083`; persistence `lib/repositories/settings_repository.dart:34` and `:39`.
 
 Both setters optimistically update state then await persistence without error handling. Void UI callbacks discard the returned Futures, so storage exceptions become unhandled asynchronous errors and users receive no indication that changes will be lost on restart. Repository also ignores the boolean success result from SharedPreferences.setInt. Load failures are handled; save failures are not.
 
@@ -30,7 +30,7 @@ Verification: fake settings repository that throws and one that reports failed w
 
 ### 3. P2 — Protect early user preferences from initialization overwrite
 
-Location: `/Users/samirpandey/Developer/personal/wifi_analyser/lib/viewmodels/analyser_view_model.dart:42`, `:48`, `:50`, `:234`, `:239`.
+Location: `lib/viewmodels/analyser_view_model.dart:42`, `:48`, `:50`, `:234`, `:239`.
 
 Initialization runs after first state publication, and settings controls are immediately usable. If load() is pending, setTheme/setMinimum changes state, then a delayed older preference result overwrites those fields. UI can show one choice while storage contains the newer one. Existing tests await vm.ready before edits and cannot catch this sequence.
 
@@ -40,7 +40,7 @@ Verification: hold load() with a Completer; select a new theme/threshold; comple
 
 ### 4. P2 — Keep network search input synchronized with retained filter
 
-Location: `/Users/samirpandey/Developer/personal/wifi_analyser/lib/views/analyser_home.dart:59` and `:768`; retained filter `/Users/samirpandey/Developer/personal/wifi_analyser/lib/models/analyser_state.dart:54`.
+Location: `lib/views/analyser_home.dart:59` and `:768`; retained filter `lib/models/analyser_state.dart:54`.
 
 Networks page creates TextField without a controller/initial query binding. Switching to Settings or another page removes the field, but analyser state retains query. Returning creates an empty-looking search box while results remain filtered by the previous text. Users cannot see the active filter.
 
@@ -50,7 +50,7 @@ Verification: search "Studio", leave Networks, return, and assert field text and
 
 ### 5. P2 — Calculate channel ratings once per data/filter change
 
-Location: `/Users/samirpandey/Developer/personal/wifi_analyser/lib/views/analyser_home.dart:948` and `:949`; getter `/Users/samirpandey/Developer/personal/wifi_analyser/lib/models/analyser_state.dart:63`; scorer `/Users/samirpandey/Developer/personal/wifi_analyser/lib/models/access_point.dart:79`.
+Location: `lib/views/analyser_home.dart:948` and `:949`; getter `lib/models/analyser_state.dart:63`; scorer `lib/models/access_point.dart:79`.
 
 Each channel row invokes s.ratings again to find the maximum. That getter reruns all candidate/AP overlap calculations and sorts the result, even though the outer iteration already calculated ratings. With C candidates and A access points, scoring work increases from approximately O(C*A) to O(C*C*A) for this page, before repeated getters elsewhere. Provider updates unrelated to scoring trigger the same work.
 
@@ -60,7 +60,7 @@ Verification: keep existing scoring tests; add a Channels page behavior test cov
 
 ### 6. P3 — Split painter responsibilities and implement change-based repaint
 
-Location: `/Users/samirpandey/Developer/personal/wifi_analyser/lib/widgets/signal_charts.dart:85`, duplicated band bounds at `:147`/`:202`, and unconditional shouldRepaint at `:223`.
+Location: `lib/widgets/signal_charts.dart:85`, duplicated band bounds at `:147`/`:202`, and unconditional shouldRepaint at `:223`.
 
 paint() mixes grid layout, time-series extraction, spectrum envelopes, tick mapping and labels across 136 lines. Band bounds appear twice. shouldRepaint always returns true, so a parent rebuild for an unrelated preference/status can repaint an unchanged chart. The single existing SignalChart widget is a good starting point, but painter responsibilities are insufficiently separated.
 
@@ -70,7 +70,7 @@ Verification: assert shouldRepaint false for equivalent inputs and true for chan
 
 ### 7. P3 — Separate demo generation from scan orchestration; extend failure coverage
 
-Location: `/Users/samirpandey/Developer/personal/wifi_analyser/lib/viewmodels/analyser_view_model.dart:154`; missing failure-path coverage visible in `/Users/samirpandey/Developer/personal/wifi_analyser/test/controller_test.dart:83` onward.
+Location: `lib/viewmodels/analyser_view_model.dart:154`; missing failure-path coverage visible in `test/controller_test.dart:83` onward.
 
 scan() spans 79 lines and owns demo generation/history updates, permission requests, platform invocation, timeout scheduling and exception-to-status mapping. ViewModel is correctly located but has accumulated distinct responsibilities. Demo fixture data also lives alongside production domain models in access_point.dart:116. Existing three ViewModel tests cover important cases but leave disposal, lifecycle changes, permission denial, scan timeout and repository failures untested. Integration test checks native snapshot shape/basic state, not successful physical RF scanning.
 

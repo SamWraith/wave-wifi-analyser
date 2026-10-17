@@ -8,6 +8,7 @@ import '../widgets/theme_reveal.dart';
 import '../widgets/wave_haptics.dart';
 import '../widgets/support_card.dart';
 import 'onboarding_page.dart';
+import '../viewmodels/export_cache_view_model.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -24,6 +25,8 @@ class SettingsPage extends StatelessWidget {
             AppearanceCard(),
             SizedBox(height: 18),
             AboutCard(),
+            SizedBox(height: 18),
+            ExportCacheCard(),
             SizedBox(height: 18),
             SupportCard(),
           ],
@@ -212,7 +215,7 @@ class AboutCard extends StatelessWidget {
       children: [
         SectionHeading(
           title: 'Built for clarity',
-          subtitle: 'wave • version 1.0.0',
+          subtitle: 'wave • version 1.0.2',
         ),
         const SizedBox(height: 16),
         Text(
@@ -232,15 +235,75 @@ class AboutCard extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          'Saved room comparisons, local aliases, channel planning and private previewed exports keep your WiFi evidence on your device.',
+          'WiFi records are stored locally under OS protections, without app-level encryption. Android excludes app data from OS backup and transfer; manufacturer behavior can vary. Desktop backups may include records. Exports require your review; receiving apps can retain copies.',
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 12),
         Text(
-          'Update-enabled releases contact Shorebird for app updates using version and installation information. Your WiFi scans and saved comparisons stay on your device.',
+          'Update-enabled releases contact Shorebird for app updates using version and installation information. Wave does not upload WiFi scans or saved comparisons to the updater.',
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ],
     ),
   );
+}
+
+class ExportCacheCard extends ConsumerWidget {
+  const ExportCacheCard({super.key});
+
+  Future<void> _clear(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear temporary exports?'),
+        content: const Text(
+          'This removes Wave’s temporary export files, including files a receiving app may still be reading. Saved sessions and copies held by other apps or saved to a chosen folder remain.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Clear files'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      await ref.read(exportCacheProvider.notifier).clear();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(exportCacheProvider);
+    return WavePanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeading(
+            title: 'Temporary exports',
+            subtitle: 'Reviewed files can contain private WiFi details.',
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Cancelled files are removed. Handed-off files expire after 24 hours and are cleaned on next startup or share. Other apps may keep their own copies.',
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: state.busy ? null : () => _clear(context, ref),
+            icon: const Icon(Icons.delete_outline),
+            label: Text(state.busy ? 'Clearing…' : 'Clear temporary exports'),
+          ),
+          if (state.message != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(state.message!, semanticsLabel: state.message),
+            ),
+        ],
+      ),
+    );
+  }
 }

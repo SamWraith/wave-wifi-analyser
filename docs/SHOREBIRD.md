@@ -68,7 +68,9 @@ Run the normal project checks before building.
 ```sh
 ai/scripts/check.sh
 shorebird release android --artifact apk --flutter-version 3.47.5 --dry-run
-shorebird release macos --flutter-version 3.47.5 --dry-run
+# Explicit engine profile; ordinary Flutter releases must not select it.
+XCODE_XCCONFIG_FILE="$PWD/tool/macos/Shorebird.xcconfig" \
+  shorebird release macos --flutter-version 3.47.5 --dry-run
 ```
 
 Dry runs validate local builds without uploading a release. To register the actual
@@ -81,6 +83,16 @@ the Shorebird baseline first.
 Before public distribution, use a stable production Android signing key and complete
 macOS Developer ID signing/notarization. Shorebird does not replace platform signing.
 Increment app version/build number for each new full release.
+
+For macOS, `tool/macos/Shorebird.xcconfig` selects the separate
+`ShorebirdRelease.entitlements` profile and enforces hardened runtime without
+base debugging-entitlement injection. Verify the built **and final packaged** app
+with `tool/macos/verify_distribution.py --shorebird`; use the packaging script's
+`--shorebird` flag. Keep ordinary Flutter builds on the default Release profile.
+A local build is not evidence of valid patch delivery. Before public Shorebird
+distribution, require owner-controlled patch signatures and verify missing/invalid
+signature rejection and rollback. Existing private experimental baselines do not
+establish those controls.
 
 ## Patches
 

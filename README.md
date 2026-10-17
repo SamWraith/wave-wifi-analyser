@@ -23,9 +23,10 @@ No account is required. Optional support never unlocks or restricts a feature.
 
 ## Download
 
-Get Android, macOS, Windows and Linux packages from [GitHub Releases](https://github.com/SamWraith/wave-wifi-analyser/releases).
+Get Android, Windows and Linux packages from [GitHub Releases](https://github.com/SamWraith/wave-wifi-analyser/releases).
 Read each release's installation notes and SHA-256 checksums. Windows/Linux are
-experimental; macOS previews are ad-hoc signed and not notarized. iOS and web are
+experimental. macOS 1.0.2 binary is withheld pending Developer ID signing,
+notarization and a successful hardened-runtime launch check. iOS and web are
 UI/demo development targets, not supported downloadable app releases.
 
 ## A clearer view, on every screen
@@ -109,7 +110,7 @@ backgrounding stops automatic work; late replies cannot add unrelated history.
 
 ## Privacy and optional support
 
-WiFi identifiers, aliases, preferences and saved comparisons stay on your device.
+Wave stores WiFi identifiers, aliases, preferences and saved comparisons locally under OS account protections, without application-level encryption. Android disables OS cloud backup and excludes app data from legacy backup and Android 12+ device transfer; manufacturer behavior can vary. Desktop account/filesystem backups may include local records. These rules do not erase backups made by older app versions.
 Wave does not collect location coordinates. Export is an explicit action after
 preview; timing and radio context can still identify a place, even when names are
 excluded. Receiving apps may retain shared copies. Linux saves into a new export

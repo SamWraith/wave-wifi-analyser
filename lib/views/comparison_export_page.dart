@@ -192,7 +192,7 @@ class _ComparisonExportPageState
                       Text(
                         savesFiles
                             ? 'Review both files before saving. Choose a folder; Wave creates a new wave-comparison- subfolder containing both reviewed files. No account or upload by Wave. Aliases are always excluded.'
-                            : 'Review both files before sharing. No account or upload by Wave. Sharing writes two local temporary files, overwritten on the next share; system and receiving apps may keep copies. Sharing opens your system chooser; the app you choose controls delivery. Aliases are always excluded.',
+                            : 'Review both files before sharing. No account or upload by Wave. Cancelled preparation is removed. Handed-off temporary files are retained for 24 hours, then cleaned on next startup or share. Settings can clear them sooner; system and receiving apps may keep copies. Sharing opens your system chooser; the app you choose controls delivery. Aliases are always excluded.',
                       ),
                       const Text(
                         'Identifiers and room labels are hidden by default. Timing and radio context can still reveal information; this is not an anonymity guarantee.',

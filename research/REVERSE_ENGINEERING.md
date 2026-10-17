@@ -6,7 +6,7 @@ Investigation date: 2026-10-12. Tooling: [morluto/rea](https://github.com/morlut
 
 Primary artifact supplied as the user's phone APK:
 
-- Path: `/Users/samirpandey/Downloads/WiFi_Analyzer_(9.4).apk`
+- Path: `<input-directory>/WiFi_Analyzer_(9.4).apk`
 - SHA-256: `719c187524fd83f3db8ea97b09bc5be4b492d64bb50fb5f657e2f049b36ba507`
 - Package: `abdelrahman.wifianalyzerpro`
 - Version: 9.4, version code 149, min SDK 23, target SDK 36.

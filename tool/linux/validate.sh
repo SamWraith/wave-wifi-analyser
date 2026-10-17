@@ -15,6 +15,7 @@ version=$("$flutter_bin" --version --machine | python3 -c 'import json,sys; prin
 "$flutter_bin" config --enable-linux-desktop
 "$flutter_bin" pub get --enforce-lockfile
 "$sdk_bin/dart" format --output=none --set-exit-if-changed lib test integration_test test_driver tool/motion_probe.dart
+python3 tool/security/check_source.py
 "$flutter_bin" analyze
 "$sdk_bin/dart" run rive_native:setup --verbose --platform linux
 cmake -S linux/native_tests -B build/linux-native-tests -DCMAKE_BUILD_TYPE=Release

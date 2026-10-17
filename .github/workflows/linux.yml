@@ -11,7 +11,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
       - name: Install Linux build dependencies
         run: |
           sudo apt-get update
@@ -21,13 +23,14 @@ jobs:
           version=$(python3 -c 'import json; print(json.load(open(".fvmrc"))["flutter"])')
           test "$version" = 3.47.5
           git clone --depth 1 --branch "$version" https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter-sdk"
+          test "$(git -C "$RUNNER_TEMP/flutter-sdk" rev-parse HEAD)" = "$(cat tool/flutter-revision)"
           echo "$RUNNER_TEMP/flutter-sdk/bin" >> "$GITHUB_PATH"
       - name: Inspect Linux toolchain
         run: flutter doctor -v
       - name: Analyze, test and build complete release bundle
         run: ./tool/linux/validate.sh
       - name: Upload workflow artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: wave-wifi-analyser-linux-x64
           path: dist/wave-wifi-analyser-linux-x64.tar.gz

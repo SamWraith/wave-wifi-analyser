@@ -13,7 +13,7 @@ All features are free; an optional donation link opens an external website.
 - Source and website: https://github.com/SamWraith/wave-wifi-analyser
 - License: GPL-3.0-or-later (root LICENSE and NOTICE on main)
 - Android package: com.samirpandey.wifi_analyser
-- Current version: 1.0.1, version code 2
+- Current version: 1.0.2, version code 3
 - Releases: https://github.com/SamWraith/wave-wifi-analyser/releases
 - Issue tracker: https://github.com/SamWraith/wave-wifi-analyser/issues
 - Metadata and screenshots: fastlane/metadata/android/en-US

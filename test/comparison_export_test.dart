@@ -251,43 +251,113 @@ void main() {
       );
     },
   );
-  test(
-    'owned source cache stays two files and overwrites previous opt-in content',
-    () async {
-      final directory = await Directory.systemTemp.createTemp(
-        'wave-export-test',
-      );
-      const channel = MethodChannel('plugins.flutter.io/path_provider');
+  test('owned cache separates shares, expires stale exports and preserves recent receiver files', () async {
+    final directory = await Directory.systemTemp.createTemp('wave-export-test');
+    const channel = MethodChannel('plugins.flutter.io/path_provider');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (_) async => directory.path);
+    addTearDown(() async {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, (_) async => directory.path);
-      addTearDown(() async {
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(channel, null);
-        await directory.delete(recursive: true);
-      });
-      final private = serializeComparison([
-        evidence(),
-      ], includeIdentifiers: true);
-      final initial = await prepareComparisonFiles(private);
-      final safe = serializeComparison([evidence()]);
-      final current = await prepareComparisonFiles(safe);
-      expect(current.map((f) => f.path), initial.map((f) => f.path));
-      expect(await current.first.readAsString(), safe.summary);
-      expect(await current.last.readAsString(), safe.csv);
-      expect(
-        await Directory('${directory.path}/wave_comparison_export')
-            .list()
-            .length,
-        2,
-      );
-    },
-  );
+          .setMockMethodCallHandler(channel, null);
+      await directory.delete(recursive: true);
+    });
+    final private = serializeComparison([evidence()], includeIdentifiers: true);
+    final initial = await prepareComparisonFiles(private);
+    final safe = serializeComparison([evidence()]);
+    final current = await prepareComparisonFiles(safe);
+    expect(current.first.path, isNot(initial.first.path));
+    expect(await initial.first.readAsString(), private.summary);
+    final stale = File(initial.first.path).parent;
+    final unrelated = File('${directory.path}/unrelated.txt');
+    await unrelated.writeAsString('keep');
+    final legacy = File(
+      '${directory.path}/wave_comparison_export/${ComparisonExport.summaryFilename}',
+    );
+    await legacy.writeAsString('old sensitive export');
+    await cleanupComparisonFiles();
+    expect(await stale.exists(), isTrue);
+    expect(await legacy.exists(), isFalse);
+    expect(await unrelated.exists(), isTrue);
+    expect(await current.first.readAsString(), safe.summary);
+    expect(await current.last.readAsString(), safe.csv);
+    expect(
+      await Directory('${directory.path}/wave_comparison_export').list().length,
+      2,
+    );
+    await cleanupComparisonFiles(
+      now: DateTime.now().add(const Duration(days: 2)),
+    );
+    expect(await stale.exists(), isFalse);
+    expect(await File(current.first.path).exists(), isFalse);
+    final fresh = await prepareComparisonFiles(safe);
+    await cleanupComparisonFiles(clearAll: true);
+    expect(await File(current.first.path).exists(), isFalse);
+    expect(await File(fresh.first.path).exists(), isFalse);
+    expect(await unrelated.exists(), isTrue);
+  });
+  test('stale preparation preserves previous plugin copy; dismissed chooser clears only owned plugin files', () async {
+    final cache = await Directory.systemTemp.createTemp('wave-plugin-cache');
+    const channel = MethodChannel('plugins.flutter.io/path_provider');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (_) async => cache.path);
+    addTearDown(() async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null);
+      await cache.delete(recursive: true);
+    });
+    await Directory('${cache.path}/share_plus').create();
+    final plugin = await File(
+      '${cache.path}/share_plus/${ComparisonExport.summaryFilename}',
+    ).writeAsString('previous receiver');
+    final unrelated = await File('${cache.path}/share_plus/other.txt')
+        .writeAsString('keep');
+    var current = true;
+    List<XFile>? owned;
+    final stale = PlatformComparisonShareRepository(
+      supported: true,
+      prepareFiles: (export) async {
+        owned = await prepareComparisonFiles(export);
+        current = false;
+        return owned!;
+      },
+      shareFiles: (_) async => throw StateError('stale chooser must not open'),
+    );
+    final export = serializeComparison([evidence()]);
+    expect(
+      await stale.share(
+        export,
+        const Rect.fromLTWH(0, 0, 10, 10),
+        isCurrent: () => current,
+      ),
+      ComparisonShareResult.cancelled,
+    );
+    expect(await File(owned!.first.path).exists(), isFalse);
+    expect(await plugin.readAsString(), 'previous receiver');
+    final dismissed = PlatformComparisonShareRepository(
+      supported: true,
+      shareFiles: (_) async =>
+          const ShareResult('', ShareResultStatus.dismissed),
+    );
+    await dismissed.share(export, const Rect.fromLTWH(0, 0, 10, 10));
+    expect(await plugin.exists(), isFalse);
+    expect(await unrelated.exists(), isTrue);
+    await plugin.writeAsString('expired');
+    await plugin.setLastModified(
+      DateTime.now().subtract(const Duration(days: 2)),
+    );
+    await cleanupComparisonFiles();
+    expect(await plugin.exists(), isFalse);
+    expect(await unrelated.exists(), isTrue);
+  });
   test('navigation cancellation prevents late chooser and concurrent share is bounded', () async {
     final files = Completer<List<XFile>>();
-    var current = true, called = false;
+    var current = true, called = false, deleted = false;
     final repo = PlatformComparisonShareRepository(
       supported: true,
       prepareFiles: (_) => files.future,
+      deleteFiles: (_, {bool clearPluginCopies = false}) async {
+        deleted = true;
+      },
       shareFiles: (_) async {
         called = true;
         return ShareResult.unavailable;
@@ -307,7 +377,77 @@ void main() {
     files.complete([]);
     expect(await pending, ComparisonShareResult.cancelled);
     expect(called, isFalse);
+    expect(deleted, isTrue);
   });
+  test('already stale selection never prepares files', () async {
+    final repo = PlatformComparisonShareRepository(
+      supported: true,
+      prepareFiles: (_) async => throw StateError('must not prepare'),
+    );
+    expect(
+      await repo.share(
+        serializeComparison([evidence()]),
+        const Rect.fromLTWH(0, 0, 10, 10),
+        isCurrent: () => false,
+      ),
+      ComparisonShareResult.cancelled,
+    );
+  });
+  test('dismissed share deletes owned files; success, unknown and throwing handoffs retain them', () async {
+    for (final status in <ShareResultStatus?>[
+      ...ShareResultStatus.values,
+      null,
+    ]) {
+      var deleted = false;
+      final repo = PlatformComparisonShareRepository(
+        supported: true,
+        prepareFiles: (_) async => [XFile.fromData(utf8.encode("x"))],
+        deleteFiles: (_, {bool clearPluginCopies = false}) async {
+          deleted = true;
+        },
+        shareFiles: (_) async {
+          if (status == null) throw StateError('native handoff unknown');
+          return ShareResult('', status);
+        },
+      );
+      final pending = repo.share(
+        serializeComparison([evidence()]),
+        const Rect.fromLTWH(0, 0, 10, 10),
+      );
+      if (status == null) {
+        await expectLater(pending, throwsStateError);
+      } else {
+        await pending;
+      }
+      expect(deleted, status == ShareResultStatus.dismissed);
+    }
+  });
+  test(
+    'cache refuses excess recent exports without invalidating receivers',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'wave-export-limit',
+      );
+      const channel = MethodChannel('plugins.flutter.io/path_provider');
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (_) async => directory.path);
+      addTearDown(() async {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, null);
+        await directory.delete(recursive: true);
+      });
+      final export = serializeComparison([evidence()]);
+      final first = await prepareComparisonFiles(export);
+      for (var i = 1; i < maxRetainedComparisonExports; i++) {
+        await prepareComparisonFiles(export);
+      }
+      await expectLater(prepareComparisonFiles(export), throwsStateError);
+      expect(await first.first.readAsString(), export.summary);
+      await deleteComparisonFiles(first);
+      expect(await File(first.first.path).exists(), isFalse);
+      await prepareComparisonFiles(export);
+    },
+  );
   test('unsupported platform does not prepare files or open chooser', () async {
     final repo = PlatformComparisonShareRepository(
       supported: false,
